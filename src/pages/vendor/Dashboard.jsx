@@ -3,7 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import { getMyRestaurants, createRestaurant, updateRestaurant, toggleRestaurantStatus } from '../../api/restaurant.api';
 import { getRestaurantMenu, createMenuItem, updateMenuItem, toggleMenuItemStatus, deleteMenuItem } from '../../api/menu.api';
 import { getVendorOrders, changeOrderStatus } from '../../api/order.api';
+import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
+import { Store, MapPin, Phone, Edit, LogOut } from 'lucide-react';
 
 const categories = ['Fast Food', 'Cafe', 'Bakery', 'South Indian', 'North Indian', 'Chinese', 'Other'];
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
@@ -31,6 +33,8 @@ export default function Dashboard() {
   const [orderPage, setOrderPage] = useState(1);
   const [totalOrderPages, setTotalOrderPages] = useState(1);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [partnerIds, setPartnerIds] = useState({});
+  const [assignLoading, setAssignLoading] = useState(null);
 
   useEffect(() => {
     fetchVendorRestaurant();
@@ -100,10 +104,16 @@ export default function Dashboard() {
 
   const handleToggleShopStatus = async () => {
     if (!restaurant) return;
+    if (restaurant.isSuspended) {
+      toast.error('Your restaurant has been suspended');
+      return;
+    }
     try {
       await toggleRestaurantStatus(restaurant._id, !restaurant.isOpen);
       setRestaurant({ ...restaurant, isOpen: !restaurant.isOpen });
-    } catch {}
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to toggle shop status');
+    }
   };
 
   // --- Menu Management Actions ---
@@ -171,18 +181,30 @@ export default function Dashboard() {
   };
 
   const handleToggleItemStatus = async (itemId, isAvailable) => {
+    if (restaurant?.isSuspended) {
+      toast.error('Your restaurant has been suspended');
+      return;
+    }
     try {
       await toggleMenuItemStatus(itemId, !isAvailable);
       fetchMenu();
-    } catch {}
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update item availability');
+    }
   };
 
   const handleDeleteItem = async (itemId) => {
+    if (restaurant?.isSuspended) {
+      toast.error('Your restaurant has been suspended');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this menu item?')) return;
     try {
       await deleteMenuItem(itemId);
       fetchMenu();
-    } catch {}
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete menu item');
+    }
   };
 
   // --- Order Management Actions ---
@@ -209,6 +231,25 @@ export default function Dashboard() {
       toast.success(`Order status updated to ${nextStatus}!`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update order status');
+    }
+  };
+
+  const handleAssignPartner = async (orderId) => {
+    const partnerId = partnerIds[orderId];
+    if (!partnerId || !partnerId.trim()) {
+      toast.error('Please enter a valid Delivery Partner ID');
+      return;
+    }
+    setAssignLoading(orderId);
+    try {
+      await assignDeliveryPartner(orderId, partnerId.trim());
+      toast.success('Delivery partner assigned successfully!');
+      setPartnerIds(prev => ({ ...prev, [orderId]: '' }));
+      await fetchOrders(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign delivery partner');
+    } finally {
+      setAssignLoading(null);
     }
   };
 
@@ -322,54 +363,157 @@ export default function Dashboard() {
   // --- Render Case 2: Consolidated Dashboard ---
   return (
     <div className="home-dashboard page" style={{ paddingBottom: '60px' }}>
+      {restaurant.isSuspended && (
+        <div className="msg msg-error" style={{ marginBottom: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+          <span>⚠️</span>
+          <strong>Your restaurant has been suspended by system control. Shop and menu status actions are disabled.</strong>
+        </div>
+      )}
       
       {/* Restaurant Header */}
       <div className="card" style={{ 
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #333333 100%)', 
+        background: 'linear-gradient(135deg, #b31522 0%, #6e0b12 100%)', 
         color: '#ffffff',
-        padding: '28px 24px',
+        padding: '32px 28px',
         borderRadius: '24px',
         marginBottom: '32px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: '0 10px 25px rgba(179, 21, 34, 0.15)'
       }}>
-        <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        {/* Glow overlay */}
+        <div style={{
+          position: 'absolute',
+          top: '-50%',
+          right: '-20%',
+          width: '300px',
+          height: '300px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '50%',
+          filter: 'blur(50px)',
+          pointerEvents: 'none',
+          zIndex: 1
+        }}></div>
+
+        <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
           <div>
-            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, letterSpacing: '-0.5px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <span style={{ 
+                background: 'rgba(255, 255, 255, 0.2)', 
+                padding: '4px 10px', 
+                borderRadius: '50px', 
+                fontSize: '0.72rem', 
+                fontWeight: 800, 
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Vendor Partner
+              </span>
+              {restaurant.isSuspended && (
+                <span style={{ 
+                  background: '#ffebee', 
+                  color: '#dc2626',
+                  padding: '4px 10px', 
+                  borderRadius: '50px', 
+                  fontSize: '0.72rem', 
+                  fontWeight: 800, 
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  border: '1px solid rgba(220, 38, 38, 0.2)'
+                }}>
+                  Suspended
+                </span>
+              )}
+            </div>
+            <h1 style={{ fontSize: '2.1rem', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '12px' }}>
               {restaurant.restaurantName}
             </h1>
-            <p style={{ fontSize: '0.95rem', opacity: 0.85, marginTop: '4px' }}>
-              {restaurant.category} &middot; 📍 {restaurant.location} &middot; 📞 {restaurant.phone}
-            </p>
             
-            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '0.9rem', opacity: 0.9, marginBottom: '20px', alignItems: 'center' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Store size={15} />
+                {restaurant.category}
+              </span>
+              <span style={{ opacity: 0.4 }}>&bull;</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <MapPin size={15} />
+                {restaurant.location}
+              </span>
+              <span style={{ opacity: 0.4 }}>&bull;</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Phone size={15} />
+                {restaurant.phone}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
               <button 
                 className="btn btn-sm btn-outline" 
                 onClick={() => setShowEditRestaurant(!showEditRestaurant)}
-                style={{ width: 'auto', padding: '6px 14px', color: '#fff', borderColor: '#fff' }}
+                style={{ 
+                  width: 'auto', 
+                  padding: '8px 16px', 
+                  color: '#fff', 
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontWeight: 650,
+                  fontSize: '0.85rem'
+                }}
               >
+                <Edit size={14} />
                 {showEditRestaurant ? 'Close Editor' : 'Edit Shop Info'}
               </button>
               <button 
                 className="btn btn-sm btn-outline" 
                 onClick={logout}
-                style={{ width: 'auto', padding: '6px 14px', color: '#ff6b6b', borderColor: '#ff6b6b' }}
+                style={{ 
+                  width: 'auto', 
+                  padding: '8px 16px', 
+                  color: '#ff9b9b', 
+                  borderColor: 'rgba(255, 155, 155, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontWeight: 650,
+                  fontSize: '0.85rem'
+                }}
               >
+                <LogOut size={14} />
                 Logout
               </button>
             </div>
           </div>
 
-          {/* Open / Closed Toggle Switch */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.8 }}>Shop Status</span>
+          {/* Open / Closed Toggle Switch Card */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            padding: '16px 20px',
+            borderRadius: '18px',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            minWidth: '150px'
+          }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 750, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Shop Status
+            </span>
             <button 
               type="button" 
               className={`input-toggle-btn ${restaurant.isOpen ? 'active' : ''}`}
               onClick={handleToggleShopStatus}
-              style={{ position: 'static', color: '#fff' }}
+              style={{ position: 'static', color: '#fff', background: 'transparent' }}
             >
-              <span style={{ fontWeight: 700 }}>{restaurant.isOpen ? 'OPEN' : 'CLOSED'}</span>
+              <span style={{ fontWeight: 800, fontSize: '0.9rem', marginRight: '8px' }}>
+                {restaurant.isOpen ? 'OPEN' : 'CLOSED'}
+              </span>
               <div className="input-toggle-switch"></div>
             </button>
           </div>
@@ -510,7 +654,48 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'CANCELLED' && (
+                    {o.orderStatus === 'READY' && !o.deliveryPartner && (
+                      <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Enter Delivery Partner ID"
+                            style={{ padding: '8px 12px', fontSize: '0.8rem', flex: 1, height: '36px', borderRadius: '8px', border: '1px solid #cbd5e0', background: '#ffffff', outline: 'none' }}
+                            value={partnerIds[o._id] || ''}
+                            onChange={(e) => setPartnerIds({ ...partnerIds, [o._id]: e.target.value })}
+                          />
+                          <button 
+                            className="btn btn-green"
+                            onClick={() => handleAssignPartner(o._id)}
+                            disabled={assignLoading === o._id}
+                            style={{ width: 'auto', padding: '0 12px', height: '36px', fontSize: '0.8rem', borderRadius: '8px' }}
+                          >
+                            {assignLoading === o._id ? 'Assigning...' : 'Assign'}
+                          </button>
+                        </div>
+                        <button 
+                          className="btn btn-outline" 
+                          onClick={() => handleOrderStatusChange(o._id, o.orderStatus)}
+                          style={{ padding: '4px', fontSize: '0.78rem', height: '28px', borderRadius: '6px' }}
+                        >
+                          Self Deliver (Skip Partner)
+                        </button>
+                      </div>
+                    )}
+
+                    {o.orderStatus === 'READY' && o.deliveryPartner && (
+                      <div style={{ marginTop: '12px', padding: '8px', background: '#ebf8ff', borderRadius: '8px', fontSize: '0.8rem', color: '#2b6cb0', fontWeight: 600, textAlign: 'center' }}>
+                        🚚 Partner Assigned (ID: {o.deliveryPartner})
+                      </div>
+                    )}
+
+                    {o.orderStatus === 'OUT_FOR_DELIVERY' && (
+                      <div style={{ marginTop: '12px', padding: '8px', background: '#fefcbf', borderRadius: '8px', fontSize: '0.8rem', color: '#b7791f', fontWeight: 600, textAlign: 'center' }}>
+                        🚴 Out for Delivery (Partner ID: {o.deliveryPartner})
+                      </div>
+                    )}
+
+                    {o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'CANCELLED' && o.orderStatus !== 'READY' && o.orderStatus !== 'OUT_FOR_DELIVERY' && (
                       <button 
                         className="btn btn-primary" 
                         onClick={() => handleOrderStatusChange(o._id, o.orderStatus)}

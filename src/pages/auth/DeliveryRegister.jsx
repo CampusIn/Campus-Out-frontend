@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { X, Eye, EyeOff, Bike } from 'lucide-react';
 
-export default function Register() {
+export default function DeliveryRegister() {
   const { register, loading, user } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', role: 'user' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', role: 'delivery_partner' });
   const [msg, setMsg] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -42,64 +42,46 @@ export default function Register() {
   };
 
   return (
-    <div className="swiggy-auth-page-bg animate-fade-in">
-      <div className="swiggy-auth-card animate-scale-in">
+    <div className="delivery-auth-page-bg animate-fade-in">
+      <div className="delivery-auth-card animate-scale-in">
         {/* Close Button */}
         <button 
           onClick={() => navigate('/')} 
-          className="swiggy-close-btn hover-scale"
+          className="delivery-close-btn hover-scale"
           aria-label="Close"
         >
           <X size={24} />
         </button>
 
         {/* Header Block with Title */}
-        <div className="swiggy-auth-header-row">
-          <div className="swiggy-auth-title-col">
-            <h1 className="swiggy-auth-title">Sign up</h1>
-            <p className="swiggy-auth-subtitle">
-              or <Link to="/login" className="swiggy-auth-link">login to your account</Link>
+        <div className="delivery-auth-header-row">
+          <div className="delivery-auth-title-col">
+            <div className="delivery-portal-badge">
+              <Bike size={16} />
+              <span>Delivery Partner Portal</span>
+            </div>
+            <h1 className="delivery-auth-title">Partner Sign up</h1>
+            <p className="delivery-auth-subtitle">
+              or <Link to="/delivery/login" className="delivery-auth-link">login to your account</Link>
             </p>
-            <p className="swiggy-auth-subtitle" style={{ marginTop: '8px', fontSize: '0.85rem' }}>
-              Are you a Delivery Partner? <Link to="/delivery/register" className="swiggy-auth-link" style={{ color: '#06c169' }}>Register here</Link>
-            </p>
-            <div className="swiggy-title-line"></div>
+            <div className="delivery-title-line"></div>
           </div>
         </div>
 
         {/* Registration Form */}
-        <form onSubmit={handleSubmit} className="swiggy-auth-form">
+        <form onSubmit={handleSubmit} className="delivery-auth-form">
           {msg && (
-            <p className={`swiggy-auth-error-msg ${msg.success ? 'success-style' : ''} animate-shake`}>
+            <p className={`delivery-auth-error-msg ${msg.success ? 'success-style' : ''} animate-shake`}>
               {msg.success ? 'Registration successful! Redirecting to verify email...' : msg.error}
             </p>
           )}
 
           {/* Stacked Inputs Container */}
-          <div className="swiggy-inputs-stack">
-            
-            {/* Custom Tab Role Selector */}
-            <div className="swiggy-role-selector">
-              <button 
-                type="button" 
-                onClick={() => setForm(p => ({ ...p, role: 'user' }))}
-                className={`swiggy-role-btn ${form.role === 'user' ? 'active' : ''}`}
-              >
-                Customer
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setForm(p => ({ ...p, role: 'vendor' }))}
-                className={`swiggy-role-btn ${form.role === 'vendor' ? 'active' : ''}`}
-              >
-                Vendor Partner
-              </button>
-            </div>
-
+          <div className="delivery-inputs-stack">
             {/* Username Input */}
-            <div className="swiggy-input-container border-bottom-none">
+            <div className="delivery-input-container border-bottom-none">
               <input 
-                className="swiggy-input" 
+                className="delivery-input" 
                 type="text" 
                 id="username"
                 placeholder=" " 
@@ -107,13 +89,13 @@ export default function Register() {
                 onChange={(e) => setForm({ ...form, username: e.target.value })} 
                 required 
               />
-              <label htmlFor="username" className="swiggy-label">Full Name</label>
+              <label htmlFor="username" className="delivery-label">Full Name</label>
             </div>
 
             {/* Email Input */}
-            <div className="swiggy-input-container border-bottom-none">
+            <div className="delivery-input-container border-bottom-none">
               <input 
-                className="swiggy-input" 
+                className="delivery-input" 
                 type="email" 
                 id="email"
                 placeholder=" " 
@@ -121,13 +103,13 @@ export default function Register() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })} 
                 required 
               />
-              <label htmlFor="email" className="swiggy-label">Email Address</label>
+              <label htmlFor="email" className="delivery-label">Email Address</label>
             </div>
 
             {/* Password Input */}
-            <div className="swiggy-input-container border-bottom-none">
+            <div className="delivery-input-container border-bottom-none">
               <input 
-                className="swiggy-input" 
+                className="delivery-input" 
                 type={showPassword ? "text" : "password"} 
                 id="password"
                 placeholder=" " 
@@ -135,11 +117,11 @@ export default function Register() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })} 
                 required 
               />
-              <label htmlFor="password" className="swiggy-label">Password</label>
+              <label htmlFor="password" className="delivery-label">Password</label>
               
               <button 
                 type="button" 
-                className="swiggy-password-toggle"
+                className="delivery-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -151,9 +133,9 @@ export default function Register() {
             </div>
 
             {/* Confirm Password Input */}
-            <div className="swiggy-input-container">
+            <div className="delivery-input-container">
               <input 
-                className="swiggy-input" 
+                className="delivery-input" 
                 type={showConfirmPassword ? "text" : "password"} 
                 id="confirmPassword"
                 placeholder=" " 
@@ -161,11 +143,11 @@ export default function Register() {
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} 
                 required 
               />
-              <label htmlFor="confirmPassword" className="swiggy-label">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="delivery-label">Confirm Password</label>
               
               <button 
                 type="button" 
-                className="swiggy-password-toggle"
+                className="delivery-password-toggle"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -179,192 +161,157 @@ export default function Register() {
 
           {/* Submit Button */}
           <button 
-            className="swiggy-auth-submit-btn hover-lift" 
+            className="delivery-auth-submit-btn hover-lift" 
             type="submit" 
             disabled={loading}
             style={{ marginTop: '24px' }}
           >
-            {loading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
+            {loading ? 'CREATING PARTNER ACCOUNT...' : 'REGISTER AS PARTNER'}
           </button>
         </form>
 
         {/* Footer info text */}
-        <p className="swiggy-auth-footer-text">
-          By clicking on Sign up, I accept the <span className="bold-text">Terms & Conditions</span> & <span className="bold-text">Privacy Policy</span>
+        <p className="delivery-auth-footer-text">
+          By registering, I accept the <span className="bold-text">Delivery Partner Terms & Conditions</span> & <span className="bold-text">Code of Conduct</span>
         </p>
       </div>
 
-      {/* Embedded Swiggy Auth Styles */}
+      {/* Embedded Delivery Auth Styles */}
       <style>{`
-        .swiggy-auth-page-bg {
+        .delivery-auth-page-bg {
           min-height: 100vh;
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #ffffff;
+          background: #f4fbf7; /* Light greenish bg for delivery theme */
           padding: 20px;
           font-family: 'Outfit', sans-serif;
         }
 
-        .swiggy-auth-card {
+        .delivery-auth-card {
           width: 100%;
           max-width: 480px;
           padding: 40px;
           background: #ffffff;
-          border-radius: 8px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-          border: 1px solid #f0f0f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(6, 193, 105, 0.05);
+          border: 1px solid #e3f2e9;
           display: flex;
           flex-direction: column;
           position: relative;
         }
 
-        .swiggy-close-btn {
+        .delivery-close-btn {
           background: none;
           border: none;
           cursor: pointer;
           color: #282c3f;
           align-self: flex-start;
           padding: 4px;
-          margin-bottom: 24px;
+          margin-bottom: 20px;
           transition: transform 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .swiggy-close-btn:hover {
-          color: #b31522;
+        .delivery-close-btn:hover {
+          color: #06c169;
         }
 
-        .swiggy-auth-header-row {
+        .delivery-auth-header-row {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 36px;
+          margin-bottom: 32px;
         }
 
-        .swiggy-auth-title-col {
+        .delivery-auth-title-col {
           flex: 1;
         }
 
-        .swiggy-auth-title {
+        .delivery-portal-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #e6f9f0;
+          color: #06c169;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 0.78rem;
+          font-weight: 800;
+          margin-bottom: 12px;
+          text-transform: uppercase;
+        }
+
+        .delivery-auth-title {
           font-size: 2rem;
-          font-weight: 750;
-          color: #282c3f;
+          font-weight: 800;
+          color: #111827;
           margin: 0 0 6px 0;
           letter-spacing: -0.5px;
         }
 
-        .swiggy-auth-subtitle {
+        .delivery-auth-subtitle {
           font-size: 0.95rem;
-          color: #686b78;
+          color: #6b7280;
           margin: 0;
         }
 
-        .swiggy-auth-link {
-          color: #b31522;
+        .delivery-auth-link {
+          color: #06c169;
           text-decoration: none;
           font-weight: 750;
           transition: opacity 0.2s;
         }
 
-        .swiggy-auth-link:hover {
+        .delivery-auth-link:hover {
           opacity: 0.85;
         }
 
-        .swiggy-title-line {
-          width: 32px;
-          height: 2px;
-          background: #282c3f;
-          margin-top: 16px;
+        .delivery-title-line {
+          width: 36px;
+          height: 3px;
+          background: #06c169;
+          margin-top: 14px;
+          border-radius: 2px;
         }
 
-        .swiggy-auth-icon-col {
-          margin-left: 16px;
-        }
-
-        .swiggy-food-circle {
-          width: 100px;
-          height: 100px;
-          background: #fff5f5;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-        }
-
-        .swiggy-food-img {
-          width: 80px;
-          height: 80px;
-          object-fit: contain;
-          border-radius: 50%;
-        }
-
-        .swiggy-auth-form {
+        .delivery-auth-form {
           width: 100%;
           display: flex;
           flex-direction: column;
         }
 
-        .swiggy-auth-error-msg {
-          background: #fff5f5;
-          color: #b31522;
+        .delivery-auth-error-msg {
+          background: #fef2f2;
+          color: #dc2626;
           padding: 12px 16px;
           font-size: 0.85rem;
           font-weight: 600;
           margin-bottom: 20px;
           text-align: center;
-          border-radius: 4px;
-          border: 1px solid rgba(179, 21, 34, 0.1);
+          border-radius: 6px;
+          border: 1px solid rgba(220, 38, 38, 0.1);
         }
 
-        .swiggy-auth-error-msg.success-style {
+        .delivery-auth-error-msg.success-style {
           background: #f0fdf4;
-          color: #15803d;
-          border-color: rgba(21, 128, 61, 0.1);
+          color: #16a34a;
+          border-color: rgba(22, 163, 74, 0.1);
         }
 
-        /* Stacked Inputs styling */
-        .swiggy-inputs-stack {
+        .delivery-inputs-stack {
           display: flex;
           flex-direction: column;
           margin-bottom: 12px;
         }
 
-        .swiggy-role-selector {
-          display: flex;
-          border: 1px solid #d4d5d9;
-          border-bottom: none;
-          background: #ffffff;
-        }
-
-        .swiggy-role-btn {
-          flex: 1;
-          border: none;
-          background: transparent;
-          padding: 14px;
-          font-size: 0.9rem;
-          font-weight: 750;
-          color: #7e808c;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-family: inherit;
-        }
-
-        .swiggy-role-btn.active {
-          background: #fff5f5;
-          color: #b31522;
-          border-bottom: 2px solid #b31522;
-        }
-
-        .swiggy-input-container {
+        .delivery-input-container {
           position: relative;
           background: #ffffff;
-          border: 1px solid #d4d5d9;
+          border: 1px solid #d1d5db;
           transition: all 0.2s ease;
         }
 
@@ -372,45 +319,44 @@ export default function Register() {
           border-bottom: none;
         }
 
-        .swiggy-input-container:focus-within {
-          border-color: #b31522;
-          box-shadow: 0 1px 10px rgba(0, 0, 0, 0.04);
+        .delivery-input-container:focus-within {
+          border-color: #06c169;
+          box-shadow: 0 1px 10px rgba(6, 193, 105, 0.05);
           z-index: 10;
         }
 
-        .swiggy-input {
+        .delivery-input {
           width: 100%;
           border: none;
           outline: none;
           font-size: 1.05rem;
-          font-weight: 650;
+          font-weight: 600;
           padding: 24px 16px 10px 16px;
-          color: #282c3f;
+          color: #111827;
           background: transparent;
           font-family: inherit;
         }
 
-        .swiggy-label {
+        .delivery-label {
           position: absolute;
           left: 16px;
           top: 50%;
           transform: translateY(-50%);
           font-size: 1rem;
-          font-weight: 550;
-          color: #93959f;
+          font-weight: 500;
+          color: #9ca3af;
           pointer-events: none;
           transition: all 0.2s ease;
         }
 
-        /* Floating text effects */
-        .swiggy-input:focus ~ .swiggy-label,
-        .swiggy-input:not(:placeholder-shown) ~ .swiggy-label {
+        .delivery-input:focus ~ .delivery-label,
+        .delivery-input:not(:placeholder-shown) ~ .delivery-label {
           top: 14px;
           font-size: 0.75rem;
-          color: #93959f;
+          color: #9ca3af;
         }
 
-        .swiggy-password-toggle {
+        .delivery-password-toggle {
           position: absolute;
           right: 16px;
           top: 50%;
@@ -418,19 +364,19 @@ export default function Register() {
           background: none;
           border: none;
           cursor: pointer;
-          color: #7e808c;
+          color: #9ca3af;
           display: flex;
           align-items: center;
           padding: 4px;
         }
 
-        .swiggy-password-toggle:hover {
-          color: #b31522;
+        .delivery-password-toggle:hover {
+          color: #06c169;
         }
 
-        .swiggy-auth-submit-btn {
+        .delivery-auth-submit-btn {
           width: 100%;
-          background: #b31522;
+          background: #06c169;
           color: #ffffff;
           border: none;
           padding: 16px;
@@ -439,40 +385,42 @@ export default function Register() {
           letter-spacing: 0.5px;
           cursor: pointer;
           transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(179, 21, 34, 0.2);
+          box-shadow: 0 4px 15px rgba(6, 193, 105, 0.2);
+          border-radius: 8px;
           text-align: center;
         }
 
-        .swiggy-auth-submit-btn:hover {
-          background: #960f1a;
-          box-shadow: 0 6px 20px rgba(179, 21, 34, 0.3);
+        .delivery-auth-submit-btn:hover {
+          background: #05a85c;
+          box-shadow: 0 6px 20px rgba(6, 193, 105, 0.3);
         }
 
-        .swiggy-auth-submit-btn:disabled {
-          background: #d4d5d9;
-          color: #ffffff;
+        .delivery-auth-submit-btn:disabled {
+          background: #d1d5db;
+          color: #9ca3af;
           cursor: not-allowed;
           box-shadow: none;
         }
 
-        .swiggy-auth-footer-text {
+        .delivery-auth-footer-text {
           font-size: 0.75rem;
-          color: #7e808c;
+          color: #6b7280;
           line-height: 1.4;
-          margin: 16px 0 0 0;
+          margin: 20px 0 0 0;
+          text-align: center;
         }
 
-        .swiggy-auth-footer-text .bold-text {
-          color: #282c3f;
+        .delivery-auth-footer-text .bold-text {
+          color: #111827;
           font-weight: 700;
         }
 
         @media (max-width: 600px) {
-          .swiggy-auth-page-bg {
+          .delivery-auth-page-bg {
             padding: 0;
             background: #ffffff;
           }
-          .swiggy-auth-card {
+          .delivery-auth-card {
             border: none;
             box-shadow: none;
             border-radius: 0;

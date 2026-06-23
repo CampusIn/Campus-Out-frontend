@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getRestaurants } from '../api/restaurant.api';
 import { useAuth } from '../context/AuthContext';
 import BottomNav from '../components/BottomNav';
-import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock } from 'lucide-react';
+import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation } from 'lucide-react';
 
 // Available categories with labels, backend tags and Lucide Icons
 const categoriesList = [
@@ -61,15 +61,67 @@ const promoTexts = [
   '60% OFF UPTO ₹120'
 ];
 
+const savedAddresses = [
+  { id: 'hostel_a', name: 'Hostel A', detail: 'Hostel A (Boys) &bull; Men\'s Hostel Block, Campus Road' },
+  { id: 'hostel_b', name: 'Hostel B', detail: 'Hostel B (Girls) &bull; Women\'s Hostel Block, Campus Road' },
+  { id: 'hostel_c', name: 'Hostel C', detail: 'Hostel C &bull; PG Block C, Campus East' },
+  { id: 'library', name: 'Central Library', detail: 'Central Library &bull; Main Campus Academic Center' },
+  { id: 'academic', name: 'Academic Block', detail: 'Academic Block &bull; Science & Arts Department' }
+];
+
 export default function Restaurants() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [restaurants, setRestaurants] = useState([]);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [activeCategory, setActiveCategory] = useState('All');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const isFirstMount = useRef(true);
+
+  const [activeLocation, setActiveLocation] = useState(searchParams.get('hostel') || 'Koramangala, Bengaluru');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const locationRef = useRef(null);
+
+  // Click outside to close location dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (locationRef.current && !locationRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [locationRef]);
+
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setActiveLocation('Hostel A');
+          setDropdownOpen(false);
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set('hostel', 'Hostel A');
+          setSearchParams(newParams);
+        },
+        () => {
+          setActiveLocation('Hostel A');
+          setDropdownOpen(false);
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set('hostel', 'Hostel A');
+          setSearchParams(newParams);
+        }
+      );
+    } else {
+      setActiveLocation('Hostel A');
+      setDropdownOpen(false);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('hostel', 'Hostel A');
+      setSearchParams(newParams);
+    }
+  };
 
   const fetchRestaurants = async (currentSearch = search) => {
     setLoading(true);
@@ -100,7 +152,9 @@ export default function Restaurants() {
       return;
     }
     const query = searchParams.get('search') || '';
+    const hostelQuery = searchParams.get('hostel') || 'Koramangala, Bengaluru';
     setSearch(query);
+    setActiveLocation(hostelQuery);
     setPage(1);
     fetchRestaurants(query);
   }, [searchParams]);
@@ -159,12 +213,76 @@ export default function Restaurants() {
     <div className="home-dashboard page animate-fade-in" style={{ background: '#fcfcfc', minHeight: '100vh', paddingBottom: '96px' }}>
       
       {/* Location Bar */}
-      <div className="dashboard-location-bar animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div className="location-display" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MapPin size={22} color="#b31522" className="animate-pulse-soft" />
-          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111' }}>Koramangala, Bengaluru</span>
-          <ChevronDown size={18} color="#718096" />
+      <div className="dashboard-location-bar animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 100 }}>
+        <div className="location-selector-wrapper" ref={locationRef} style={{ position: 'relative' }}>
+          <button 
+            type="button" 
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="location-display-btn"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer',
+              padding: '6px 0',
+              fontFamily: 'inherit'
+            }}
+          >
+            <MapPin size={22} color="#b31522" className="animate-pulse-soft" />
+            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111' }}>
+              {activeLocation ? savedAddresses.find(a => a.name === activeLocation)?.name || activeLocation : 'Koramangala, Bengaluru'}
+            </span>
+            <ChevronDown size={18} color="#718096" />
+          </button>
+
+          {dropdownOpen && (
+            <div className="swiggy-location-popover animate-scale-in">
+              {/* Current Location Option */}
+              <button 
+                type="button" 
+                onClick={handleUseCurrentLocation}
+                className="swiggy-location-popover-item current-loc-item"
+              >
+                <Navigation size={18} color="#b31522" className="popover-item-icon" />
+                <div className="popover-item-details">
+                  <span className="current-loc-title">Use my current location</span>
+                </div>
+              </button>
+
+              <div className="swiggy-popover-divider"></div>
+
+              <span className="swiggy-popover-header">SAVED ADDRESSES</span>
+
+              {/* Saved Addresses list */}
+              {savedAddresses.map((addr) => (
+                <button 
+                  key={addr.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveLocation(addr.name);
+                    setDropdownOpen(false);
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.set('hostel', addr.name);
+                    setSearchParams(newParams);
+                  }}
+                  className="swiggy-location-popover-item address-item"
+                >
+                  <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
+                  <div className="popover-item-details">
+                    <span className="address-name">{addr.name}</span>
+                    <span 
+                      className="address-desc" 
+                      dangerouslySetInnerHTML={{ __html: addr.detail }}
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
         <Link to="/profile" className="profile-avatar-btn hover-scale" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', background: '#fff5f5', borderRadius: '50%', color: '#b31522' }}>
           <User size={20} />
         </Link>
@@ -315,6 +433,92 @@ export default function Restaurants() {
 
       {/* Local custom overrides for scroll sections */}
       <style>{`
+        /* Swiggy Location Dropdown Popover */
+        .swiggy-location-popover {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          margin-top: 12px;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+          border: 1px solid #f0f0f0;
+          width: 340px;
+          max-height: 400px;
+          overflow-y: auto;
+          z-index: 200;
+          display: flex;
+          flex-direction: column;
+          padding: 16px 0;
+        }
+
+        .swiggy-location-popover-item {
+          width: 100%;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          display: flex;
+          align-items: flex-start;
+          padding: 12px 20px;
+          text-align: left;
+          font-family: inherit;
+          transition: background 0.2s ease;
+          gap: 12px;
+        }
+
+        .swiggy-location-popover-item:hover {
+          background: #f7fafc;
+        }
+
+        .popover-item-icon {
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .popover-item-details {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .current-loc-item {
+          padding-top: 4px;
+          padding-bottom: 12px;
+        }
+
+        .current-loc-title {
+          font-size: 0.95rem;
+          font-weight: 750;
+          color: #b31522;
+        }
+
+        .swiggy-popover-divider {
+          height: 1px;
+          background: #e2e8f0;
+          margin: 8px 20px 14px 20px;
+        }
+
+        .swiggy-popover-header {
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #93959f;
+          padding: 0 20px 8px 20px;
+          letter-spacing: 0.5px;
+        }
+
+        .address-name {
+          font-size: 0.95rem;
+          font-weight: 750;
+          color: #282c3f;
+        }
+
+        .address-desc {
+          font-size: 0.8rem;
+          color: #7e808c;
+          line-height: 1.4;
+          font-weight: 550;
+        }
+
         /* Swiggy Restaurants Grid */
         .swiggy-restaurants-grid {
           display: grid;

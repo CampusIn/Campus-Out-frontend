@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store } from 'lucide-react';
+import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -131,6 +131,48 @@ export default function Navbar() {
               </>
             )}
             
+            {user.role === 'admin' && (
+              <>
+                <Link 
+                  to="/admin" 
+                  className="nav-link"
+                  style={{ 
+                    color: isActive('/admin') ? '#b31522' : '#718096', 
+                    fontWeight: 700, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px',
+                    fontSize: '0.9rem',
+                    transition: 'color 0.2s'
+                  }}
+                >
+                  <Shield size={18} />
+                  Admin Dashboard
+                </Link>
+              </>
+            )}
+            
+            {user.role === 'delivery_partner' && (
+              <>
+                <Link 
+                  to="/delivery/dashboard" 
+                  className="nav-link"
+                  style={{ 
+                    color: isActive('/delivery/dashboard') ? '#06c169' : '#718096', 
+                    fontWeight: 700, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px',
+                    fontSize: '0.9rem',
+                    transition: 'color 0.2s'
+                  }}
+                >
+                  <Bike size={18} />
+                  Delivery Dashboard
+                </Link>
+              </>
+            )}
+            
             <button 
               onClick={logout} 
               className="nav-link hover-darken" 
@@ -156,6 +198,18 @@ export default function Navbar() {
           </>
         ) : (
           <>
+            <Link 
+              to="/delivery/login" 
+              className="nav-link"
+              style={{ 
+                color: isActive('/delivery/login') ? '#06c169' : '#718096', 
+                fontWeight: 700, 
+                fontSize: '0.9rem',
+                marginRight: '8px'
+              }}
+            >
+              Delivery Portal
+            </Link>
             <Link 
               to="/login" 
               className="nav-link"

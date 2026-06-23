@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useEffect, useState } from 'react';
-import { Flame, Search, MapPin, ChevronDown, ArrowRight, Clock, Heart, Award, Star, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Flame, Search, MapPin, ChevronDown, ArrowRight, Clock, Heart, Award, Star, SlidersHorizontal, Navigation } from 'lucide-react';
 import { getRestaurants } from '../api/restaurant.api';
 
 const foodImages = [
@@ -26,14 +26,55 @@ const promoTexts = [
   '60% OFF UPTO ₹120'
 ];
 
+const savedAddresses = [
+  { id: 'hostel_a', name: 'Hostel A', detail: 'Hostel A (Boys) &bull; Men\'s Hostel Block, Campus Road' },
+  { id: 'hostel_b', name: 'Hostel B', detail: 'Hostel B (Girls) &bull; Women\'s Hostel Block, Campus Road' },
+  { id: 'hostel_c', name: 'Hostel C', detail: 'Hostel C &bull; PG Block C, Campus East' },
+  { id: 'library', name: 'Central Library', detail: 'Central Library &bull; Main Campus Academic Center' },
+  { id: 'academic', name: 'Academic Block', detail: 'Academic Block &bull; Science & Arts Department' }
+];
+
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [hostel, setHostel] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const locationRef = useRef(null);
   
   const [restaurants, setRestaurants] = useState([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(true);
+
+  // Click outside to close location dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (locationRef.current && !locationRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [locationRef]);
+
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setHostel('Hostel A');
+          setDropdownOpen(false);
+        },
+        () => {
+          setHostel('Hostel A');
+          setDropdownOpen(false);
+        }
+      );
+    } else {
+      setHostel('Hostel A');
+      setDropdownOpen(false);
+    }
+  };
 
   // Redirect if already logged in to provide a smooth experience
   useEffect(() => {
@@ -131,22 +172,60 @@ export default function Home() {
 
           {/* Search bar Widget */}
           <form onSubmit={handleSearchSubmit} className="hero-search-form animate-slide-up delay-2">
-            <div className="search-field-location">
-              <MapPin size={20} color="#b31522" className="field-icon" />
-              <select 
-                value={hostel} 
-                onChange={(e) => setHostel(e.target.value)}
-                className="location-select-input"
+            <div className="search-field-location" ref={locationRef}>
+              <button 
+                type="button" 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="location-dropdown-toggle-btn"
               >
-                <option value="">Select Hostel / Building</option>
-                <option value="Hostel A">Hostel A (Boys)</option>
-                <option value="Hostel B">Hostel B (Girls)</option>
-                <option value="Hostel C">Hostel C</option>
-                <option value="PG Block">PG Hostel Block</option>
-                <option value="Central Library">Central Library</option>
-                <option value="Academic Block">Academic Block</option>
-              </select>
-              <ChevronDown size={16} color="#718096" className="dropdown-arrow-icon" />
+                <MapPin size={20} color="#b31522" className="field-icon" />
+                <span className="location-toggle-label-text">
+                  {hostel ? savedAddresses.find(a => a.name === hostel)?.name || hostel : 'Select Hostel / Building'}
+                </span>
+                <ChevronDown size={16} color="#718096" className="dropdown-arrow-icon" />
+              </button>
+
+              {dropdownOpen && (
+                <div className="swiggy-location-popover animate-scale-in">
+                  {/* Current Location Option */}
+                  <button 
+                    type="button" 
+                    onClick={handleUseCurrentLocation}
+                    className="swiggy-location-popover-item current-loc-item"
+                  >
+                    <Navigation size={18} color="#b31522" className="popover-item-icon" />
+                    <div className="popover-item-details">
+                      <span className="current-loc-title">Use my current location</span>
+                    </div>
+                  </button>
+
+                  <div className="swiggy-popover-divider"></div>
+
+                  <span className="swiggy-popover-header">SAVED ADDRESSES</span>
+
+                  {/* Saved Addresses list */}
+                  {savedAddresses.map((addr) => (
+                    <button 
+                      key={addr.id}
+                      type="button"
+                      onClick={() => {
+                        setHostel(addr.name);
+                        setDropdownOpen(false);
+                      }}
+                      className="swiggy-location-popover-item address-item"
+                    >
+                      <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
+                      <div className="popover-item-details">
+                        <span className="address-name">{addr.name}</span>
+                        <span 
+                          className="address-desc" 
+                          dangerouslySetInnerHTML={{ __html: addr.detail }}
+                        />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="search-field-divider"></div>
@@ -394,6 +473,7 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           font-family: 'Outfit', sans-serif;
+          overflow-x: hidden;
         }
 
         /* 1. Header Styles */
@@ -516,7 +596,7 @@ export default function Home() {
           justify-content: center;
           position: relative;
           padding: 140px 24px 80px 24px;
-          overflow: hidden;
+          overflow: visible;
         }
 
         /* Floating Food items */
@@ -600,11 +680,42 @@ export default function Home() {
         }
 
         .search-field-location {
+          position: relative;
           display: flex;
           align-items: center;
-          padding: 0 20px;
+          padding: 0;
           flex: 1.1;
+        }
+
+        .location-dropdown-toggle-btn {
+          width: 100%;
+          border: none;
+          outline: none;
+          background: transparent;
+          font-family: inherit;
+          font-size: 0.95rem;
+          font-weight: 650;
+          color: #1a1a1a;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          padding: 10px 20px;
+          text-align: left;
           position: relative;
+        }
+
+        .location-toggle-label-text {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 180px;
+          margin-right: 20px;
+        }
+
+        .dropdown-arrow-icon {
+          position: absolute;
+          right: 20px;
+          pointer-events: none;
         }
 
         .field-icon {
@@ -612,24 +723,90 @@ export default function Home() {
           flex-shrink: 0;
         }
 
-        .location-select-input {
-          width: 100%;
-          border: none;
-          outline: none;
-          background: transparent;
-          font-family: inherit;
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: #1a1a1a;
-          cursor: pointer;
-          appearance: none;
-          padding-right: 24px;
+        /* Swiggy Location Dropdown Popover */
+        .swiggy-location-popover {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          margin-top: 12px;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+          border: 1px solid #f0f0f0;
+          width: 340px;
+          max-height: 400px;
+          overflow-y: auto;
+          z-index: 200;
+          display: flex;
+          flex-direction: column;
+          padding: 16px 0;
         }
 
-        .dropdown-arrow-icon {
-          position: absolute;
-          right: 20px;
-          pointer-events: none;
+        .swiggy-location-popover-item {
+          width: 100%;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          display: flex;
+          align-items: flex-start;
+          padding: 12px 20px;
+          text-align: left;
+          font-family: inherit;
+          transition: background 0.2s ease;
+          gap: 12px;
+        }
+
+        .swiggy-location-popover-item:hover {
+          background: #f7fafc;
+        }
+
+        .popover-item-icon {
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .popover-item-details {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .current-loc-item {
+          padding-top: 4px;
+          padding-bottom: 12px;
+        }
+
+        .current-loc-title {
+          font-size: 0.95rem;
+          font-weight: 750;
+          color: #b31522;
+        }
+
+        .swiggy-popover-divider {
+          height: 1px;
+          background: #e2e8f0;
+          margin: 8px 20px 14px 20px;
+        }
+
+        .swiggy-popover-header {
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #93959f;
+          padding: 0 20px 8px 20px;
+          letter-spacing: 0.5px;
+        }
+
+        .address-name {
+          font-size: 0.95rem;
+          font-weight: 750;
+          color: #282c3f;
+        }
+
+        .address-desc {
+          font-size: 0.8rem;
+          color: #7e808c;
+          line-height: 1.4;
+          font-weight: 550;
         }
 
         .search-field-divider {

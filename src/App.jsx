@@ -17,6 +17,10 @@ import Profile from './pages/user/Profile';
 import Dashboard from './pages/vendor/Dashboard';
 import MenuManagement from './pages/vendor/MenuManagement';
 import VendorOrders from './pages/vendor/VendorOrders';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import DeliveryLogin from './pages/auth/DeliveryLogin';
+import DeliveryRegister from './pages/auth/DeliveryRegister';
+import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 
 export default function App() {
   return (
@@ -39,6 +43,10 @@ export default function App() {
                 <Route path="/orders/:orderId" element={<ProtectedRoute allowedRoles={['user']}><OrderDetail /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
                 <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><Dashboard /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/delivery/login" element={<DeliveryLogin />} />
+                <Route path="/delivery/register" element={<DeliveryRegister />} />
+                <Route path="/delivery/dashboard" element={<ProtectedRoute allowedRoles={['delivery_partner']}><DeliveryDashboard /></ProtectedRoute>} />
               </Routes>
             </div>
           </div>

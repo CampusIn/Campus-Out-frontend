@@ -37,7 +37,11 @@ export default function VerifyEmail() {
         const token = localStorage.getItem('accessToken');
         if (token) {
           const role = JSON.parse(atob(token.split('.')[1])).role;
-          navigate(role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+          if (role === 'admin') {
+            navigate('/admin', { replace: true });
+          } else {
+            navigate(role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+          }
         }
       }, 1000);
     }
@@ -67,7 +71,7 @@ export default function VerifyEmail() {
           <ArrowLeft size={24} />
         </button>
 
-        {/* Header Block with Title and Food Icon */}
+        {/* Header Block with Title */}
         <div className="swiggy-auth-header-row">
           <div className="swiggy-auth-title-col">
             <h1 className="swiggy-auth-title">Enter OTP</h1>
@@ -75,15 +79,6 @@ export default function VerifyEmail() {
               We've sent an OTP to your email address.
             </p>
             <div className="swiggy-title-line"></div>
-          </div>
-          <div className="swiggy-auth-icon-col">
-            <div className="swiggy-food-circle">
-              <img 
-                src="https://images.unsplash.com/photo-1626700051175-6518c4793f4f?auto=format&fit=crop&w=120&q=80" 
-                alt="Burrito Roll" 
-                className="swiggy-food-img"
-              />
-            </div>
           </div>
         </div>
 
