@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { CartProvider } from './context/CartContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -14,9 +16,14 @@ import Cart from './pages/user/Cart';
 import Orders from './pages/user/Orders';
 import OrderDetail from './pages/user/OrderDetail';
 import Profile from './pages/user/Profile';
-import Dashboard from './pages/vendor/Dashboard';
-import MenuManagement from './pages/vendor/MenuManagement';
+import VendorLayout from './components/VendorLayout';
+import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorOrders from './pages/vendor/VendorOrders';
+import VendorInventory from './pages/vendor/VendorInventory';
+import VendorMenuManagement from './pages/vendor/VendorMenuManagement';
+import VendorBulkUpload from './pages/vendor/VendorBulkUpload';
+import VendorAnalytics from './pages/vendor/VendorAnalytics';
+import VendorSettings from './pages/vendor/VendorSettings';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DeliveryLogin from './pages/auth/DeliveryLogin';
 import DeliveryRegister from './pages/auth/DeliveryRegister';
@@ -26,31 +33,44 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <div className="app-layout">
-            <Navbar />
-            <div className="app-content">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/restaurants" element={<Restaurants />} />
-                <Route path="/restaurants/:id" element={<RestaurantDetail />} />
-                <Route path="/food/:id" element={<FoodDetail />} />
-                <Route path="/cart" element={<ProtectedRoute allowedRoles={['user']}><Cart /></ProtectedRoute>} />
-                <Route path="/orders" element={<ProtectedRoute allowedRoles={['user']}><Orders /></ProtectedRoute>} />
-                <Route path="/orders/:orderId" element={<ProtectedRoute allowedRoles={['user']}><OrderDetail /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
-                <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><Dashboard /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/delivery/login" element={<DeliveryLogin />} />
-                <Route path="/delivery/register" element={<DeliveryRegister />} />
-                <Route path="/delivery/dashboard" element={<ProtectedRoute allowedRoles={['delivery_partner']}><DeliveryDashboard /></ProtectedRoute>} />
-              </Routes>
-            </div>
-          </div>
-        </AuthProvider>
+        <ConfirmProvider>
+          <AuthProvider>
+            <CartProvider>
+              <div className="app-layout">
+                <Navbar />
+                <div className="app-content">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="/restaurants" element={<Restaurants />} />
+                    <Route path="/restaurants/:id" element={<RestaurantDetail />} />
+                    <Route path="/food/:id" element={<FoodDetail />} />
+                    <Route path="/cart" element={<ProtectedRoute allowedRoles={['user']}><Cart /></ProtectedRoute>} />
+                    <Route path="/orders" element={<ProtectedRoute allowedRoles={['user']}><Orders /></ProtectedRoute>} />
+                    <Route path="/orders/:orderId" element={<ProtectedRoute allowedRoles={['user']}><OrderDetail /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
+                    <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
+                      <Route index element={<Navigate to="dashboard" replace />} />
+                      <Route path="dashboard" element={<VendorDashboard />} />
+                      <Route path="orders" element={<VendorOrders />} />
+                      <Route path="inventory" element={<VendorInventory />} />
+                      <Route path="menu" element={<VendorMenuManagement />} />
+                      <Route path="menu/bulk-upload" element={<VendorBulkUpload />} />
+                      <Route path="analytics" element={<VendorAnalytics />} />
+                      <Route path="settings" element={<VendorSettings />} />
+                    </Route>
+                    <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                    <Route path="/delivery/login" element={<DeliveryLogin />} />
+                    <Route path="/delivery/register" element={<DeliveryRegister />} />
+                    <Route path="/delivery/dashboard" element={<ProtectedRoute allowedRoles={['delivery_partner']}><DeliveryDashboard /></ProtectedRoute>} />
+                  </Routes>
+                </div>
+              </div>
+            </CartProvider>
+          </AuthProvider>
+        </ConfirmProvider>
       </ToastProvider>
     </BrowserRouter>
   );

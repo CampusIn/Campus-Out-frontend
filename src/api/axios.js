@@ -30,6 +30,19 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Map raw JWT/expired/unauthorized error messages to user-friendly format
+    if (error.response?.data) {
+      const msg = error.response.data.message;
+      if (msg && (
+        msg.toLowerCase().includes('jwt') || 
+        msg.toLowerCase().includes('expired') || 
+        msg.toLowerCase().includes('unauthorized') || 
+        msg.toLowerCase().includes('token')
+      )) {
+        error.response.data.message = "Your session has expired. Please log in again to continue.";
+      }
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -57,8 +70,23 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         localStorage.removeItem('accessToken');
+        
+        let redirectUrl = '/login';
+        try {
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userObj = JSON.parse(userStr);
+            if (userObj.role === 'delivery_partner') {
+              redirectUrl = '/delivery/login';
+            }
+          }
+        } catch (e) {
+          console.error('Failed to determine redirect URL:', e);
+        }
+        
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        localStorage.setItem('authRedirectMessage', 'Your session has expired. Please log in again to continue.');
+        window.location.href = redirectUrl;
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

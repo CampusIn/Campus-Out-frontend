@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMenuItemById } from '../api/menu.api';
-import { addToCart } from '../api/cart.api';
+import { addToCart, updateCartItemQty, deleteCartItem } from '../api/cart.api';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import BottomNav from '../components/BottomNav';
 import { ArrowLeft, Share2, Heart, Star, Clock, Flame as FireIcon, Plus, Minus } from 'lucide-react';
 
@@ -11,11 +12,47 @@ export default function FoodDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  const { cart, fetchCart } = useCart();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [cartMsg, setCartMsg] = useState('');
+
+  const getCartQty = (menuItemId) => {
+    if (!cart || !cart.items) return 0;
+    const found = cart.items.find(i => {
+      const idToCheck = i.menuItem?._id || i.menuItem;
+      return idToCheck?.toString() === menuItemId?.toString();
+    });
+    return found ? found.quantity : 0;
+  };
+
+  const handleIncrement = async (menuItemId, currentQty) => {
+    try {
+      await updateCartItemQty(menuItemId, currentQty + 1);
+      await fetchCart();
+    } catch (err) {
+      setCartMsg('Failed to update quantity');
+      setTimeout(() => setCartMsg(''), 2500);
+    }
+  };
+
+  const handleDecrement = async (menuItemId, currentQty) => {
+    try {
+      if (currentQty === 1) {
+        await deleteCartItem(menuItemId);
+      } else {
+        await updateCartItemQty(menuItemId, currentQty - 1);
+      }
+      await fetchCart();
+    } catch (err) {
+      setCartMsg('Failed to update quantity');
+      setTimeout(() => setCartMsg(''), 2500);
+    }
+  };
+
+
 
   const mockItems = {
     burger_bang: {
@@ -98,6 +135,7 @@ export default function FoodDetail() {
       
       await addToCart({ menuItemId: id, quantity });
       setCartMsg('Added to cart!');
+      await fetchCart();
       setTimeout(() => setCartMsg(''), 2500);
     } catch (err) {
       setCartMsg(err.response?.data?.message || 'Failed to add to cart');
@@ -199,35 +237,60 @@ export default function FoodDetail() {
             <p style={{ fontSize: '0.85rem', color: '#718096', lineHeight: 1.6, marginBottom: '28px', margin: '0 0 28px 0' }}>{item.description}</p>
 
             {/* Action controls */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '8px 12px', gap: '16px' }}>
+            {getCartQty(id) > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '12px 20px', gap: '24px', justifyContent: 'center', width: '100%' }}>
+                <span style={{ fontWeight: 750, fontSize: '0.95rem', color: '#4a5568' }}>In Cart:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <button 
+                    onClick={() => handleDecrement(id, getCartQty(id))}
+                    style={{ background: '#e2e8f0', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#111111', width: '32px', height: '32px', borderRadius: '50%', justifyContent: 'center' }}
+                    className="hover-scale"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#111111', minWidth: '24px', textAlign: 'center' }}>
+                    {getCartQty(id) < 10 ? `0${getCartQty(id)}` : getCartQty(id)}
+                  </span>
+                  <button 
+                    onClick={() => handleIncrement(id, getCartQty(id))}
+                    style={{ background: '#e2e8f0', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#111111', width: '32px', height: '32px', borderRadius: '50%', justifyContent: 'center' }}
+                    className="hover-scale"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '8px 12px', gap: '16px' }}>
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#718096' }}
+                    className="hover-scale"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span style={{ fontWeight: 800, fontSize: '1rem', color: '#111111', minWidth: '20px', textAlign: 'center' }}>
+                    {quantity < 10 ? `0${quantity}` : quantity}
+                  </span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#718096' }}
+                    className="hover-scale"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+                
                 <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#718096' }}
-                  className="hover-scale"
+                  onClick={handleAddToCart}
+                  className="btn btn-primary hover-lift hover-darken"
+                  style={{ flex: 1, padding: '16px', borderRadius: '12px', background: 'var(--primary)', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'center' }}
                 >
-                  <Minus size={16} />
-                </button>
-                <span style={{ fontWeight: 800, fontSize: '1rem', color: '#111111', minWidth: '20px', textAlign: 'center' }}>
-                  {quantity < 10 ? `0${quantity}` : quantity}
-                </span>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#718096' }}
-                  className="hover-scale"
-                >
-                  <Plus size={16} />
+                  Add to Cart
                 </button>
               </div>
-              
-              <button 
-                onClick={handleAddToCart}
-                className="btn btn-primary hover-lift hover-darken"
-                style={{ flex: 1, padding: '16px', borderRadius: '12px', background: '#b31522', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'center' }}
-              >
-                Add to Cart
-              </button>
-            </div>
+            )}
 
           </div>
 

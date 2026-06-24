@@ -2511,11 +2511,12 @@ input:checked + .switch-slider:before {
 
 .toast-item {
   pointer-events: auto;
-  background: #111111; /* Off-black for premium contrast */
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.95); /* Light glassmorphism */
+  backdrop-filter: blur(10px);
+  color: #1a1a1a;
   padding: 14px 18px;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2525,6 +2526,7 @@ input:checked + .switch-slider:before {
   position: relative;
   cursor: pointer;
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   border-left: 4px solid #3b82f6; /* Left accent line */
   transition: opacity 0.2s, transform 0.2s;
 }
@@ -2561,7 +2563,7 @@ input:checked + .switch-slider:before {
 .toast-close-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(0, 0, 0, 0.3);
   font-size: 1.2rem;
   cursor: pointer;
   padding: 0;
@@ -2573,7 +2575,7 @@ input:checked + .switch-slider:before {
 }
 
 .toast-close-btn:hover {
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 @keyframes toastSlideUp {

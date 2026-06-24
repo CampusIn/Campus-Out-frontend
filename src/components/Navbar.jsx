@@ -6,7 +6,15 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  if (location.pathname === '/') return null;
+  // Hide main customer navbar on homepage, vendor portal, admin dashboard, and delivery partner routes
+  if (
+    location.pathname === '/' || 
+    location.pathname.startsWith('/vendor') || 
+    location.pathname.startsWith('/admin') || 
+    location.pathname.startsWith('/delivery')
+  ) {
+    return null;
+  }
 
   const isActive = (path) => location.pathname === path;
 

@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getRestaurantById } from '../api/restaurant.api';
 import { getRestaurantMenu } from '../api/menu.api';
-import { addToCart, getCart, updateCartItemQty, deleteCartItem } from '../api/cart.api';
+import { addToCart, updateCartItemQty, deleteCartItem } from '../api/cart.api';
 import { getRestaurantReviews } from '../api/review.api';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import BottomNav from '../components/BottomNav';
 import { ArrowLeft, Heart, Share2, Star, Clock, Plus, Minus, MapPin, Info as InfoIcon } from 'lucide-react';
@@ -18,22 +19,12 @@ export default function RestaurantDetail() {
   const [menu, setMenu] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const { cart, fetchCart } = useCart();
   
   const [activeTab, setActiveTab] = useState('Menu'); // 'Menu', 'Reviews', 'Info'
   const [activeSubcategory, setActiveSubcategory] = useState('All');
   const [showCoupon, setShowCoupon] = useState(true);
-
-  const fetchCart = async () => {
-    if (!user) return;
-    try {
-      const { data } = await getCart();
-      setCart(data.data);
-    } catch {
-      setCart(null);
-    }
-  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -109,7 +100,10 @@ export default function RestaurantDetail() {
   // Check item quantity in cart helper
   const getCartQty = (menuItemId) => {
     if (!cart || !cart.items) return 0;
-    const item = cart.items.find(i => i.menuItemId === menuItemId || i.menuItemId?._id === menuItemId);
+    const item = cart.items.find(i => {
+      const idToCheck = i.menuItem?._id || i.menuItem;
+      return idToCheck?.toString() === menuItemId?.toString();
+    });
     return item ? item.quantity : 0;
   };
 
@@ -419,34 +413,43 @@ export default function RestaurantDetail() {
 
       {/* Sticky Bottom Cart Basket Bar */}
       {cartTotalQty > 0 && (
-        <Link 
-          to="/cart" 
-          className="sticky-basket-bar hover-lift animate-pulse-soft"
+        <div
           style={{
-            bottom: '24px',
-            textDecoration: 'none',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: '#b31522',
-            padding: '16px 24px',
-            borderRadius: '16px',
-            color: '#ffffff',
-            fontWeight: 700,
-            fontSize: '1rem',
             position: 'fixed',
+            bottom: '24px',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 'calc(100% - 40px)',
+            width: '100%',
             maxWidth: '480px',
-            boxShadow: '0 8px 24px rgba(179, 21, 34, 0.3)',
-            zIndex: 999
+            padding: '0 20px',
+            zIndex: 999,
+            boxSizing: 'border-box'
           }}
         >
-          <span>View Cart ({cartTotalQty})</span>
-          <span className="basket-dot" style={{ width: '6px', height: '6px', background: '#ffffff', borderRadius: '50%' }}></span>
-          <span>₹{(cart.totalAmount || 0).toFixed(2)}</span>
-        </Link>
+          <Link 
+            to="/cart" 
+            className="sticky-basket-bar hover-lift animate-pulse-soft"
+            style={{
+              textDecoration: 'none',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: '#b31522',
+              padding: '16px 24px',
+              borderRadius: '16px',
+              color: '#ffffff',
+              fontWeight: 700,
+              fontSize: '1rem',
+              width: '100%',
+              boxShadow: '0 8px 24px rgba(179, 21, 34, 0.3)',
+              boxSizing: 'border-box'
+            }}
+          >
+            <span>View Cart ({cartTotalQty})</span>
+            <span className="basket-dot" style={{ width: '6px', height: '6px', background: '#ffffff', borderRadius: '50%' }}></span>
+            <span>₹{(cart.totalAmount || 0).toFixed(2)}</span>
+          </Link>
+        </div>
       )}
     </div>
   );

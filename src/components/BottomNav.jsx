@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { Home, ClipboardList, ShoppingCart, User } from 'lucide-react';
 
 export default function BottomNav({ activeTab = 'home' }) {
   const { user } = useAuth();
+  const { cartTotalQty } = useCart();
 
   return (
     <div className="bottom-nav" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
@@ -33,7 +35,32 @@ export default function BottomNav({ activeTab = 'home' }) {
         className={`bottom-nav-item ${activeTab === 'cart' ? 'active' : ''}`}
         style={{ color: activeTab === 'cart' ? '#b31522' : '#718096' }}
       >
-        <ShoppingCart size={22} style={{ strokeWidth: activeTab === 'cart' ? 2.5 : 2 }} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ShoppingCart size={22} style={{ strokeWidth: activeTab === 'cart' ? 2.5 : 2 }} />
+          {cartTotalQty > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-8px',
+              right: '-8px',
+              background: '#dc2626',
+              color: '#ffffff',
+              borderRadius: '10px',
+              fontSize: '0.65rem',
+              fontWeight: 800,
+              minWidth: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 4px',
+              border: '2px solid #ffffff',
+              boxSizing: 'border-box',
+              lineHeight: 1
+            }}>
+              {cartTotalQty}
+            </span>
+          )}
+        </div>
         <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'cart' ? 800 : 600, marginTop: '4px' }}>Cart</span>
       </Link>
 

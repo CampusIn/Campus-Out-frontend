@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getOrderById, cancelOrder } from '../../api/order.api';
 import { createReview } from '../../api/review.api';
-import BottomNav from '../../components/BottomNav';
 import { ArrowLeft, Star, Calendar, CreditCard, Clock, Store, Check, AlertCircle } from 'lucide-react';
+import BottomNav from '../../components/BottomNav';
+import { useConfirm } from '../../context/ConfirmContext';
 
 export default function OrderDetail() {
   const { orderId } = useParams();
@@ -34,8 +35,10 @@ export default function OrderDetail() {
     }
   };
 
+  const confirm = useConfirm();
+
   const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel this order?')) return;
+    if (!await confirm('Are you sure you want to cancel this order?')) return;
     try {
       const { data } = await cancelOrder(orderId);
       setOrder(data.data);
@@ -151,8 +154,19 @@ export default function OrderDetail() {
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {order.items?.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#4a5568' }}>
-                <span style={{ fontWeight: 600 }}>{item.itemName} <strong style={{ color: '#b31522' }}>x{item.quantity}</strong></span>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', color: '#4a5568' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {item.menuItem?.image && (
+                    <img 
+                      src={item.menuItem.image} 
+                      alt={item.itemName} 
+                      style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #edf2f7' }} 
+                    />
+                  )}
+                  <span style={{ fontWeight: 600 }}>
+                    {item.itemName} <strong style={{ color: '#b31522' }}>x{item.quantity}</strong>
+                  </span>
+                </div>
                 <span style={{ fontWeight: 800, color: '#111111' }}>&#8377;{item.priceAtPurchase * item.quantity}</span>
               </div>
             ))}

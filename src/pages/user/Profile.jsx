@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import BottomNav from '../../components/BottomNav';
 import { ShieldAlert, Heart, CreditCard, HelpCircle, Tag, Bell, Briefcase, LogOut, ChevronRight, User } from 'lucide-react';
 
@@ -7,8 +8,10 @@ export default function Profile() {
   const { user, logout, logoutAll } = useAuth();
   const navigate = useNavigate();
 
+  const confirm = useConfirm();
+
   const handleLogoutAll = async () => {
-    if (!confirm('Log out of all devices?')) return;
+    if (!await confirm('Log out of all devices?')) return;
     await logoutAll();
     navigate('/login');
   };

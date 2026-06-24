@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { X, Eye, EyeOff, Lock } from 'lucide-react';
 
 export default function Login() {
   const { login, logout, loading, user } = useAuth();
@@ -9,6 +9,15 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+
+  useEffect(() => {
+    const redirectMsg = localStorage.getItem('authRedirectMessage');
+    if (redirectMsg) {
+      setShowSessionExpiredModal(true);
+      localStorage.removeItem('authRedirectMessage');
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -51,6 +60,27 @@ export default function Login() {
 
   return (
     <div className="swiggy-auth-page-bg animate-fade-in">
+      {/* Session Expired Modal */}
+      {showSessionExpiredModal && (
+        <div className="session-expired-modal-overlay">
+          <div className="session-expired-modal-card animate-scale-in">
+            <div className="session-expired-icon-wrapper">
+              <Lock className="session-expired-icon animate-bounce" size={28} />
+            </div>
+            <h2 className="session-expired-title">Session Expired</h2>
+            <p className="session-expired-text">
+              For your security, your session has timed out. Please log in again to continue ordering.
+            </p>
+            <button 
+              className="session-expired-btn"
+              onClick={() => setShowSessionExpiredModal(false)}
+            >
+              Okay, Log In
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="swiggy-auth-card animate-scale-in">
         {/* Close Button */}
         <button 
@@ -408,6 +438,81 @@ export default function Login() {
             min-height: 100vh;
             padding: 32px 24px;
           }
+        }
+
+        /* Session Expired Modal Styles */
+        .session-expired-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(179, 21, 34, 0.04);
+          backdrop-filter: blur(12px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+        }
+
+        .session-expired-modal-card {
+          background: #ffffff;
+          border-radius: 20px;
+          padding: 32px 24px;
+          width: 90%;
+          max-width: 360px;
+          text-align: center;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+          border: 1px solid #f0f0f0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .session-expired-icon-wrapper {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #fff5f5;
+          color: #b31522;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
+
+        .session-expired-title {
+          font-size: 1.3rem;
+          font-weight: 800;
+          color: #1a1a1a;
+          margin: 0 0 10px 0;
+        }
+
+        .session-expired-text {
+          font-size: 0.9rem;
+          color: #7e7e7e;
+          line-height: 1.5;
+          margin: 0 0 24px 0;
+        }
+
+        .session-expired-btn {
+          width: 100%;
+          background: #b31522;
+          color: #ffffff;
+          border: none;
+          padding: 14px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(179, 21, 34, 0.2);
+        }
+
+        .session-expired-btn:hover {
+          background: #960f1a;
+          box-shadow: 0 6px 16px rgba(179, 21, 34, 0.3);
+          transform: translateY(-1px);
         }
       `}</style>
     </div>

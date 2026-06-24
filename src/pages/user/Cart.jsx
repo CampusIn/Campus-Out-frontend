@@ -4,28 +4,27 @@ import { getCart, updateCartItemQty, deleteCartItem, clearCart } from '../../api
 import { createOrder } from '../../api/order.api';
 import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
-import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart } from 'lucide-react';
+import { useCart } from '../../context/CartContext';
+import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag } from 'lucide-react';
 
 export default function Cart() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { cart, setCart, fetchCart, loading } = useCart();
+  const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
+  const [deliveryAddress, setDeliveryAddress] = useState('Hostel Block 3, Room 204');
+  const [paymentMethod, setPaymentMethod] = useState('COD');
+
+  const campusAddresses = [
+    { label: 'Hostel Block 3, Room 204', Icon: Building },
+    { label: 'Central Library Entrance', Icon: BookOpen },
+    { label: 'Food Court Block A, Table 12', Icon: Coffee },
+    { label: 'Sports Complex Pavilion', Icon: Compass }
+  ];
 
   useEffect(() => {
     fetchCart();
-  }, []);
-
-  const fetchCart = async () => {
-    try {
-      const { data } = await getCart();
-      setCart(data.data);
-    } catch {
-      setCart(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchCart]);
 
   const handleQtyChange = async (menuItemId, quantity) => {
     if (quantity < 1) return;
@@ -63,7 +62,7 @@ export default function Cart() {
     }
   };
 
-  if (loading) {
+  if (loading && !cart) {
     return (
       <div className="home-dashboard page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <p className="loading-text" style={{ color: '#718096' }}>Loading your cart...</p>
@@ -78,16 +77,20 @@ export default function Cart() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }} className="animate-slide-up">
         <button 
           className="circle-icon-btn hover-scale" 
-          onClick={() => navigate(-1)}
+          onClick={() => checkoutStep === 'address' ? setCheckoutStep('cart') : navigate(-1)}
           style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
         >
           <ArrowLeft size={18} />
         </button>
-        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#718096' }}>Back</span>
+        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#718096' }}>
+          {checkoutStep === 'address' ? 'Back to Cart' : 'Back'}
+        </span>
       </div>
 
       <div className="section-header-row animate-slide-up delay-1" style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 850, color: '#111111', margin: 0 }}>Your Cart</h1>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 850, color: '#111111', margin: 0 }}>
+          {checkoutStep === 'address' ? 'Select Delivery Address' : 'Your Cart'}
+        </h1>
       </div>
 
       {!cart || cart.items?.length === 0 ? (
@@ -100,6 +103,256 @@ export default function Cart() {
           <Link to="/restaurants" className="btn btn-primary hover-lift hover-darken" style={{ width: 'auto', padding: '12px 24px', borderRadius: '12px', background: '#b31522', color: '#ffffff', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem', marginTop: '8px' }}>
             Browse Restaurants
           </Link>
+        </div>
+      ) : checkoutStep === 'address' ? (
+        <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Active restaurant indicator */}
+          <div style={{ 
+            background: '#fff5f5', 
+            color: '#b31522', 
+            padding: '14px 18px', 
+            borderRadius: '16px', 
+            fontSize: '0.95rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            border: '1px solid rgba(179, 21, 34, 0.05)'
+          }}>
+            <Store size={18} />
+            <span>Ordering from: <strong>{cart.restaurant?.restaurantName}</strong></span>
+          </div>
+
+          {/* 2 Column Split layout for Address selection */}
+          <div className="split-layout-container" style={{ display: 'flex', gap: '32px' }}>
+            
+            {/* Left panel: Address selections */}
+            <div className="split-left-main" style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
+              
+              {/* Campus Pre-saved address suggestions */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#718096', paddingLeft: '4px' }}>
+                  Quick Suggestions
+                </span>
+                <div 
+                  className="subcategory-scroll" 
+                  style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    overflowX: 'auto', 
+                    paddingBottom: '8px',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {campusAddresses.map((addr) => {
+                    const isSelected = deliveryAddress === addr.label;
+                    return (
+                      <button
+                        type="button"
+                        key={addr.label}
+                        onClick={() => setDeliveryAddress(addr.label)}
+                        className="hover-scale"
+                        style={{
+                          padding: '10px 16px',
+                          borderRadius: '20px',
+                          border: isSelected ? '2px solid #b31522' : '1px solid #edf2f7',
+                          background: isSelected ? '#fff5f5' : '#ffffff',
+                          color: isSelected ? '#b31522' : '#4a5568',
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          transition: 'all 0.2s',
+                          whiteSpace: 'nowrap',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          outline: 'none'
+                        }}
+                      >
+                        <addr.Icon size={14} style={{ color: isSelected ? '#b31522' : '#718096' }} />
+                        <span>{addr.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Delivery Address Input */}
+              <div 
+                style={{ 
+                  background: '#ffffff', 
+                  border: '1px solid #edf2f7', 
+                  borderRadius: '24px', 
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.01)'
+                }}
+              >
+                <label htmlFor="deliveryAddress" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#111111' }}>
+                  Delivery Address
+                </label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <MapPin size={18} style={{ position: 'absolute', left: '16px', color: '#718096' }} />
+                  <input
+                    type="text"
+                    id="deliveryAddress"
+                    placeholder="Enter delivery room, department or hostel location..."
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '16px 16px 16px 46px',
+                      borderRadius: '16px',
+                      border: '1.5px solid #edf2f7',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      background: '#f8fafc',
+                      color: '#111111',
+                      fontWeight: 600,
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#718096', margin: 0, paddingLeft: '4px' }}>
+                  Select a quick suggestion above or type your custom location details.
+                </p>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#111111', margin: 0 }}>Payment Method</h3>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('COD')}
+                    style={{
+                      flex: 1,
+                      background: '#ffffff',
+                      border: paymentMethod === 'COD' ? '2px solid #b31522' : '1px solid #edf2f7',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      color: paymentMethod === 'COD' ? '#b31522' : '#4a5568',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: paymentMethod === 'COD' ? '0 4px 12px rgba(179, 21, 34, 0.03)' : 'none'
+                    }}
+                    className="hover-scale"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Wallet size={16} />
+                      <span>Cash on Delivery</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('PAY_ON_PICKUP')}
+                    style={{
+                      flex: 1,
+                      background: '#ffffff',
+                      border: paymentMethod === 'PAY_ON_PICKUP' ? '2px solid #b31522' : '1px solid #edf2f7',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      color: paymentMethod === 'PAY_ON_PICKUP' ? '#b31522' : '#4a5568',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: paymentMethod === 'PAY_ON_PICKUP' ? '0 4px 12px rgba(179, 21, 34, 0.03)' : 'none'
+                    }}
+                    className="hover-scale"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <ShoppingBag size={16} />
+                      <span>Pay on Pickup</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right panel: Summary receipt & Order Action */}
+            <div className="split-right-aside" style={{ width: '100%' }}>
+              
+              <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111111', borderBottom: '1px solid #edf2f7', paddingBottom: '12px', margin: 0 }}>
+                  Order Details
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem', borderBottom: '1px solid #edf2f7', paddingBottom: '16px' }}>
+                  <div>
+                    <p style={{ margin: '0 0 6px 0', color: '#718096' }}>
+                      <strong>Delivering to:</strong>
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <MapPin size={16} style={{ color: '#b31522', flexShrink: 0 }} />
+                      <span style={{ fontWeight: 700, color: '#111111' }}>
+                        {deliveryAddress || 'Please specify an address'}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ margin: '0 0 6px 0', color: '#718096' }}>
+                      <strong>Payment Mode:</strong>
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {paymentMethod === 'COD' ? <Wallet size={16} style={{ color: '#b31522', flexShrink: 0 }} /> : <ShoppingBag size={16} style={{ color: '#b31522', flexShrink: 0 }} />}
+                      <span style={{ fontWeight: 700, color: '#111111' }}>
+                        {paymentMethod === 'COD' ? 'Cash on Delivery' : 'Pay on Pickup'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bill summary breakdown */}
+                <div style={{ background: '#f7fafc', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid #edf2f7' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>Subtotal</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{cart.totalAmount}</span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>Service & Delivery Fee</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;15.00</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, borderTop: '1px solid #edf2f7', paddingTop: '10px', marginTop: '4px', color: '#111111' }}>
+                    <span>Total Amount</span>
+                    <span>&#8377;{(cart.totalAmount + 15.00).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Confirm & Place Order trigger */}
+                <button 
+                  type="button"
+                  className="btn btn-primary hover-lift hover-darken" 
+                  onClick={() => handleOrder(paymentMethod)}
+                  disabled={!deliveryAddress.trim()}
+                  style={{ 
+                    padding: '16px', 
+                    background: '#b31522', 
+                    color: '#ffffff', 
+                    border: 'none', 
+                    borderRadius: '12px', 
+                    fontWeight: 700, 
+                    fontSize: '0.95rem', 
+                    cursor: !deliveryAddress.trim() ? 'not-allowed' : 'pointer',
+                    opacity: !deliveryAddress.trim() ? 0.6 : 1
+                  }}
+                >
+                  Confirm & Place Order (&#8377;{(cart.totalAmount + 15.00).toFixed(2)})
+                </button>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       ) : (
         <div className="cart-layout-responsive" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -196,10 +449,10 @@ export default function Cart() {
             </div>
 
             {/* Right Col: Summary Card */}
-            <div className="split-right-aside" style={{ width: '100%' }}>
+            <div className="split-right-aside" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
               
               {/* Make it a gift card */}
-              <div className="card gift-promo-card hover-lift" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}>
+              <div className="card gift-promo-card hover-lift" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ background: '#fff5f5', color: '#b31522', padding: '8px', borderRadius: '8px', display: 'flex' }}>
                     <Gift size={20} />
@@ -213,7 +466,7 @@ export default function Cart() {
               </div>
 
               {/* Add promo code card */}
-              <div className="card gift-promo-card hover-lift" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}>
+              <div className="card gift-promo-card hover-lift" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ background: '#fff5f5', color: '#b31522', padding: '8px', borderRadius: '8px', display: 'flex' }}>
                     <Tag size={20} />
@@ -260,13 +513,14 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* Checkout Payment Mode Selection */}
+                {/* Proceed to Select Address */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-                  <button className="btn btn-primary hover-lift hover-darken" onClick={() => handleOrder('COD')} style={{ padding: '16px', background: '#b31522', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}>
-                    Place Order &middot; COD (&#8377;{(cart.totalAmount + 15.00).toFixed(2)})
-                  </button>
-                  <button className="btn btn-outline hover-lift" onClick={() => handleOrder('PAY_ON_PICKUP')} style={{ padding: '16px', background: 'transparent', color: '#b31522', border: '2px solid #b31522', borderRadius: '12px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}>
-                    Pay on Pickup
+                  <button 
+                    className="btn btn-primary hover-lift hover-darken" 
+                    onClick={() => setCheckoutStep('address')} 
+                    style={{ padding: '16px', background: '#b31522', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}
+                  >
+                    Proceed to Select Address
                   </button>
                 </div>
 
@@ -292,7 +546,9 @@ export default function Cart() {
       <style>{`
         @media (max-width: 768px) {
           .split-layout-container {
+            display: flex !important;
             flex-direction: column !important;
+            gap: 16px !important;
           }
           .split-right-aside {
             position: relative !important;

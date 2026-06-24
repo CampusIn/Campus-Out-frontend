@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff, Bike } from 'lucide-react';
+import { X, Eye, EyeOff, Bike, Lock } from 'lucide-react';
 
 export default function DeliveryLogin() {
   const { login, logout, loading, user } = useAuth();
@@ -9,6 +9,15 @@ export default function DeliveryLogin() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+
+  useEffect(() => {
+    const redirectMsg = localStorage.getItem('authRedirectMessage');
+    if (redirectMsg) {
+      setShowSessionExpiredModal(true);
+      localStorage.removeItem('authRedirectMessage');
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -48,6 +57,27 @@ export default function DeliveryLogin() {
 
   return (
     <div className="delivery-auth-page-bg animate-fade-in">
+      {/* Session Expired Modal */}
+      {showSessionExpiredModal && (
+        <div className="session-expired-modal-overlay">
+          <div className="session-expired-modal-card animate-scale-in">
+            <div className="session-expired-icon-wrapper">
+              <Lock className="session-expired-icon animate-bounce" size={28} />
+            </div>
+            <h2 className="session-expired-title">Session Expired</h2>
+            <p className="session-expired-text">
+              For your security, your session has timed out. Please log in again to continue.
+            </p>
+            <button 
+              className="session-expired-btn"
+              onClick={() => setShowSessionExpiredModal(false)}
+            >
+              Okay, Log In
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="delivery-auth-card animate-scale-in">
         {/* Close Button */}
         <button 
@@ -398,6 +428,82 @@ export default function DeliveryLogin() {
             min-height: 100vh;
             padding: 32px 24px;
           }
+        }
+
+        /* Session Expired Modal Styles */
+        .session-expired-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(6, 193, 105, 0.03);
+          backdrop-filter: blur(12px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+        }
+
+        .session-expired-modal-card {
+          background: #ffffff;
+          border-radius: 20px;
+          padding: 32px 24px;
+          width: 90%;
+          max-width: 360px;
+          text-align: center;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+          border: 1px solid #f0f0f0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          font-family: inherit;
+        }
+
+        .session-expired-icon-wrapper {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #e6f9f0;
+          color: #06c169;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
+
+        .session-expired-title {
+          font-size: 1.3rem;
+          font-weight: 800;
+          color: #111827;
+          margin: 0 0 10px 0;
+        }
+
+        .session-expired-text {
+          font-size: 0.9rem;
+          color: #6b7280;
+          line-height: 1.5;
+          margin: 0 0 24px 0;
+        }
+
+        .session-expired-btn {
+          width: 100%;
+          background: #06c169;
+          color: #ffffff;
+          border: none;
+          padding: 14px;
+          font-size: 0.95rem;
+          font-weight: 750;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(6, 193, 105, 0.2);
+        }
+
+        .session-expired-btn:hover {
+          background: #05a85c;
+          box-shadow: 0 6px 16px rgba(6, 193, 105, 0.3);
+          transform: translateY(-1px);
         }
       `}</style>
     </div>

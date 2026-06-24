@@ -5,6 +5,7 @@ import {
   verifyEmailOtp,
   logoutUser,
   logoutAllDevices,
+  refreshToken,
 } from '../api/auth.api';
 
 const AuthContext = createContext(null);
@@ -28,6 +29,60 @@ export function AuthProvider({ children }) {
     } else {
       localStorage.removeItem('user');
     }
+  }, [user]);
+
+  useEffect(() => {
+    let timer;
+
+    const checkToken = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        if (user) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+        return;
+      }
+
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const expiry = payload.exp * 1000;
+        const remaining = expiry - Date.now();
+
+        if (remaining <= 0) {
+          // Token expired, attempt refresh
+          try {
+            const { data } = await refreshToken();
+            const newToken = data.data.accessToken;
+            localStorage.setItem('accessToken', newToken);
+            const decoded = JSON.parse(atob(newToken.split('.')[1]));
+            setUser({ id: decoded.id, role: decoded.role, email: user?.email });
+          } catch (refreshErr) {
+            // Refresh failed, clear session and redirect
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            setUser(null);
+            localStorage.setItem('authRedirectMessage', 'Your session has expired. Please log in again to continue.');
+            const redirectUrl = user?.role === 'delivery_partner' ? '/delivery/login' : '/login';
+            window.location.href = redirectUrl;
+          }
+        } else {
+          // Set timer to check again when it expires
+          timer = setTimeout(checkToken, remaining);
+        }
+      } catch (e) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+    };
+
+    checkToken();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [user]);
 
   const login = async (email, password) => {
