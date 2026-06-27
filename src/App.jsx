@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -24,10 +25,19 @@ import VendorMenuManagement from './pages/vendor/VendorMenuManagement';
 import VendorBulkUpload from './pages/vendor/VendorBulkUpload';
 import VendorAnalytics from './pages/vendor/VendorAnalytics';
 import VendorSettings from './pages/vendor/VendorSettings';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import DeliveryLogin from './pages/auth/DeliveryLogin';
 import DeliveryRegister from './pages/auth/DeliveryRegister';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
+
+// Admin Lazy Pages
+const AdminLayout = lazy(() => import('./components/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminAnnouncements = lazy(() => import('./pages/admin/AdminAnnouncements'));
+const AdminRestaurants = lazy(() => import('./pages/admin/AdminRestaurants'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
 
 export default function App() {
   return (
@@ -61,7 +71,30 @@ export default function App() {
                       <Route path="analytics" element={<VendorAnalytics />} />
                       <Route path="settings" element={<VendorSettings />} />
                     </Route>
-                    <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Admin Portal...</p>
+                            </div>
+                          }>
+                            <AdminLayout />
+                          </Suspense>
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<Navigate to="dashboard" replace />} />
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="settings" element={<AdminSettings />} />
+                      <Route path="coupons" element={<AdminCoupons />} />
+                      <Route path="announcements" element={<AdminAnnouncements />} />
+                      <Route path="banners" element={<AdminBanners />} />
+                      <Route path="restaurants" element={<AdminRestaurants />} />
+                      <Route path="users" element={<AdminUsers />} />
+                    </Route>
                     <Route path="/delivery/login" element={<DeliveryLogin />} />
                     <Route path="/delivery/register" element={<DeliveryRegister />} />
                     <Route path="/delivery/dashboard" element={<ProtectedRoute allowedRoles={['delivery_partner']}><DeliveryDashboard /></ProtectedRoute>} />

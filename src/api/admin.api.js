@@ -20,3 +20,27 @@ export const getAdminOrders = (params) => api.get('/admin/orders', { params });
 
 export const getAdminOrderById = (id) => api.get(`/admin/orders/${id}`);
 
+// Platform Settings
+export const getAdminSettings = () => api.get('/admin/settings');
+export const updateAdminSettings = (data) => api.patch('/admin/settings', data);
+
+// Coupons
+export const createCoupon = (data) => api.post('/admin/coupons', data);
+export const getCoupons = (params) => api.get('/admin/coupons', { params });
+export const getCouponById = (couponId) => api.get(`/admin/coupons/${couponId}`);
+export const updateCoupon = (couponId, data) => api.patch(`/admin/coupons/${couponId}`, data);
+export const updateCouponStatus = (couponId) => api.patch(`/admin/coupons/${couponId}/status`);
+
+// Announcements
+export const createAnnouncement = (data) => api.post('/admin/announcements', data);
+export const getAnnouncements = (params) => api.get('/admin/announcements', { params });
+export const getAnnouncementById = (announcementId) => api.get(`/admin/announcements/${announcementId}`);
+export const updateAnnouncement = (announcementId, data) => api.patch(`/admin/announcements/${announcementId}`, data);
+export const updateAnnouncementStatus = (announcementId) => api.patch(`/admin/announcements/${announcementId}/status`);
+
+// Banners
+export const createBanner = (data) => api.post('/admin/banners', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getBanners = (params) => api.get('/admin/banners', { params });
+export const getBannerById = (bannerId) => api.get(`/admin/banners/${bannerId}`);
+export const updateBanner = (bannerId, data) => api.patch(`/admin/banners/${bannerId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateBannerStatus = (bannerId) => api.patch(`/admin/banners/${bannerId}/status`);
