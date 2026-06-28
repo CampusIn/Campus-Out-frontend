@@ -2495,98 +2495,205 @@ input:checked + .switch-slider:before {
 }
 
 /* Toast Notification System (Zomato/Swiggy Premium Style) */
-.toast-portal-container {
+/* ═══════════════════════════════════════════════════════════
+   CAMPUSIN Premium Toast / Notification System
+   ═══════════════════════════════════════════════════════════ */
+
+/* Portal container — bottom-center, above bottom nav */
+.campusin-toast-portal {
   position: fixed;
-  bottom: 84px; /* Float nicely above the bottom navigation bar */
+  bottom: 90px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10000;
+  z-index: 99999;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 90%;
-  max-width: 400px;
+  flex-direction: column-reverse;
+  gap: 12px;
+  width: 92%;
+  max-width: 420px;
   pointer-events: none;
 }
 
-.toast-item {
+/* Individual toast card — liquid glass with tint */
+.campusin-toast-card {
   pointer-events: auto;
-  background: rgba(255, 255, 255, 0.95); /* Light glassmorphism */
-  backdrop-filter: blur(10px);
-  color: #1a1a1a;
-  padding: 14px 18px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--toast-border, rgba(37, 99, 235, 0.15));
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: default;
+  will-change: transform, opacity;
+  touch-action: pan-x;
   position: relative;
-  cursor: pointer;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-left: 4px solid #3b82f6; /* Left accent line */
-  transition: opacity 0.2s, transform 0.2s;
 }
 
-.toast-item.toast-success {
-  border-left-color: #10b981; /* Swiggy/Zomato green */
+/* — Soft tinted glow along the top edge — */
+.campusin-toast-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--toast-color, #2563eb) 50%,
+    transparent 100%
+  );
+  opacity: 0.35;
 }
 
-.toast-item.toast-error {
-  border-left-color: #e11d48; /* Premium Zomato red */
+/* ─── Entrance animation ─── */
+.campusin-toast-enter {
+  animation: campusin-toast-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.toast-item.toast-warning {
-  border-left-color: #f59e0b; /* Swiggy orange/amber */
+@keyframes campusin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.toast-item.toast-info {
-  border-left-color: #3b82f6; /* Royal Blue */
+/* ─── Exit animation ─── */
+.campusin-toast-exit {
+  animation: campusin-toast-out 180ms ease-in both;
+  pointer-events: none;
 }
 
-.toast-icon {
-  font-size: 1.1rem;
+@keyframes campusin-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+/* ─── Icon container ─── */
+.campusin-toast-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--toast-icon-bg, rgba(37, 99, 235, 0.10));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.toast-message {
-  flex-grow: 1;
-  line-height: 1.4;
+/* ─── Text body ─── */
+.campusin-toast-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.toast-close-btn {
-  background: none;
+.campusin-toast-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.campusin-toast-desc {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(26, 26, 46, 0.55);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Close button ─── */
+.campusin-toast-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   border: none;
-  color: rgba(0, 0, 0, 0.3);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  margin-left: 4px;
+  cursor: pointer;
+  color: rgba(26, 26, 46, 0.3);
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  margin-top: -2px;
+  margin-right: -4px;
 }
 
-.toast-close-btn:hover {
-  color: #1a1a1a;
+.campusin-toast-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(26, 26, 46, 0.6);
 }
 
-@keyframes toastSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
+.campusin-toast-close:active {
+  transform: scale(0.9);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Mobile adjustments ─── */
+@media (max-width: 480px) {
+  .campusin-toast-portal {
+    bottom: 82px;
+    width: 96%;
+    gap: 8px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+
+  .campusin-toast-card {
+    padding: 14px;
+    border-radius: 16px;
   }
+
+  .campusin-toast-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .campusin-toast-title {
+    font-size: 0.88rem;
+  }
+
+  .campusin-toast-desc {
+    font-size: 0.76rem;
+  }
+
+  .campusin-toast-close {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Legacy toast classes — kept for backwards compat but hidden */
+.toast-portal-container {
+  display: none;
 }
 
 /* === Modern Web Animations & Transitions === */

@@ -378,6 +378,7 @@ export default function Cart() {
                   className="subcategory-scroll" 
                   style={{ 
                     display: 'flex', 
+                    flexWrap: 'wrap',
                     gap: '8px', 
                     overflowX: 'auto', 
                     paddingBottom: '8px',
@@ -1049,6 +1050,32 @@ export default function Cart() {
 
       {/* Responsive layout overrides via media queries */}
       <style>{`
+        /* Desktop: side-by-side 2-column layout */
+        @media (min-width: 769px) {
+          .split-layout-container {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 32px !important;
+            align-items: flex-start !important;
+          }
+          .split-left-main {
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+          }
+          .split-right-aside {
+            flex: 0 0 340px !important;
+            width: 340px !important;
+            position: sticky !important;
+            top: 24px !important;
+          }
+        }
+        @media (min-width: 1024px) {
+          .split-right-aside {
+            flex: 0 0 380px !important;
+            width: 380px !important;
+          }
+        }
+        /* Mobile: single stacked column */
         @media (max-width: 768px) {
           .split-layout-container {
             display: flex !important;
@@ -1058,6 +1085,7 @@ export default function Cart() {
           .split-right-aside {
             position: relative !important;
             top: auto !important;
+            width: 100% !important;
           }
         }
       `}</style>
