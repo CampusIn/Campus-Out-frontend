@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCart, updateCartItemQty, deleteCartItem, clearCart } from '../../api/cart.api';
-import { createOrder } from '../../api/order.api';
+import { createOrder, getCoupons, applyCoupon } from '../../api/order.api';
 import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
-import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent } from 'lucide-react';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -14,6 +14,77 @@ export default function Cart() {
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
   const [deliveryAddress, setDeliveryAddress] = useState('Hostel Block 3, Room 204');
   const [paymentMethod, setPaymentMethod] = useState('COD');
+
+  // Coupon integration states
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [pricingSummary, setPricingSummary] = useState(null);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [couponsList, setCouponsList] = useState([]);
+  const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Resize listener for responsive modal/bottom-sheet toggle
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Re-apply active coupon when cart contents or amounts change
+  useEffect(() => {
+    const reapplyActiveCoupon = async () => {
+      if (!cart || cart.items?.length === 0) {
+        setSelectedCoupon(null);
+        setPricingSummary(null);
+        return;
+      }
+
+      if (selectedCoupon?.couponId) {
+        try {
+          const { data } = await applyCoupon(selectedCoupon.couponId);
+          if (data.success && data.data) {
+            setSelectedCoupon(data.data.coupon);
+            setPricingSummary(data.data.pricing);
+          } else {
+            setSelectedCoupon(null);
+            setPricingSummary(null);
+          }
+        } catch (err) {
+          setSelectedCoupon(null);
+          setPricingSummary(null);
+          toast.error(err.response?.data?.message || 'Selected coupon is no longer applicable.');
+        }
+      }
+    };
+
+    reapplyActiveCoupon();
+  }, [cart?.totalAmount, cart?.items?.length]);
+
+  const DEFAULT_SETTINGS = {
+    deliveryCharge: 20,
+    freeDeliveryAbove: 80,
+    gstPercentage: 0,
+    packagingCharge: 0
+  };
+
+  const getDefaultPricing = () => {
+    if (!cart) return null;
+    const subTotal = cart.totalAmount;
+    const gstAmount = Math.round((subTotal * DEFAULT_SETTINGS.gstPercentage) / 100);
+    const packagingCharge = DEFAULT_SETTINGS.packagingCharge;
+    const deliveryCharge = subTotal >= DEFAULT_SETTINGS.freeDeliveryAbove ? 0 : DEFAULT_SETTINGS.deliveryCharge;
+    const finalAmount = subTotal + gstAmount + deliveryCharge + packagingCharge;
+
+    return {
+      subTotal,
+      couponDiscount: 0,
+      gstAmount,
+      packagingCharge,
+      deliveryCharge,
+      finalAmount
+    };
+  };
 
   const campusAddresses = [
     { label: 'Hostel Block 3, Room 204', Icon: Building },
@@ -50,9 +121,11 @@ export default function Cart() {
 
   const handleOrder = async (paymentMethod) => {
     try {
-      const { data } = await createOrder(paymentMethod);
+      const { data } = await createOrder(paymentMethod, selectedCoupon?.couponId);
       toast.success(`Order placed successfully! #${data.data.orderNumber}`);
       setCart(null);
+      setSelectedCoupon(null);
+      setPricingSummary(null);
       // Automatically redirect to orders page after 2.5 seconds
       setTimeout(() => {
         navigate('/orders');
@@ -60,6 +133,172 @@ export default function Cart() {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Order placement failed');
     }
+  };
+
+  const fetchAndOpenCouponsModal = async () => {
+    setIsCouponModalOpen(true);
+    setIsFetchingCoupons(true);
+    try {
+      const { data } = await getCoupons();
+      if (data.success) {
+        setCouponsList(data.data || []);
+      } else {
+        setCouponsList([]);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to fetch coupons');
+      setCouponsList([]);
+    } finally {
+      setIsFetchingCoupons(false);
+    }
+  };
+
+  const handleApply = async (couponId) => {
+    setIsApplyingCoupon(true);
+    try {
+      const { data } = await applyCoupon(couponId);
+      if (data.success && data.data) {
+        setSelectedCoupon(data.data.coupon);
+        setPricingSummary(data.data.pricing);
+        toast.success('Coupon applied successfully.');
+        setIsCouponModalOpen(false);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to apply coupon');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setSelectedCoupon(null);
+    setPricingSummary(null);
+    toast.success('Coupon removed successfully.');
+  };
+
+  const CouponSkeleton = () => (
+    <div style={{
+      background: '#ffffff',
+      borderRadius: '16px',
+      border: '1px solid #edf2f7',
+      padding: '16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      animation: 'pulseSoft 1.5s ease-in-out infinite'
+    }}>
+      <div style={{ height: '24px', background: '#e2e8f0', borderRadius: '6px', width: '40%' }}></div>
+      <div style={{ height: '18px', background: '#edf2f7', borderRadius: '4px', width: '70%' }}></div>
+      <div style={{ height: '14px', background: '#edf2f7', borderRadius: '4px', width: '50%' }}></div>
+      <div style={{ height: '36px', background: '#edf2f7', borderRadius: '8px', width: '100%', marginTop: '4px' }}></div>
+    </div>
+  );
+
+  const CouponCard = ({ coupon }) => {
+    const isApplied = selectedCoupon?.couponId === coupon._id;
+    const expiryStr = coupon.expiryDate 
+      ? new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '';
+
+    return (
+      <div className="card" style={{
+        background: '#ffffff',
+        borderRadius: '16px',
+        border: isApplied ? '1.5px solid #06c169' : '1px solid #edf2f7',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        boxShadow: isApplied ? '0 4px 12px rgba(6, 193, 105, 0.05)' : '0 2px 8px rgba(0,0,0,0.01)',
+        position: 'relative',
+        transition: 'all 0.2s ease',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{
+              display: 'inline-block',
+              background: '#fff5f5',
+              color: '#b31522',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              border: '1px dashed #b31522',
+              letterSpacing: '0.5px',
+              marginBottom: '6px'
+            }}>
+              {coupon.code}
+            </div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111111' }}>
+              {coupon.discountType === 'PERCENTAGE' 
+                ? `${coupon.discountValue}% OFF` 
+                : `₹${coupon.discountValue} OFF`}
+            </div>
+          </div>
+          {isApplied && (
+            <div style={{
+              background: '#e6f9f0',
+              color: '#06c169',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              padding: '4px 8px',
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <Check size={12} />
+              <span>Applied</span>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.8rem', color: '#718096' }}>
+          <div>Min. Order Value: <strong>₹{coupon.minimumOrderValue}</strong></div>
+          {coupon.discountType === 'PERCENTAGE' && coupon.maximumDiscount && (
+            <div>Max Discount: <strong>₹{coupon.maximumDiscount}</strong></div>
+          )}
+          {expiryStr && <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '2px' }}>Valid till {expiryStr}</div>}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleApply(coupon._id)}
+          disabled={isApplyingCoupon || isApplied}
+          style={{
+            marginTop: '6px',
+            width: '100%',
+            padding: '10px',
+            borderRadius: '10px',
+            background: isApplied ? '#06c169' : '#b31522',
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            border: 'none',
+            cursor: (isApplyingCoupon || isApplied) ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+            opacity: (isApplyingCoupon && !isApplied) ? 0.7 : 1
+          }}
+          className="hover-lift"
+        >
+          {isApplyingCoupon && !isApplied ? (
+            <>
+              <Loader size={14} className="animate-spin" />
+              <span>Applying...</span>
+            </>
+          ) : isApplied ? (
+            <span>Applied Successfully</span>
+          ) : (
+            <span>Apply Coupon</span>
+          )}
+        </button>
+      </div>
+    );
   };
 
   if (loading && !cart) {
@@ -312,20 +551,40 @@ export default function Cart() {
 
                 {/* Bill summary breakdown */}
                 <div style={{ background: '#f7fafc', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid #edf2f7' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                    <span style={{ color: '#718096' }}>Subtotal</span>
-                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{cart.totalAmount}</span>
-                  </div>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                    <span style={{ color: '#718096' }}>Service & Delivery Fee</span>
-                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;15.00</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, borderTop: '1px solid #edf2f7', paddingTop: '10px', marginTop: '4px', color: '#111111' }}>
-                    <span>Total Amount</span>
-                    <span>&#8377;{(cart.totalAmount + 15.00).toFixed(2)}</span>
-                  </div>
+                  {(() => {
+                    const currentPricing = pricingSummary || getDefaultPricing();
+                    if (!currentPricing) return null;
+                    return (
+                      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Subtotal</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.subTotal}</span>
+                        </div>
+                        {currentPricing.couponDiscount > 0 && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                            <span style={{ color: '#718096' }}>Coupon Discount</span>
+                            <span style={{ color: '#06c169', fontWeight: 700 }}>-&#8377;{currentPricing.couponDiscount}</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>GST</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.gstAmount}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Packaging Charge</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.packagingCharge}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Delivery Charge</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.deliveryCharge}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, borderTop: '1px solid #edf2f7', paddingTop: '10px', marginTop: '4px', color: '#111111' }}>
+                          <span>Final Amount</span>
+                          <span>&#8377;{currentPricing.finalAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Confirm & Place Order trigger */}
@@ -346,7 +605,7 @@ export default function Cart() {
                     opacity: !deliveryAddress.trim() ? 0.6 : 1
                   }}
                 >
-                  Confirm & Place Order (&#8377;{(cart.totalAmount + 15.00).toFixed(2)})
+                  Confirm & Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
                 </button>
               </div>
             </div>
@@ -465,18 +724,145 @@ export default function Cart() {
                 <button type="button" style={{ background: 'none', border: 'none', color: '#b31522', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}>Add</button>
               </div>
 
-              {/* Add promo code card */}
-              <div className="card gift-promo-card hover-lift" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: '#fff5f5', color: '#b31522', padding: '8px', borderRadius: '8px', display: 'flex' }}>
-                    <Tag size={20} />
+              {/* Premium Coupons & Offers Section */}
+              <div className="card hover-lift" style={{
+                padding: '16px',
+                background: '#ffffff',
+                border: '1px solid #edf2f7',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.01)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: '#fff5f5', color: '#b31522', padding: '8px', borderRadius: '8px', display: 'flex' }}>
+                      <Tag size={18} />
+                    </div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#111111' }}>Coupons & Offers</span>
                   </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: '#111111' }}>Add promo code</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#718096' }}>Use a coupon for discount</p>
-                  </div>
+                  <button 
+                    type="button" 
+                    onClick={fetchAndOpenCouponsModal}
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      color: '#b31522', 
+                      fontWeight: 800, 
+                      fontSize: '0.85rem', 
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    View Available Coupons
+                  </button>
                 </div>
-                <button type="button" style={{ background: 'none', border: 'none', color: '#b31522', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}>Add</button>
+
+                {!selectedCoupon ? (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    background: '#f8fafc', 
+                    padding: '12px 16px', 
+                    borderRadius: '12px',
+                    border: '1px dashed #e2e8f0'
+                  }}>
+                    <span style={{ fontSize: '0.85rem', color: '#718096', fontWeight: 600 }}>
+                      No coupon applied
+                    </span>
+                    <button 
+                      type="button" 
+                      onClick={fetchAndOpenCouponsModal}
+                      style={{ 
+                        background: '#b31522', 
+                        color: '#ffffff', 
+                        border: 'none', 
+                        padding: '6px 14px', 
+                        borderRadius: '8px', 
+                        fontWeight: 700, 
+                        fontSize: '0.8rem', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      Apply Coupon
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    background: '#e6f9f0', 
+                    padding: '12px 16px', 
+                    borderRadius: '12px',
+                    border: '1px solid #06c169'
+                  }} className="animate-scale-in">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <div style={{ color: '#06c169', display: 'flex', flexShrink: 0 }} className="animate-pulse-soft">
+                        <Check size={18} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ 
+                            background: '#06c169', 
+                            color: '#ffffff', 
+                            fontSize: '0.75rem', 
+                            fontWeight: 800, 
+                            padding: '2px 8px', 
+                            borderRadius: '6px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>
+                            {selectedCoupon.code}
+                          </span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#111111' }}>
+                            Applied
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#06c169', fontWeight: 700, marginTop: '2px' }}>
+                          Saved ₹{selectedCoupon.couponDiscount} on this order!
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button 
+                        type="button" 
+                        onClick={fetchAndOpenCouponsModal}
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          color: '#06c169', 
+                          fontWeight: 800, 
+                          fontSize: '0.8rem', 
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          padding: 0
+                        }}
+                      >
+                        Change
+                      </button>
+                      <span style={{ color: '#cbd5e0', fontSize: '0.8rem' }}>|</span>
+                      <button 
+                        type="button" 
+                        onClick={handleRemoveCoupon}
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          color: '#718096', 
+                          fontWeight: 700, 
+                          fontSize: '0.8rem', 
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          padding: 0
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Main Bill receipt card */}
@@ -487,30 +873,40 @@ export default function Cart() {
 
                 {/* Grey receipt box */}
                 <div style={{ background: '#f7fafc', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid #edf2f7' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                    <span style={{ color: '#718096' }}>Subtotal</span>
-                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{cart.totalAmount}</span>
-                  </div>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                    <span style={{ color: '#718096' }}>Service Fee</span>
-                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;15.00</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                    <span style={{ color: '#718096' }}>Delivery Fee</span>
-                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;35.00</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                    <span style={{ color: '#718096' }}>Delivery Discount</span>
-                    <span style={{ color: '#06c169', fontWeight: 700 }}>-&#8377;35.00</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, borderTop: '1px solid #edf2f7', paddingTop: '10px', marginTop: '4px', color: '#111111' }}>
-                    <span>Total Amount</span>
-                    <span>&#8377;{(cart.totalAmount + 15.00).toFixed(2)}</span>
-                  </div>
+                  {(() => {
+                    const currentPricing = pricingSummary || getDefaultPricing();
+                    if (!currentPricing) return null;
+                    return (
+                      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Subtotal</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.subTotal}</span>
+                        </div>
+                        {currentPricing.couponDiscount > 0 && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                            <span style={{ color: '#718096' }}>Coupon Discount</span>
+                            <span style={{ color: '#06c169', fontWeight: 700 }}>-&#8377;{currentPricing.couponDiscount}</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>GST</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.gstAmount}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Packaging Charge</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.packagingCharge}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Delivery Charge</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.deliveryCharge}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, borderTop: '1px solid #edf2f7', paddingTop: '10px', marginTop: '4px', color: '#111111' }}>
+                          <span>Final Amount</span>
+                          <span>&#8377;{currentPricing.finalAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Proceed to Select Address */}
@@ -541,6 +937,115 @@ export default function Cart() {
       )}
 
       <BottomNav activeTab="cart" />
+
+      {/* Coupon Bottom Sheet / Modal Overlay */}
+      {isCouponModalOpen && (
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCouponModalOpen(false);
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: isMobile ? 'flex-end' : 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: isMobile ? '0' : '20px',
+            animation: 'fadeIn 0.25s ease-in-out forwards'
+          }}
+        >
+          <div 
+            style={{
+              background: '#ffffff',
+              borderTopLeftRadius: '24px',
+              borderTopRightRadius: '24px',
+              borderBottomLeftRadius: isMobile ? '0px' : '24px',
+              borderBottomRightRadius: isMobile ? '0px' : '24px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '480px',
+              maxHeight: isMobile ? '80vh' : '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.12)',
+              border: '1px solid #edf2f7',
+              animation: isMobile ? 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' : 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+              boxSizing: 'border-box'
+            }}
+          >
+            {isMobile && (
+              <div style={{
+                width: '40px',
+                height: '4px',
+                background: '#cbd5e0',
+                borderRadius: '2px',
+                margin: '-8px auto 8px auto',
+                flexShrink: 0
+              }} />
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 850, color: '#111111', margin: 0 }}>
+                Available Coupons
+              </h3>
+              <button 
+                type="button"
+                onClick={() => setIsCouponModalOpen(false)} 
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #edf2f7',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#718096',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '16px', 
+              overflowY: 'auto', 
+              paddingRight: '4px', 
+              flex: 1 
+            }}>
+              {isFetchingCoupons ? (
+                <>
+                  <CouponSkeleton />
+                  <CouponSkeleton />
+                  <CouponSkeleton />
+                </>
+              ) : couponsList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 16px', color: '#718096', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ background: '#f7fafc', color: '#a0aec0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Percent size={24} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#111111', fontWeight: 700 }}>No coupons available</h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem' }}>Check back later for exclusive discount codes.</p>
+                  </div>
+                </div>
+              ) : (
+                couponsList.map(coupon => (
+                  <CouponCard key={coupon._id} coupon={coupon} />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Responsive layout overrides via media queries */}
       <style>{`

@@ -169,7 +169,7 @@ export default function VendorOrders() {
                     <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
                       Items to prepare:
                     </span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderBottom: '1px dashed #e2e8f0', paddingBottom: '8px', marginBottom: '8px' }}>
                       {o.items?.map((item, index) => (
                         <div key={index} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#1e293b' }}>
                           <span>{item.itemName} <strong style={{ color: 'var(--vendor-primary)' }}>x{item.quantity}</strong></span>
@@ -177,7 +177,56 @@ export default function VendorOrders() {
                         </div>
                       ))}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, borderTop: '1px dashed #cbd5e1', paddingTop: '8px', marginTop: '8px' }}>
+
+                    {/* Invoice Breakdown */}
+                    {(() => {
+                      const subTotal = o.items ? o.items.reduce((total, item) => total + (item.priceAtPurchase * item.quantity), 0) : o.totalAmount;
+                      const hasBreakdown = o.deliveryCharge !== undefined || o.discountAmount !== undefined || o.gstAmount !== undefined || o.packagingCharge !== undefined;
+                      
+                      if (!hasBreakdown && subTotal === o.totalAmount) {
+                        return null; // No extra breakdown needed
+                      }
+
+                      const discount = o.discountAmount || 0;
+                      const gst = o.gstAmount || 0;
+                      const packaging = o.packagingCharge || 0;
+                      const delivery = o.deliveryCharge || 0;
+
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: '#64748b', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Subtotal</span>
+                            <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{subTotal}</span>
+                          </div>
+                          {discount > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Coupon Discount {o.couponCode ? `(${o.couponCode})` : ''}</span>
+                              <span style={{ color: '#06c169', fontWeight: 700 }}>-₹{discount}</span>
+                            </div>
+                          )}
+                          {gst > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>GST</span>
+                              <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{gst}</span>
+                            </div>
+                          )}
+                          {packaging > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Packaging Charge</span>
+                              <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{packaging}</span>
+                            </div>
+                          )}
+                          {delivery > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Delivery Charge</span>
+                              <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{delivery}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800 }}>
                       <span>Total Invoice</span>
                       <span style={{ color: 'var(--vendor-primary)' }}>₹{o.totalAmount}</span>
                     </div>

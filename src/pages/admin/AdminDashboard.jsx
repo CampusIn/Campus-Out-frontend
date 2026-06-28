@@ -4,6 +4,7 @@ import { useToast } from '../../context/ToastContext';
 import {
   getAdminOrders,
   getAdminOrderById,
+  getTopRestaurants,
 } from '../../api/admin.api';
 import {
   DollarSign,
@@ -35,6 +36,28 @@ export default function AdminDashboard() {
   const [orderDetailLoading, setOrderDetailLoading] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Top restaurants states
+  const [topRestaurantsList, setTopRestaurantsList] = useState([]);
+  const [topRestaurantsLoading, setTopRestaurantsLoading] = useState(true);
+
+  const fetchTopRestaurants = useCallback(async () => {
+    setTopRestaurantsLoading(true);
+    try {
+      const { data } = await getTopRestaurants();
+      if (data.success) {
+        setTopRestaurantsList(data.data || []);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error fetching top eateries');
+    } finally {
+      setTopRestaurantsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchTopRestaurants();
+  }, [fetchTopRestaurants]);
 
   // Fetch orders
   const fetchOrders = useCallback(async () => {
@@ -95,9 +118,10 @@ export default function AdminDashboard() {
           onClick={() => {
             fetchStats();
             fetchOrders();
+            fetchTopRestaurants();
             toast.success('Data refreshed successfully');
           }}
-          disabled={statsLoading || tabLoading}
+          disabled={statsLoading || tabLoading || topRestaurantsLoading}
           style={{ width: 'auto', gap: '6px' }}
         >
           <RefreshCw size={14} className={statsLoading || tabLoading ? 'spin-anim' : ''} />
@@ -172,56 +196,127 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Key Efficiency Ratios */}
-            <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <h3 className="chart-title">Key Efficiency Ratios</h3>
-              <p className="chart-subtitle">Calculated operational metric indicators</p>
+            {/* Right side metrics and widgets layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', width: '100%' }}>
+              {/* Key Efficiency Ratios */}
+              <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <h3 className="chart-title">Key Efficiency Ratios</h3>
+                <p className="chart-subtitle">Calculated operational metric indicators</p>
 
-              <div className="metric-bars-container">
-                {/* Metric 1 */}
-                <div className="metric-bar-group">
-                  <div className="metric-bar-label-row">
-                    <span className="metric-bar-name">Average Order Value (AOV)</span>
-                    <span className="metric-bar-val">₹{avgOrderValue}</span>
+                <div className="metric-bars-container">
+                  {/* Metric 1 */}
+                  <div className="metric-bar-group">
+                    <div className="metric-bar-label-row">
+                      <span className="metric-bar-name">Average Order Value (AOV)</span>
+                      <span className="metric-bar-val">₹{avgOrderValue}</span>
+                    </div>
+                    <div className="metric-progress-bg">
+                      <div 
+                        className="metric-progress-fill color-rev" 
+                        style={{ width: `${Math.min((stats.revenue / (stats.orderCount || 1)) / 500 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="metric-description">Target Benchmark: ₹250.00 / order</span>
                   </div>
-                  <div className="metric-progress-bg">
-                    <div 
-                      className="metric-progress-fill color-rev" 
-                      style={{ width: `${Math.min((stats.revenue / (stats.orderCount || 1)) / 500 * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                  <span className="metric-description">Target Benchmark: ₹250.00 / order</span>
-                </div>
 
-                {/* Metric 2 */}
-                <div className="metric-bar-group">
-                  <div className="metric-bar-label-row">
-                    <span className="metric-bar-name">Orders Per Customer Ratio</span>
-                    <span className="metric-bar-val">{userEngagementRatio}x</span>
+                  {/* Metric 2 */}
+                  <div className="metric-bar-group">
+                    <div className="metric-bar-label-row">
+                      <span className="metric-bar-name">Orders Per Customer Ratio</span>
+                      <span className="metric-bar-val">{userEngagementRatio}x</span>
+                    </div>
+                    <div className="metric-progress-bg">
+                      <div 
+                        className="metric-progress-fill color-orders" 
+                        style={{ width: `${Math.min((userEngagementRatio / 10) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="metric-description">Customer usage frequency scale</span>
                   </div>
-                  <div className="metric-progress-bg">
-                    <div 
-                      className="metric-progress-fill color-orders" 
-                      style={{ width: `${Math.min((userEngagementRatio / 10) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                  <span className="metric-description">Customer usage frequency scale</span>
-                </div>
 
-                {/* Metric 3 */}
-                <div className="metric-bar-group">
-                  <div className="metric-bar-label-row">
-                    <span className="metric-bar-name">Cafeterias per Vendor Ratio</span>
-                    <span className="metric-bar-val">{restVendorRatio}</span>
+                  {/* Metric 3 */}
+                  <div className="metric-bar-group">
+                    <div className="metric-bar-label-row">
+                      <span className="metric-bar-name">Cafeterias per Vendor Ratio</span>
+                      <span className="metric-bar-val">{restVendorRatio}</span>
+                    </div>
+                    <div className="metric-progress-bg">
+                      <div 
+                        className="metric-progress-fill color-vendors" 
+                        style={{ width: `${Math.min((restVendorRatio / 2) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="metric-description">Average outlets run per manager</span>
                   </div>
-                  <div className="metric-progress-bg">
-                    <div 
-                      className="metric-progress-fill color-vendors" 
-                      style={{ width: `${Math.min((restVendorRatio / 2) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                  <span className="metric-description">Average outlets run per manager</span>
                 </div>
+              </div>
+
+              {/* Top Restaurants widget */}
+              <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.5s', padding: '24px' }}>
+                <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Store size={18} style={{ color: '#b31522' }} />
+                  <span>Top Eateries</span>
+                </h3>
+                <p className="chart-subtitle" style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 16px 0' }}>
+                  Top 5 cafeterias by completed order revenue
+                </p>
+
+                {topRestaurantsLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 0' }}>
+                    <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
+                    <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
+                    <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
+                  </div>
+                ) : topRestaurantsList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: '0.85rem' }}>
+                    No sales data available.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {topRestaurantsList.map((rest, index) => {
+                      const name = Array.isArray(rest.restaurantName) ? rest.restaurantName[0] : (rest.restaurantName || 'Unknown eatery');
+                      return (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                            <span style={{ 
+                              background: index === 0 ? '#fff5f5' : '#f8fafc',
+                              color: index === 0 ? '#b31522' : '#64748b',
+                              fontWeight: 800,
+                              fontSize: '0.8rem',
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              #{index + 1}
+                            </span>
+                            <span style={{ 
+                              fontWeight: 700, 
+                              color: '#0f172a', 
+                              fontSize: '0.85rem',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>
+                              {name}
+                            </span>
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
+                              ₹{rest.totalRevenue.toLocaleString()}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                              {rest.totalOrders} {rest.totalOrders === 1 ? 'order' : 'orders'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

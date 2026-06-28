@@ -44,3 +44,5 @@ export const getBanners = (params) => api.get('/admin/banners', { params });
 export const getBannerById = (bannerId) => api.get(`/admin/banners/${bannerId}`);
 export const updateBanner = (bannerId, data) => api.patch(`/admin/banners/${bannerId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updateBannerStatus = (bannerId) => api.patch(`/admin/banners/${bannerId}/status`);
+
+export const getTopRestaurants = () => api.get('/admin/dashboard/top-restaurant');

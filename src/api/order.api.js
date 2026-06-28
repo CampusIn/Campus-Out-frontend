@@ -1,7 +1,7 @@
 import api from './axios';
 
-export const createOrder = (paymentMethod) =>
-  api.post('/user/order', { paymentMethod });
+export const createOrder = (paymentMethod, couponId) =>
+  api.post('/user/order', { paymentMethod, couponId });
 
 export const getMyOrders = (params) =>
   api.get('/user/orders/my', { params });
@@ -17,3 +17,9 @@ export const getVendorOrders = (params) =>
 
 export const changeOrderStatus = (orderId, orderStatus) =>
   api.patch(`/user/order/${orderId}/status`, { orderStatus });
+
+export const getCoupons = () =>
+  api.get('/user/coupons/view');
+
+export const applyCoupon = (couponId) =>
+  api.post('/user/coupons/apply', { couponId });

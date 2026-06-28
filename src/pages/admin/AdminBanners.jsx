@@ -260,7 +260,9 @@ export default function AdminBanners() {
       fd.append('title', form.title.trim());
       fd.append('priority', Number(form.priority));
       fd.append('redirectType', form.redirectType);
-      fd.append('redirectedId', form.redirectType !== 'NONE' ? form.redirectedId.trim() : '');
+      if (form.redirectType !== 'NONE') {
+        fd.append('redirectedId', form.redirectedId.trim());
+      }
       if (image) {
         fd.append('image', image);
       }
@@ -933,14 +935,16 @@ export default function AdminBanners() {
                   <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>
                     Display Priority Level *
                   </label>
-                  <input
-                    type="number"
-                    min="1"
+                  <select
                     className={`input-pill ${errors.priority ? 'error-border' : ''}`}
+                    style={{ paddingLeft: '16px', cursor: 'pointer' }}
                     value={form.priority}
                     onChange={(e) => setForm({ ...form, priority: e.target.value })}
-                    required
-                  />
+                  >
+                    <option value="1">Priority 1 (Low)</option>
+                    <option value="2">Priority 2 (Medium)</option>
+                    <option value="3">Priority 3 (High)</option>
+                  </select>
                   {errors.priority && <span className="input-error-msg">{errors.priority}</span>}
                 </div>
 
