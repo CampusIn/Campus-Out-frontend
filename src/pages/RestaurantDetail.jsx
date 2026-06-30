@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getRestaurantById } from '../api/restaurant.api';
 import { getRestaurantMenu } from '../api/menu.api';
 import { addToCart, updateCartItemQty, deleteCartItem } from '../api/cart.api';
 import { getRestaurantReviews } from '../api/review.api';
+import { getCoupons } from '../api/order.api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import BottomNav from '../components/BottomNav';
-import { ArrowLeft, Heart, Share2, Star, Clock, Plus, Minus, MapPin, Info as InfoIcon } from 'lucide-react';
+import { ArrowLeft, Heart, Share2, Star, Clock, Plus, Minus, MapPin, Info as InfoIcon, ShoppingBag, Search, Users, ChevronDown, ChevronUp, Flame } from 'lucide-react';
 
 export default function RestaurantDetail() {
   const { id } = useParams();
@@ -24,7 +25,62 @@ export default function RestaurantDetail() {
   
   const [activeTab, setActiveTab] = useState('Menu'); // 'Menu', 'Reviews', 'Info'
   const [activeSubcategory, setActiveSubcategory] = useState('All');
+  const [dishSearch, setDishSearch] = useState('');
+  const [vegOnly, setVegOnly] = useState(false);
+  const [nonVegOnly, setNonVegOnly] = useState(false);
+  const [ratingsOnly, setRatingsOnly] = useState(false);
+  const [bestsellerOnly, setBestsellerOnly] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState({});
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [cartExpanded, setCartExpanded] = useState(false);
+  const [bubblePos, setBubblePos] = useState({ x: null, y: null });
+  const dragRef = useRef(null);
+  const isDragging = useRef(false);
+  const dragStart = useRef({ mx: 0, my: 0, bx: 0, by: 0 });
+
+  const onPointerDown = useCallback((e) => {
+    isDragging.current = false;
+    const rect = dragRef.current.getBoundingClientRect();
+    const startX = e.clientX ?? e.touches?.[0]?.clientX;
+    const startY = e.clientY ?? e.touches?.[0]?.clientY;
+    dragStart.current = { mx: startX, my: startY, bx: rect.left, by: rect.top };
+    const onMove = (me) => {
+      const cx = me.clientX ?? me.touches?.[0]?.clientX;
+      const cy = me.clientY ?? me.touches?.[0]?.clientY;
+      const dx = Math.abs(cx - dragStart.current.mx);
+      const dy = Math.abs(cy - dragStart.current.my);
+      if (dx > 4 || dy > 4) isDragging.current = true;
+      const newX = dragStart.current.bx + (cx - dragStart.current.mx);
+      const newY = dragStart.current.by + (cy - dragStart.current.my);
+      const bw = dragRef.current?.offsetWidth || 64;
+      const bh = dragRef.current?.offsetHeight || 64;
+      setBubblePos({
+        x: Math.max(8, Math.min(window.innerWidth - bw - 8, newX)),
+        y: Math.max(8, Math.min(window.innerHeight - bh - 8, newY))
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchend', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+  }, []);
+
+  const handleBubbleClick = useCallback(() => {
+    if (!isDragging.current) setCartExpanded(prev => !prev);
+  }, []);
   const [showCoupon, setShowCoupon] = useState(true);
+  const [bestCoupon, setBestCoupon] = useState({
+    code: 'CAMPUS40',
+    discountType: 'PERCENTAGE',
+    discountValue: 40,
+    maximumDiscount: 100
+  });
 
   useEffect(() => {
     const fetch = async () => {
@@ -38,6 +94,20 @@ export default function RestaurantDetail() {
         setMenu(menuRes.data.data || []);
         setReviews(revRes.data.data.reviews || []);
         await fetchCart();
+
+        if (user) {
+          try {
+            const couponRes = await getCoupons();
+            const couponsList = couponRes.data?.data || [];
+            if (couponsList.length > 0) {
+              setBestCoupon(couponsList[0]);
+            } else {
+              setBestCoupon(null);
+            }
+          } catch (e) {
+            console.error('Error fetching coupons:', e);
+          }
+        }
       } catch {
         navigate('/restaurants');
       } finally {
@@ -47,11 +117,20 @@ export default function RestaurantDetail() {
     fetch();
   }, [id, user]);
 
+  useEffect(() => {
+    if (menu.length > 0) {
+      const initial = {};
+      menu.forEach(item => {
+        initial[item.category || 'General'] = true;
+      });
+      setExpandedCategories(initial);
+    }
+  }, [menu]);
+
   const handleAdd = async (menuItemId) => {
     if (!user) return navigate('/login');
     try {
       await addToCart({ menuItemId, quantity: 1 });
-      toast.success('Added to cart!');
       await fetchCart();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add to cart');
@@ -80,6 +159,16 @@ export default function RestaurantDetail() {
     }
   };
 
+  const displayTopPicks = useMemo(() => {
+    if (!menu || menu.length === 0) return [];
+    const withImages = menu.filter(item => item.image);
+    const sourceList = withImages.length > 0 ? withImages : menu;
+    // Stable random shuffle
+    return [...sourceList]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 5);
+  }, [menu]);
+
   if (loading) {
     return (
       <div className="home-dashboard page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -91,11 +180,6 @@ export default function RestaurantDetail() {
   if (!restaurant) return null;
 
   const subcategories = ['All', ...new Set(menu.map(item => item.category || 'General'))];
-
-  // Filter menu items based on active subcategory
-  const filteredMenu = activeSubcategory === 'All' 
-    ? menu 
-    : menu.filter(item => (item.category || 'General') === activeSubcategory);
 
   // Check item quantity in cart helper
   const getCartQty = (menuItemId) => {
@@ -115,340 +199,654 @@ export default function RestaurantDetail() {
   // Cover image fallback
   const coverImage = restaurant.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
 
+  const isVegItem = (item) => {
+    const name = (item.name || '').toLowerCase();
+    const desc = (item.description || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const nonVegKeywords = ['chicken', 'meat', 'egg', 'fish', 'beef', 'mutton', 'pork', 'non-veg', 'nonveg', 'prawn', 'ham', 'bacon', 'kabab', 'kebab'];
+    return !nonVegKeywords.some(kw => name.includes(kw) || desc.includes(kw) || cat.includes(kw));
+  };
+
+  const filteredMenu = menu.filter(item => {
+    if (activeSubcategory !== 'All' && (item.category || 'General') !== activeSubcategory) {
+      return false;
+    }
+    if (dishSearch.trim() && !item.name.toLowerCase().includes(dishSearch.toLowerCase()) && !item.description?.toLowerCase().includes(dishSearch.toLowerCase())) {
+      return false;
+    }
+    const isVeg = isVegItem(item);
+    if (vegOnly && !isVeg) return false;
+    if (nonVegOnly && isVeg) return false;
+    
+    return true;
+  });
+
+  const categoriesGrouped = filteredMenu.reduce((acc, item) => {
+    const cat = item.category || 'General';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {});
+
+  const VegIcon = ({ isVeg }) => (
+    <div style={{ 
+      width: '13px', 
+      height: '13px', 
+      border: `1.5px solid ${isVeg ? '#1f8a4c' : '#e53e3e'}`, 
+      borderRadius: '3px', 
+      display: 'inline-flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      background: '#ffffff',
+      flexShrink: 0
+    }}>
+      {isVeg ? (
+        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#1f8a4c' }}></div>
+      ) : (
+        <div style={{ 
+          width: 0, 
+          height: 0, 
+          borderLeft: '3.5px solid transparent', 
+          borderRight: '3.5px solid transparent', 
+          borderBottom: '6px solid #e53e3e',
+          marginTop: '-1.2px'
+        }}></div>
+      )}
+    </div>
+  );
+
+  const toggleCategory = (cat) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [cat]: !prev[cat]
+    }));
+  };
+
   return (
-    <div className="home-dashboard page animate-fade-in" style={{ padding: 0, background: '#fcfcfc', minHeight: '100vh', paddingBottom: '120px' }}>
+    <div className="restaurant-detail-page animate-fade-in" style={{ paddingBottom: '120px' }}>
       
-      {/* Restaurant Header Cover */}
-      <div className="restaurant-cover-image-container animate-scale-in" style={{ position: 'relative', height: '240px', overflow: 'hidden' }}>
-        <img src={coverImage} alt={restaurant.restaurantName} className="restaurant-cover-image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <div className="restaurant-cover-overlay" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6))', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '16px' }}>
-          {/* Overlaid Actions */}
-          <div className="restaurant-cover-nav" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+      {/* Dark / Premium Header Wrapper */}
+      <div className="restaurant-detail-header-wrapper">
+        {/* Header Actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button 
+            type="button" 
+            onClick={() => navigate('/restaurants')}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#ffffff', 
+              cursor: 'pointer', 
+              padding: '4px' 
+            }}
+          >
+            <ArrowLeft size={24} />
+          </button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button 
               type="button"
-              className="restaurant-cover-nav-btn hover-scale" 
-              onClick={() => navigate('/restaurants')}
-              style={{ background: '#ffffff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111111', cursor: 'pointer' }}
+              onClick={() => setIsFavorite(!isFavorite)}
+              style={{ background: 'none', border: 'none', color: isFavorite ? '#b31522' : '#ffffff', cursor: 'pointer', padding: '4px' }}
             >
-              <ArrowLeft size={20} />
+              <Heart size={22} fill={isFavorite ? '#b31522' : 'none'} />
             </button>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                type="button"
-                className="restaurant-cover-nav-btn favorite-btn hover-scale"
-                onClick={() => setIsFavorite(!isFavorite)}
-                style={{ background: '#ffffff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFavorite ? '#b31522' : '#111111', cursor: 'pointer' }}
-              >
-                <Heart size={20} fill={isFavorite ? '#b31522' : 'none'} />
-              </button>
-              <button 
-                type="button"
-                className="restaurant-cover-nav-btn hover-scale"
-                style={{ background: '#ffffff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111111', cursor: 'pointer' }}
-              >
-                <Share2 size={20} />
-              </button>
-            </div>
+            
+            <button style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: '4px' }}>
+              <Share2 size={22} />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Restaurant Info Panel */}
-      <div className="restaurant-details-wrapper animate-slide-up" style={{ padding: '24px 20px' }}>
-        <h1 className="restaurant-detail-title" style={{ fontSize: '1.75rem', fontWeight: 850, color: '#111111', margin: '0 0 4px 0' }}>{restaurant.restaurantName}</h1>
-        <p className="restaurant-detail-cuisines" style={{ fontSize: '0.9rem', color: '#718096', margin: '0 0 12px 0' }}>
-          {restaurant.category} &middot; Fast Food &middot; Beverages
-        </p>
-        
-        {/* Rating and Delivery stats */}
-        <div className="restaurant-detail-stats-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#111111', fontWeight: 700, background: '#f7fafc', padding: '12px 16px', borderRadius: '12px', width: 'fit-content', marginBottom: '20px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Star size={14} color="#ffc700" fill="#ffc700" />
-            <span>{restaurant.averageRating > 0 ? restaurant.averageRating.toFixed(1) : '4.6'} (230+)</span>
-          </span>
-          <span className="restaurant-detail-stats-divider" style={{ color: '#cbd5e0' }}>|</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Clock size={14} color="#718096" />
-            <span>{restaurant.deliveryTime || '20-30'} min</span>
-          </span>
-          <span className="restaurant-detail-stats-divider" style={{ color: '#cbd5e0' }}>|</span>
-          <span>₹150 for two</span>
-        </div>
+      {/* Floating White Info Card */}
+      <div style={{ 
+        background: '#ffffff', 
+        borderRadius: '20px', 
+        border: '1px solid #edf2f7', 
+        boxShadow: '0 8px 30px rgba(0,0,0,0.06)', 
+        margin: '-100px 16px 0 16px', 
+        padding: '35px 30px', 
+        position: 'relative', 
+        zIndex: 10 
+      }}>
 
-        {/* Promo Coupon Banner */}
-        {showCoupon && (
-          <div className="premium-coupon-banner animate-scale-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff5f5', border: '1px dashed #b31522', borderRadius: '12px', padding: '12px 16px', color: '#b31522', fontWeight: 600, fontSize: '0.85rem', marginBottom: '28px' }}>
-            <span>40% OFF up to ₹100 with code</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="coupon-code-badge" style={{ background: '#b31522', color: '#ffffff', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 }}>CAMPUS40</span>
-              <button className="coupon-close-btn" onClick={() => setShowCoupon(false)} style={{ background: 'none', border: 'none', color: '#b31522', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem', padding: '0 4px' }}>×</button>
+        {/* Name and Rating */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#1a202c', margin: '0 0 6px 0', letterSpacing: '-0.3px' }}>
+              {restaurant.restaurantName}
+            </h1>
+            <div style={{ fontSize: '0.82rem', color: '#718096', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>{restaurant.deliveryTime || 30} mins</span>
+              <span>•</span>
+              <span>{restaurant.location || 'Campus food zone'}</span>
             </div>
           </div>
-        )}
 
-        {/* Tab Selection */}
-        <div className="detail-tab-bar" style={{ display: 'flex', borderBottom: '2px solid #edf2f7', marginBottom: '24px' }}>
-          {['Menu', 'Reviews', 'Info'].map((tab) => (
-            <button
-              key={tab}
-              className={`detail-tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                flex: 1,
-                padding: '12px',
-                border: 'none',
-                background: 'none',
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                color: activeTab === tab ? '#b31522' : '#718096',
-                borderBottom: activeTab === tab ? '3px solid #b31522' : '3px solid transparent',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {tab === 'Reviews' ? `Reviews (${reviews.length > 0 ? reviews.length : '230'})` : tab}
-            </button>
-          ))}
+          {/* Rating Block */}
+          {restaurant.reviewCount > 0 ? (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              border: '1px solid #edf2f7', 
+              borderRadius: '12px', 
+              padding: '6px 8px', 
+              background: '#ffffff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}>
+              <span style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '2px', 
+                fontWeight: 800, 
+                fontSize: '0.85rem', 
+                color: '#ffffff', 
+                background: '#1f8a4c', 
+                padding: '2px 6px', 
+                borderRadius: '6px' 
+              }}>
+                {(restaurant.averageRating || 0).toFixed(1)} <Star size={11} fill="#ffffff" color="#ffffff" />
+              </span>
+              <span style={{ fontSize: '0.62rem', color: '#718096', fontWeight: 800, marginTop: '4px', whiteSpace: 'nowrap' }}>
+                {restaurant.reviewCount} rating{restaurant.reviewCount > 1 ? 's' : ''}
+              </span>
+            </div>
+          ) : (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              border: '1px solid #edf2f7', 
+              borderRadius: '12px', 
+              padding: '6px 8px', 
+              background: '#ffffff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+            }}>
+              <span style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '2px', 
+                fontWeight: 800, 
+                fontSize: '0.85rem', 
+                color: '#718096', 
+                background: '#edf2f7', 
+                padding: '2px 6px', 
+                borderRadius: '6px' 
+              }}>
+                -- <Star size={11} fill="#718096" color="#718096" />
+              </span>
+              <span style={{ fontSize: '0.62rem', color: '#718096', fontWeight: 800, marginTop: '4px', whiteSpace: 'nowrap' }}>
+                No ratings
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Tab Contents */}
-        {activeTab === 'Menu' && (
-          <div>
-            {/* Horizontal sub-category badging list */}
-            <div className="subcategory-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px' }}>
-              {subcategories.map((subcat) => (
-                <button
-                  key={subcat}
-                  className={`subcategory-chip hover-scale ${activeSubcategory === subcat ? 'active' : ''}`}
-                  onClick={() => setActiveSubcategory(subcat)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    border: 'none',
-                    background: activeSubcategory === subcat ? '#b31522' : '#f1f5f9',
-                    color: activeSubcategory === subcat ? '#ffffff' : '#4a5568',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '0.85rem',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {subcat}
-                </button>
-              ))}
+        {/* Coupon Section */}
+        {bestCoupon && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            borderTop: '1px solid #edf2f7', 
+            paddingTop: '12px', 
+            marginTop: '12px' 
+          }}>
+            <span style={{ background: '#fff5f5', border: '1px dashed #b31522', color: '#b31522', padding: '2px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 850 }}>
+              {bestCoupon.code}
+            </span>
+            <span style={{ fontSize: '0.78rem', color: '#4a5568', fontWeight: 700 }}>
+              {bestCoupon.discountType === 'PERCENTAGE'
+                ? `${bestCoupon.discountValue}% OFF up to ₹${bestCoupon.maximumDiscount}`
+                : `Flat ₹${bestCoupon.discountValue} OFF`}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Tab Selection */}
+      <div style={{ display: 'flex', borderBottom: '1px solid #edf2f7', margin: '20px 16px 0 16px' }}>
+        {['Menu', 'Reviews', 'Info'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              flex: 1,
+              padding: '12px',
+              border: 'none',
+              background: 'none',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              color: activeTab === tab ? '#b31522' : '#718096',
+              borderBottom: activeTab === tab ? '3px solid #b31522' : '3px solid transparent',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {tab === 'Reviews' ? `Reviews (${reviews.length})` : tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Contents */}
+      {activeTab === 'Menu' && (
+        <div>
+          {/* Search bar inside menu */}
+          <div style={{ padding: '0 16px', marginTop: '16px' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              background: '#f0f0f2', 
+              borderRadius: '16px', 
+              padding: '10px 16px', 
+              gap: '10px' 
+            }}>
+              <Search size={18} color="#718096" />
+              <input 
+                type="text" 
+                placeholder="Search for dishes" 
+                value={dishSearch} 
+                onChange={(e) => setDishSearch(e.target.value)}
+                style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '0.9rem', color: '#111111', fontWeight: 600 }}
+              />
             </div>
+          </div>
 
-            {/* Menu Items */}
-            <div className="menu-items-list responsive-grid-2">
-              {filteredMenu.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#718096', padding: '24px' }}>No menu items found</p>
-              ) : (
-                filteredMenu.map((item) => {
+
+          {/* Top Picks Horizontal Scroll */}
+          {displayTopPicks.length > 0 && !dishSearch.trim() && (
+            <div style={{ padding: '0 16px', marginTop: '24px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1a202c', marginBottom: '16px' }}>Top Picks</h3>
+              <div className="subcategory-scroll" style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '12px' }}>
+                {displayTopPicks.map(item => {
                   const qty = getCartQty(item._id);
-                  const itemImage = item.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=150&q=80';
-                  
+                  const isVeg = isVegItem(item);
                   return (
-                    <div key={item._id} className="menu-item-row-card hover-lift" style={{ display: 'flex', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px', padding: '16px', gap: '16px' }}>
-                      <div className="menu-item-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        <div>
-                          <div className="menu-item-name" style={{ fontWeight: 700, fontSize: '1rem', color: '#111111', marginBottom: '4px' }}>{item.name}</div>
-                          <div className="menu-item-desc" style={{ fontSize: '0.8rem', color: '#718096', lineHeight: 1.4, marginBottom: '8px' }}>
-                            {item.description || 'Beef patty, cheese, lettuce, tomato, onion.'}
-                          </div>
+                    <div key={item._id} style={{ flexShrink: 0, width: '160px', position: 'relative', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+                      <img src={item.image} alt={item.name} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85))' }}></div>
+                      
+                      <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', color: '#ffffff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                          <VegIcon isVeg={isVeg} />
                         </div>
-                        <div className="menu-item-price" style={{ fontWeight: 800, color: '#111111', fontSize: '0.95rem' }}>₹{item.price}</div>
+                        <div style={{ fontWeight: 800, fontSize: '0.85rem', lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '32px' }}>{item.name}</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 800, marginTop: '4px' }}>₹{item.price}</div>
                       </div>
-
-                      <div className="menu-item-right-wrapper" style={{ position: 'relative', width: '96px', height: '96px', borderRadius: '12px', flexShrink: 0 }}>
-                        <img src={itemImage} alt={item.name} className="menu-item-img" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
-                        
-                        {/* Quantity Controller overlay / Add Button */}
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '-8px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          zIndex: 2,
-                          width: '100%'
-                        }}>
-                          {qty > 0 ? (
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              background: '#ffffff',
-                              borderRadius: '20px',
-                              padding: '4px 8px',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                              gap: '8px',
-                              border: '1.5px solid #cbd5e0'
-                            }}>
-                              <button 
-                                type="button" 
-                                className="quantity-control-btn hover-scale"
-                                onClick={() => handleDecrement(item._id, qty)}
-                                style={{ width: '22px', height: '22px', border: 'none', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', fontWeight: 'bold' }}
-                              >
-                                <Minus size={12} />
-                              </button>
-                              <span className="quantity-display-value" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111111' }}>{qty}</span>
-                              <button 
-                                type="button" 
-                                className="quantity-control-btn hover-scale"
-                                onClick={() => handleIncrement(item._id, qty)}
-                                style={{ width: '22px', height: '22px', border: 'none', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', fontWeight: 'bold' }}
-                              >
-                                <Plus size={12} />
-                              </button>
-                            </div>
-                          ) : item.isAvailable ? (
-                            <button
-                              type="button"
-                              className="menu-add-btn-small hover-scale hover-lift"
-                              onClick={() => handleAdd(item._id)}
-                              style={{
-                                background: '#ffffff',
-                                border: '1.5px solid #b31522',
-                                color: '#b31522',
-                                padding: '4px 16px',
-                                borderRadius: '12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                                outline: 'none'
-                              }}
-                            >
-                              Add
-                            </button>
-                          ) : (
-                            <span style={{ background: '#e2e8f0', color: '#718096', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
-                              Unavailable
-                            </span>
-                          )}
-                        </div>
+                      
+                      {/* ADD Button on Top Picks */}
+                      <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                        {qty > 0 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', borderRadius: '12px', padding: '2px 6px', gap: '6px', border: '1px solid #cbd5e0', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+                            <button type="button" onClick={() => handleDecrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer' }}>-</button>
+                            <span style={{ fontWeight: 800, fontSize: '0.75rem', color: '#111111' }}>{qty}</span>
+                            <button type="button" onClick={() => handleIncrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer' }}>+</button>
+                          </div>
+                        ) : (
+                          <button 
+                            type="button" 
+                            onClick={() => handleAdd(item._id)} 
+                            style={{ background: '#ffffff', border: '1.5px solid #1f8a4c', color: '#1f8a4c', borderRadius: '8px', padding: '4px 10px', fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                          >
+                            ADD
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
-                })
-              )}
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === 'Reviews' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-            {(reviews.length > 0 ? reviews : [
-              {
-                _id: 'mock-rev-1',
-                user: { username: 'Emma Watson' },
-                rating: 5,
-                comment: 'Delicious food! The ingredients feel very premium, and the delivery was incredibly prompt and fresh!'
-              },
-              {
-                _id: 'mock-rev-2',
-                user: { username: 'Tony Stark' },
-                rating: 4,
-                comment: 'Great portion sizes. The taste is authentic and very satisfying. A great addition to campus delivery!'
-              }
-            ]).map((r) => {
-              const initial = r.user?.username ? r.user.username.charAt(0).toUpperCase() : 'U';
-              return (
-                <div key={r._id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: '#fff5f5',
-                    color: '#b31522',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    flexShrink: 0
-                  }}>
-                    {initial}
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '4px' }}>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111111', margin: 0 }}>{r.user?.username || 'Anonymous'}</h4>
-                      <span style={{ color: '#ffc700', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <Star size={12} fill="#ffc700" color="#ffc700" /> {r.rating}
-                      </span>
-                    </div>
-                    {r.comment && (
-                      <p style={{ fontSize: '0.85rem', color: '#718096', lineHeight: 1.4, margin: 0 }}>
-                        {r.comment}
-                      </p>
+          {/* Categorized Menu Accordion List */}
+          <div style={{ marginTop: '24px' }}>
+            {Object.keys(categoriesGrouped).length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#718096', padding: '32px' }}>No dishes match the filters.</p>
+            ) : (
+              Object.keys(categoriesGrouped).map(cat => {
+                const isExpanded = expandedCategories[cat] !== false;
+                const items = categoriesGrouped[cat];
+                return (
+                  <div key={cat} id={cat} style={{ borderBottom: '8px solid #f8fafc', padding: '16px 0' }}>
+                    {/* Collapsible Header */}
+                    <button 
+                      onClick={() => toggleCategory(cat)}
+                      style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        width: '100%', 
+                        padding: '0 16px 12px 16px', 
+                        border: 'none', 
+                        background: 'none', 
+                        fontWeight: 900, 
+                        fontSize: '1.1rem', 
+                        color: '#1a202c', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      <span>{cat} ({items.length})</span>
+                      {isExpanded ? <ChevronUp size={20} color="#4a5568" /> : <ChevronDown size={20} color="#4a5568" />}
+                    </button>
+
+                    {/* Accordion Content */}
+                    {isExpanded && (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {items.map(item => {
+                          const qty = getCartQty(item._id);
+                          const isVeg = isVegItem(item);
+                          const itemImage = item.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=150&q=80';
+                          return (
+                            <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 16px', borderBottom: '1px solid #f1f5f9', gap: '16px' }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                  <VegIcon isVeg={isVeg} />
+                                </div>
+                                <h4 style={{ fontSize: '0.98rem', fontWeight: 850, color: '#1d232c', margin: '0 0 4px 0' }}>{item.name}</h4>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#111111', marginBottom: '6px' }}>₹{item.price}</div>
+                                <p style={{ fontSize: '0.78rem', color: '#718096', lineHeight: 1.4, margin: 0, paddingRight: '8px' }}>
+                                  {item.description || 'Delectable and freshly prepared for your cravings.'}
+                                </p>
+                              </div>
+                              
+                              {/* Square image and ADD button */}
+                              <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+                                <img src={itemImage} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }} />
+                                
+                                <div style={{ 
+                                  position: 'absolute', 
+                                  bottom: '-10px', 
+                                  left: '50%', 
+                                  transform: 'translateX(-50%)',
+                                  zIndex: 5
+                                }}>
+                                  {qty > 0 ? (
+                                    <div style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      background: '#ffffff', 
+                                      borderRadius: '20px', 
+                                      padding: '4px 10px', 
+                                      gap: '10px', 
+                                      border: '1px solid #cbd5e0',
+                                      boxShadow: '0 4px 10px rgba(0,0,0,0.12)' 
+                                    }}>
+                                      <button type="button" onClick={() => handleDecrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, cursor: 'pointer', fontSize: '0.9rem' }}>-</button>
+                                      <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#111111' }}>{qty}</span>
+                                      <button type="button" onClick={() => handleIncrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, cursor: 'pointer', fontSize: '0.9rem' }}>+</button>
+                                    </div>
+                                  ) : item.isAvailable ? (
+                                    <button 
+                                      type="button" 
+                                      onClick={() => handleAdd(item._id)}
+                                      style={{ 
+                                        background: '#ffffff', 
+                                        border: '1.5px solid #1f8a4c', 
+                                        color: '#1f8a4c', 
+                                        borderRadius: '12px', 
+                                        padding: '6px 20px', 
+                                        fontWeight: 800, 
+                                        fontSize: '0.8rem', 
+                                        cursor: 'pointer',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.08)' 
+                                      }}
+                                    >
+                                      ADD
+                                    </button>
+                                  ) : (
+                                    <span style={{ background: '#e2e8f0', color: '#718096', padding: '4px 12px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>Unavailable</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reviews Tab */}
+      {activeTab === 'Reviews' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px' }}>
+          {reviews.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#a0aec0', fontSize: '0.9rem', padding: '32px 0' }}>No reviews yet. Be the first to review!</p>
+          ) : reviews.map((r) => {
+            const initial = r.user?.username ? r.user.username.charAt(0).toUpperCase() : 'U';
+            return (
+              <div key={r._id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: '#fff5f5',
+                  color: '#b31522',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  flexShrink: 0
+                }}>
+                  {initial}
                 </div>
-              );
-            })}
-          </div>
-        )}
+                <div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '4px' }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111111', margin: 0 }}>{r.user?.username || 'Anonymous'}</h4>
+                    <span style={{ color: '#ffc700', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <Star size={12} fill="#ffc700" color="#ffc700" /> {r.rating}
+                    </span>
+                  </div>
+                  {r.comment && (
+                    <p style={{ fontSize: '0.85rem', color: '#718096', lineHeight: 1.4, margin: 0 }}>
+                      {r.comment}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-        {activeTab === 'Info' && (
-          <div style={{ marginTop: '16px', fontSize: '0.9rem', color: '#718096', lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-              <MapPin size={18} color="#b31522" />
-              <span><strong style={{ color: '#111111' }}>Address:</strong> {restaurant.location || 'Greene St, New York'}</span>
-            </p>
-            <p style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-              <Clock size={18} color="#b31522" />
-              <span><strong style={{ color: '#111111' }}>Delivery Time:</strong> {restaurant.deliveryTime || '20-30'} minutes</span>
-            </p>
-            <p style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: 0 }}>
-              <InfoIcon size={18} color="#b31522" style={{ marginTop: '3px' }} />
-              <span><strong style={{ color: '#111111' }}>Description:</strong> {restaurant.description || 'Prepared fresh using high-quality ingredients.'}</span>
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Info Tab */}
+      {activeTab === 'Info' && (
+        <div style={{ padding: '20px 16px', fontSize: '0.9rem', color: '#718096', lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <MapPin size={18} color="#b31522" />
+            <span><strong style={{ color: '#111111' }}>Address:</strong> {restaurant.location || 'N/A'}</span>
+          </p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <Clock size={18} color="#b31522" />
+            <span><strong style={{ color: '#111111' }}>Delivery Time:</strong> {restaurant.deliveryTime || 30} minutes</span>
+          </p>
+          <p style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: 0 }}>
+            <InfoIcon size={18} color="#b31522" style={{ marginTop: '3px' }} />
+            <span><strong style={{ color: '#111111' }}>Description:</strong> {restaurant.description || 'No description available.'}</span>
+          </p>
+        </div>
+      )}
 
-      {/* Sticky Bottom Cart Basket Bar */}
-      {cartTotalQty > 0 && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '100%',
-            maxWidth: '480px',
-            padding: '0 20px',
-            zIndex: 999,
-            boxSizing: 'border-box'
-          }}
-        >
-          <Link 
-            to="/cart" 
-            className="sticky-basket-bar hover-lift animate-pulse-soft"
-            style={{
-              textDecoration: 'none',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: '#b31522',
-              padding: '16px 24px',
-              borderRadius: '16px',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '1rem',
-              width: '100%',
-              boxShadow: '0 8px 24px rgba(179, 21, 34, 0.3)',
-              boxSizing: 'border-box'
+      {/* Floating Categories Picker Menu Button */}
+      {activeTab === 'Menu' && Object.keys(categoriesGrouped).length > 0 && (
+        <div style={{ position: 'fixed', bottom: '86px', left: '50%', transform: 'translateX(-50%)', zIndex: 999 }}>
+          <button 
+            type="button"
+            onClick={() => setShowCategoryMenu(prev => !prev)}
+            style={{ 
+              background: '#0c0f12', 
+              color: '#ffffff', 
+              border: 'none', 
+              borderRadius: '24px', 
+              padding: '10px 18px', 
+              fontWeight: 800, 
+              fontSize: '0.82rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              cursor: 'pointer' 
             }}
           >
-            <span>View Cart ({cartTotalQty})</span>
-            <span className="basket-dot" style={{ width: '6px', height: '6px', background: '#ffffff', borderRadius: '50%' }}></span>
-            <span>₹{(cart.totalAmount || 0).toFixed(2)}</span>
-          </Link>
+            <Flame size={14} /> MENU
+          </button>
+          
+          {showCategoryMenu && (
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '48px', 
+              left: '50%', 
+              transform: 'translateX(-50%)', 
+              background: '#0c0f12', 
+              borderRadius: '16px', 
+              padding: '12px 8px', 
+              minWidth: '180px', 
+              boxShadow: '0 10px 25px rgba(0,0,0,0.3)', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '4px',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              {Object.keys(categoriesGrouped).map(cat => (
+                <button 
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setShowCategoryMenu(false);
+                    const el = document.getElementById(cat);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#ffffff', 
+                    textAlign: 'left', 
+                    padding: '8px 12px', 
+                    fontSize: '0.8rem', 
+                    fontWeight: 700, 
+                    cursor: 'pointer',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <span>{cat}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>{categoriesGrouped[cat].length}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Draggable Floating Cart Bubble */}
+      {cartTotalQty > 0 && (
+        <div
+          ref={dragRef}
+          onMouseDown={onPointerDown}
+          onTouchStart={onPointerDown}
+          style={{
+            position: 'fixed',
+            left: bubblePos.x !== null ? bubblePos.x : 'auto',
+            right: bubblePos.x !== null ? 'auto' : '20px',
+            top: bubblePos.y !== null ? bubblePos.y : 'auto',
+            bottom: bubblePos.y !== null ? 'auto' : '96px',
+            zIndex: 1000,
+            userSelect: 'none',
+            touchAction: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: '10px'
+          }}
+        >
+          {/* Expanded Cart Panel */}
+          {cartExpanded && (
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '20px',
+                padding: '16px',
+                minWidth: '200px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                border: '1px solid #f1f5f9',
+                animation: 'scaleIn 0.18s ease'
+              }}
+            >
+              <div style={{ fontSize: '0.78rem', color: '#718096', fontWeight: 600, marginBottom: '8px' }}>
+                {cartTotalQty} item{cartTotalQty > 1 ? 's' : ''} in cart
+              </div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111111', marginBottom: '12px' }}>
+                ₹{(cart.totalAmount || 0).toFixed(2)}
+              </div>
+              <Link
+                to="/cart"
+                style={{
+                  display: 'block',
+                  background: '#b31522',
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  borderRadius: '12px',
+                  padding: '10px 16px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  textAlign: 'center'
+                }}
+              >
+                View Cart →
+              </Link>
+            </div>
+          )}
+
+          {/* Circular Bubble Button */}
+          <button
+            type="button"
+            onClick={handleBubbleClick}
+            style={{
+              width: '58px',
+              height: '58px',
+              borderRadius: '50%',
+              background: '#b31522',
+              border: 'none',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'grab',
+              boxShadow: '0 4px 16px rgba(179, 21, 34, 0.35)',
+              position: 'relative',
+              flexShrink: 0
+            }}
+          >
+            <ShoppingBag size={22} />
+            <span style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '-4px',
+              background: '#ffffff',
+              color: '#b31522',
+              borderRadius: '50%',
+              width: '20px',
+              height: '20px',
+              fontSize: '0.7rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1.5px solid #b31522'
+            }}>
+              {cartTotalQty}
+            </span>
+          </button>
         </div>
       )}
     </div>

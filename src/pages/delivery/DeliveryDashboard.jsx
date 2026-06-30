@@ -465,6 +465,28 @@ export default function DeliveryDashboard() {
                         {o.user?.username || 'Anonymous Customer'}
                       </h4>
                     </div>
+
+                    {o.customerPhone && (
+                      <div className="detail-item">
+                        <span className="label">Customer Phone</span>
+                        <h4 className="value">
+                          <Phone size={15} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#3182ce' }} />
+                          <a href={`tel:${o.customerPhone}`} style={{ color: '#3182ce', textDecoration: 'none', fontWeight: 700 }}>
+                            {o.customerPhone}
+                          </a>
+                        </h4>
+                      </div>
+                    )}
+
+                    {o.deliveryAddress && (
+                      <div className="detail-item" style={{ gridColumn: 'span 2' }}>
+                        <span className="label">Delivery Address</span>
+                        <h4 className="value" style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontWeight: 700 }}>
+                          <MapPin size={15} style={{ marginTop: '2px', color: '#e53e3e', flexShrink: 0 }} />
+                          <span>{o.deliveryAddress}</span>
+                        </h4>
+                      </div>
+                    )}
                   </div>
 
                   {/* Items list */}

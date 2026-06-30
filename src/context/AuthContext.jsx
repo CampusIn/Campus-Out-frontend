@@ -24,6 +24,31 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('accessToken', token);
+      try {
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        const userObj = { 
+          id: decoded.id, 
+          role: decoded.role, 
+          email: decoded.email || '', 
+          username: decoded.username || '' 
+        };
+        localStorage.setItem('user', JSON.stringify(userObj));
+        setUser(userObj);
+        
+        // Clean URL parameter
+        const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
+        window.history.replaceState({}, document.title, newUrl);
+      } catch (e) {
+        console.error('Failed to parse OAuth token from URL:', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
     } else {
@@ -57,7 +82,12 @@ export function AuthProvider({ children }) {
             const newToken = data.data.accessToken;
             localStorage.setItem('accessToken', newToken);
             const decoded = JSON.parse(atob(newToken.split('.')[1]));
-            setUser({ id: decoded.id, role: decoded.role, email: user?.email });
+            setUser({ 
+              id: decoded.id, 
+              role: decoded.role, 
+              email: decoded.email || '', 
+              username: decoded.username || '' 
+            });
           } catch (refreshErr) {
             // Refresh failed, clear session and redirect
             localStorage.removeItem('accessToken');
@@ -91,7 +121,12 @@ export function AuthProvider({ children }) {
       const { data } = await loginUser({ email, password });
       localStorage.setItem('accessToken', data.data.accessToken);
       const decoded = JSON.parse(atob(data.data.accessToken.split('.')[1]));
-      setUser({ id: decoded.id, role: decoded.role, email });
+      setUser({ 
+        id: decoded.id, 
+        role: decoded.role, 
+        email: decoded.email || '', 
+        username: decoded.username || '' 
+      });
       return { success: true };
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed';
@@ -120,7 +155,12 @@ export function AuthProvider({ children }) {
       const { data } = await verifyEmailOtp({ email, otp });
       localStorage.setItem('accessToken', data.data.accessToken);
       const decoded = JSON.parse(atob(data.data.accessToken.split('.')[1]));
-      setUser({ id: decoded.id, role: decoded.role, email, username: data.data.user.username });
+      setUser({ 
+        id: decoded.id, 
+        role: decoded.role, 
+        email: decoded.email || '', 
+        username: decoded.username || '' 
+      });
       return { success: true };
     } catch (err) {
       const msg = err.response?.data?.message || 'Verification failed';

@@ -146,12 +146,14 @@ export default function AdminAnnouncements() {
 
     try {
       const { data } = await updateAnnouncementStatus(item._id);
-      if (data.success) {
+      if (data) {
         toast.success(data.message || `Announcement status updated successfully`);
         // Optimistic UI update
         setAnnouncementsList((prev) =>
           prev.map((a) => a._id === item._id ? { ...a, isActive: !a.isActive } : a)
         );
+        // Refresh from server
+        fetchAnnouncements();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update announcement status');

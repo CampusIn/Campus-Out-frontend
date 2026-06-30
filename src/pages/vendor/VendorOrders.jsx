@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { getVendorOrders, changeOrderStatus } from '../../api/order.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
-import { ShoppingBag, User, Clock, CreditCard, UserPlus, CheckCircle2, ChevronRight, Loader } from 'lucide-react';
+import { ShoppingBag, User, Clock, CreditCard, UserPlus, CheckCircle2, ChevronRight, Loader, Phone, MapPin } from 'lucide-react';
 
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
 
@@ -158,6 +158,18 @@ export default function VendorOrders() {
                       <User size={14} color="#64748b" />
                       <strong>Customer:</strong> {o.user?.username || 'Unknown Customer'}
                     </span>
+                    {o.customerPhone && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Phone size={14} color="#64748b" />
+                        <strong>Phone:</strong> {o.customerPhone}
+                      </span>
+                    )}
+                    {o.deliveryAddress && (
+                      <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <MapPin size={14} color="#64748b" style={{ marginTop: '2px' }} />
+                        <span><strong>Address:</strong> {o.deliveryAddress}</span>
+                      </span>
+                    )}
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <CreditCard size={14} color="#64748b" />
                       <strong>Payment:</strong> {o.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Pay on Pickup'} ({o.paymentStatus})

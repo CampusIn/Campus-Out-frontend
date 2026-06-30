@@ -111,7 +111,7 @@ export default function Orders() {
       <div className="orders-header animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #edf2f7' }}>
         <button 
           className="circle-icon-btn hover-scale" 
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/restaurants')}
           style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
         >
           <ArrowLeft size={18} />

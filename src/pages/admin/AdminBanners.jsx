@@ -167,12 +167,14 @@ export default function AdminBanners() {
 
     try {
       const { data } = await updateBannerStatus(item._id);
-      if (data.success) {
+      if (data) {
         toast.success(data.message || `Banner status updated successfully`);
         // Optimistic UI updates
         setBannersList((prev) =>
           prev.map((b) => (b._id === item._id ? { ...b, isActive: !b.isActive } : b))
         );
+        // Refresh from server
+        fetchBanners();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update banner status');

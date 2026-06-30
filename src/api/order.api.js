@@ -1,7 +1,7 @@
 import api from './axios';
 
-export const createOrder = (paymentMethod, couponId) =>
-  api.post('/user/order', { paymentMethod, couponId });
+export const createOrder = (paymentMethod, couponId, customerPhone, deliveryAddress) =>
+  api.post('/user/order', { paymentMethod, couponId, customerPhone, deliveryAddress });
 
 export const getMyOrders = (params) =>
   api.get('/user/orders/my', { params });

@@ -5,7 +5,7 @@ import { createOrder, getCoupons, applyCoupon } from '../../api/order.api';
 import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
-import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent } from 'lucide-react';
+import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent, Phone } from 'lucide-react';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ export default function Cart() {
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
   const [deliveryAddress, setDeliveryAddress] = useState('Hostel Block 3, Room 204');
   const [paymentMethod, setPaymentMethod] = useState('COD');
+  const [customerPhone, setCustomerPhone] = useState('');
 
   // Coupon integration states
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -120,8 +121,12 @@ export default function Cart() {
   };
 
   const handleOrder = async (paymentMethod) => {
+    if (!customerPhone.trim() || !/^[6-9]\d{9}$/.test(customerPhone.trim())) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
     try {
-      const { data } = await createOrder(paymentMethod, selectedCoupon?.couponId);
+      const { data } = await createOrder(paymentMethod, selectedCoupon?.couponId, customerPhone.trim(), deliveryAddress.trim());
       toast.success(`Order placed successfully! #${data.data.orderNumber}`);
       setCart(null);
       setSelectedCoupon(null);
@@ -462,6 +467,50 @@ export default function Cart() {
                 </p>
               </div>
 
+              {/* Mobile Number Input */}
+              <div
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #edf2f7',
+                  borderRadius: '24px',
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.01)'
+                }}
+              >
+                <label htmlFor="customerPhone" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#111111' }}>
+                  Mobile Number <span style={{ color: '#b31522' }}>*</span>
+                </label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Phone size={18} style={{ position: 'absolute', left: '16px', color: '#718096' }} />
+                  <input
+                    type="tel"
+                    id="customerPhone"
+                    placeholder="Enter your 10-digit mobile number..."
+                    value={customerPhone}
+                    maxLength={10}
+                    onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                    style={{
+                      width: '100%',
+                      padding: '16px 16px 16px 46px',
+                      borderRadius: '16px',
+                      border: customerPhone && !/^[6-9]\d{9}$/.test(customerPhone) ? '1.5px solid #b31522' : '1.5px solid #edf2f7',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      background: '#f8fafc',
+                      color: '#111111',
+                      fontWeight: 600,
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#718096', margin: 0, paddingLeft: '4px' }}>
+                  This number will be shared with the vendor and delivery agent for order coordination.
+                </p>
+              </div>
+
               {/* Payment Method Selector */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#111111', margin: 0 }}>Payment Method</h3>
@@ -548,6 +597,17 @@ export default function Cart() {
                       </span>
                     </div>
                   </div>
+                  {customerPhone && (
+                    <div>
+                      <p style={{ margin: '0 0 6px 0', color: '#718096' }}>
+                        <strong>Contact Number:</strong>
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Phone size={16} style={{ color: '#b31522', flexShrink: 0 }} />
+                        <span style={{ fontWeight: 700, color: '#111111' }}>{customerPhone}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bill summary breakdown */}
@@ -593,7 +653,7 @@ export default function Cart() {
                   type="button"
                   className="btn btn-primary hover-lift hover-darken" 
                   onClick={() => handleOrder(paymentMethod)}
-                  disabled={!deliveryAddress.trim()}
+                  disabled={!deliveryAddress.trim() || !customerPhone.trim() || !/^[6-9]\d{9}$/.test(customerPhone)}
                   style={{ 
                     padding: '16px', 
                     background: '#b31522', 
