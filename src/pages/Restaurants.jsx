@@ -276,102 +276,25 @@ export default function Restaurants() {
     fetchRestaurants(search);
   };
 
-  const mockTopPicksMenu = [
-    {
-      _id: 'pizza_palace_item_id',
-      name: 'Loaded Double Cheese Pizza',
-      restaurantName: 'Pizza Palace',
-      restaurantId: 'pizza_palace_id',
-      category: 'North Indian',
-      averageRating: 4.6,
-      deliveryTime: 20,
-      price: 299,
-      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=300&q=80'
-    },
-    {
-      _id: 'dominos_pizza_item_id',
-      name: 'Farmhouse Pizza (Medium)',
-      restaurantName: "Domino's Pizza",
-      restaurantId: 'dominos_pizza_id',
-      category: 'North Indian',
-      averageRating: 4.3,
-      deliveryTime: 25,
-      price: 349,
-      image: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=300&q=80'
-    },
-    {
-      _id: 'pizza_hut_item_id',
-      name: 'Choco Lava Cake',
-      restaurantName: 'Pizza Hut',
-      restaurantId: 'pizza_hut_id',
-      category: 'Bakery',
-      averageRating: 4.2,
-      deliveryTime: 30,
-      price: 99,
-      image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=300&q=80'
-    },
-    {
-      _id: 'burger_bang_item_id',
-      name: 'Crispy Veg Double Patty Burger',
-      restaurantName: 'Burger Bang',
-      restaurantId: 'burger_bang_id',
-      category: 'Fast Food',
-      averageRating: 4.6,
-      deliveryTime: 20,
-      price: 149,
-      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80'
-    },
-    {
-      _id: 'coffee_item_id',
-      name: 'Caramel Macchiato',
-      restaurantName: 'Cafe Coffee Day',
-      restaurantId: 'cafe_coffee_day_id',
-      category: 'Cafe',
-      averageRating: 4.5,
-      deliveryTime: 15,
-      price: 189,
-      image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=300&q=80'
-    }
-  ];
-
-  const [topPicks, setTopPicks] = useState(mockTopPicksMenu);
+  const [topPicks, setTopPicks] = useState([]);
+  const [loadingTopPicks, setLoadingTopPicks] = useState(true);
 
   useEffect(() => {
     const fetchTopPicksMenu = async () => {
+      setLoadingTopPicks(true);
       const backendCategory = activeCategory;
 
       if (!restaurants || restaurants.length === 0) {
-        const uniqueCats = [...new Set(mockTopPicksMenu.map(item => item.category))].filter(Boolean);
-        const dynamicCats = [
+        setCategoriesList([
           {
             id: 'All',
             label: 'All',
             backend: 'All',
             icon: categoryIcons['All']
-          },
-          ...uniqueCats.map(cat => ({
-            id: cat,
-            label: cat,
-            backend: cat,
-            icon: categoryIcons[cat] || <Utensils size={20} />
-          }))
-        ];
-        setCategoriesList(dynamicCats);
-
-        const mockCatsMap = {
-          'pizza_palace_id': ['North Indian'],
-          'dominos_pizza_id': ['North Indian'],
-          'pizza_hut_id': ['Bakery'],
-          'burger_bang_id': ['Fast Food'],
-          'cafe_coffee_day_id': ['Cafe']
-        };
-        setRestaurantMenuCategories(mockCatsMap);
-
-        if (backendCategory === 'All') {
-          setTopPicks(mockTopPicksMenu);
-        } else {
-          setTopPicks(mockTopPicksMenu.filter(item => item.category === backendCategory));
-        }
+          }
+        ]);
+        setTopPicks([]);
+        setLoadingTopPicks(false);
         return;
       }
       try {
@@ -432,22 +355,12 @@ export default function Restaurants() {
           filteredItems = allItems.filter(item => item.category === backendCategory);
         }
 
-        if (filteredItems.length > 0) {
-          setTopPicks(filteredItems);
-        } else {
-          if (backendCategory === 'All') {
-            setTopPicks(mockTopPicksMenu);
-          } else {
-            setTopPicks(mockTopPicksMenu.filter(item => item.category === backendCategory));
-          }
-        }
+        setTopPicks(filteredItems);
       } catch (err) {
         console.error("Error fetching top pick menus:", err);
-        if (backendCategory === 'All') {
-          setTopPicks(mockTopPicksMenu);
-        } else {
-          setTopPicks(mockTopPicksMenu.filter(item => item.category === backendCategory));
-        }
+        setTopPicks([]);
+      } finally {
+        setLoadingTopPicks(false);
       }
     };
 
@@ -598,7 +511,18 @@ export default function Restaurants() {
         )}
 
         {/* Promo / Main Banner */}
-        {banners.length > 0 ? (
+        {loadingCMS ? (
+          <div 
+            className="animate-pulse" 
+            style={{ 
+              height: '180px', 
+              background: '#e2e8f0', 
+              borderRadius: '20px', 
+              marginBottom: '28px',
+              width: '100%'
+            }}
+          />
+        ) : banners.length > 0 ? (
           <div 
             className="animate-scale-in delay-2 cms-priority-banner" 
             onClick={() => handleBannerClick(banners[0])}
@@ -648,7 +572,16 @@ export default function Restaurants() {
         <div className="secondary-carousel-section animate-slide-up" style={{ margin: 0 }}>
           <h3 className="carousel-section-heading">Featured Offers For You</h3>
           <div className="banners-carousel-scrollable" ref={carouselRef}>
-            {banners.slice(1).length > 0 ? (
+            {loadingCMS ? (
+              // Banners Carousel Skeleton
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className="carousel-banner-card animate-pulse"
+                  style={{ background: '#e2e8f0', borderRadius: '16px', width: '280px', height: '160px', flexShrink: 0 }}
+                />
+              ))
+            ) : banners.slice(1).length > 0 ? (
               /* Render lower priority banners from CMS */
               banners.slice(1).map((b) => (
                 <div 
@@ -782,38 +715,61 @@ export default function Restaurants() {
       </ContentWrapper>
 
       {/* Top Picks For You section */}
-      <ContentWrapper className="home-section-spacer">
-        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111111' }}>Top Picks For You</h2>
-        </div>
+      {(loadingTopPicks || topPicks.length > 0) && (
+        <ContentWrapper className="home-section-spacer">
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111111' }}>Top Picks For You</h2>
+          </div>
 
-        <div className="top-picks-scroll responsive-grid-4 animate-slide-up delay-3" style={{ marginBottom: 0 }}>
-          {topPicks.map((pick) => (
-            <Link 
-              to={(pick.restaurantId && typeof pick.restaurantId === 'string' && pick.restaurantId.includes('_id')) ? '/restaurants' : `/restaurants/${pick.restaurantId}`} 
-              key={pick._id} 
-              className="top-pick-card hover-lift"
-              style={{ textDecoration: 'none', color: 'inherit', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'block' }}
-            >
-              <div className="top-pick-img-container" style={{ position: 'relative', height: '140px', overflow: 'hidden' }}>
-                <img src={pick.image} alt={pick.name} className="top-pick-img hover-scale" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div className="top-pick-content" style={{ padding: '12px' }}>
-                <div className="top-pick-name" style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111', marginBottom: '2px' }}>{pick.name}</div>
-                <div className="top-pick-cuisine" style={{ fontSize: '0.8rem', color: '#718096', marginBottom: '8px' }}>{pick.restaurantName}</div>
-                <div className="top-pick-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
-                  <span className="top-pick-rating" style={{ fontWeight: 700, color: '#111111', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <Star size={14} color="#ffc700" fill="#ffc700" /> {pick.averageRating > 0 ? pick.averageRating.toFixed(1) : '4.5'}
-                  </span>
-                  <span className="top-pick-price" style={{ fontWeight: 850, color: '#b31522' }}>
-                    ₹{pick.price}
-                  </span>
+          <div className="top-picks-scroll responsive-grid-4 animate-slide-up delay-3" style={{ marginBottom: 0 }}>
+            {loadingTopPicks ? (
+              // Top Picks Skeleton Loader
+              Array.from({ length: 4 }).map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className="top-pick-card animate-pulse"
+                  style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'block' }}
+                >
+                  <div style={{ height: '140px', background: '#e2e8f0' }} />
+                  <div style={{ padding: '12px' }}>
+                    <div style={{ height: '16px', background: '#e2e8f0', borderRadius: '4px', width: '80%', marginBottom: '6px' }} />
+                    <div style={{ height: '12px', background: '#edf2f7', borderRadius: '4px', width: '50%', marginBottom: '12px' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ height: '14px', background: '#e2e8f0', borderRadius: '4px', width: '30%' }} />
+                      <div style={{ height: '14px', background: '#e2e8f0', borderRadius: '4px', width: '30%' }} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </ContentWrapper>
+              ))
+            ) : (
+              topPicks.map((pick) => (
+                <Link 
+                  to={(pick.restaurantId && typeof pick.restaurantId === 'string' && pick.restaurantId.includes('_id')) ? '/restaurants' : `/restaurants/${pick.restaurantId}`} 
+                  key={pick._id} 
+                  className="top-pick-card hover-lift"
+                  style={{ textDecoration: 'none', color: 'inherit', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'block' }}
+                >
+                  <div className="top-pick-img-container" style={{ position: 'relative', height: '140px', overflow: 'hidden' }}>
+                    <img src={pick.image} alt={pick.name} className="top-pick-img hover-scale" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div className="top-pick-content" style={{ padding: '12px' }}>
+                    <div className="top-pick-name" style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111', marginBottom: '2px' }}>{pick.name}</div>
+                    <div className="top-pick-cuisine" style={{ fontSize: '0.8rem', color: '#718096', marginBottom: '8px' }}>{pick.restaurantName}</div>
+                    <div className="top-pick-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+                      <span className="top-pick-rating" style={{ fontWeight: 700, color: '#111111', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <Star size={14} color="#ffc700" fill="#ffc700" /> {pick.averageRating > 0 ? pick.averageRating.toFixed(1) : '4.5'}
+                      </span>
+                      <span className="top-pick-price" style={{ fontWeight: 850, color: '#b31522' }}>
+                        ₹{pick.price}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </ContentWrapper>
+      )}
 
       {/* All Restaurants List section */}
       <ContentWrapper className="home-section-spacer">
