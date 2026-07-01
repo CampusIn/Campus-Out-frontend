@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { refreshToken } from '../../api/auth.api';
+import { refreshToken, getMe } from '../../api/auth.api';
 
 export default function AuthSuccess() {
   const { setUser } = useAuth();
@@ -18,12 +18,12 @@ export default function AuthSuccess() {
         
         localStorage.setItem('accessToken', token);
         
-        const decoded = JSON.parse(atob(token.split('.')[1]));
+        const { data: meRes } = await getMe();
         const userObj = { 
-          id: decoded.id, 
-          role: decoded.role, 
-          email: decoded.email || '', 
-          username: decoded.username || '' 
+          id: meRes.data.id, 
+          role: meRes.data.role, 
+          email: meRes.data.email, 
+          username: meRes.data.username 
         };
 
         // Block delivery partners

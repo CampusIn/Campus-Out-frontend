@@ -6,6 +6,7 @@ import {
   logoutUser,
   logoutAllDevices,
   refreshToken,
+  getMe,
 } from '../api/auth.api';
 
 const AuthContext = createContext(null);
@@ -28,48 +29,56 @@ export function AuthProvider({ children }) {
     const token = params.get('token');
     if (token) {
       localStorage.setItem('accessToken', token);
-      try {
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        const userObj = { 
-          id: decoded.id, 
-          role: decoded.role, 
-          email: decoded.email || '', 
-          username: decoded.username || '' 
-        };
+      
+      const fetchProfile = async () => {
+        try {
+          const { data: meRes } = await getMe();
+          const userObj = { 
+            id: meRes.data.id, 
+            role: meRes.data.role, 
+            email: meRes.data.email, 
+            username: meRes.data.username 
+          };
 
-        // Block delivery partners
-        if (userObj.role === 'delivery_partner') {
+          // Block delivery partners
+          if (userObj.role === 'delivery_partner') {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            setUser(null);
+            localStorage.setItem('authError', 'Access Denied. Please use the Delivery Partner Portal to login.');
+            
+            // Clean URL parameters first
+            const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
+            window.history.replaceState({}, document.title, newUrl);
+            
+            window.location.href = '/login';
+            return;
+          }
+
+          localStorage.setItem('user', JSON.stringify(userObj));
+          setUser(userObj);
+          
+          // Clean URL parameter
+          const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
+          window.history.replaceState({}, document.title, newUrl);
+
+          // Redirect based on role
+          if (userObj.role === 'admin') {
+            window.location.href = '/admin';
+          } else if (userObj.role === 'vendor') {
+            window.location.href = '/vendor';
+          } else {
+            window.location.href = '/restaurants';
+          }
+        } catch (e) {
+          console.error('Failed to fetch profile during startup:', e);
           localStorage.removeItem('accessToken');
           localStorage.removeItem('user');
           setUser(null);
-          localStorage.setItem('authError', 'Access Denied. Please use the Delivery Partner Portal to login.');
-          
-          // Clean URL parameters first
-          const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
-          window.history.replaceState({}, document.title, newUrl);
-          
-          window.location.href = '/login';
-          return;
         }
-
-        localStorage.setItem('user', JSON.stringify(userObj));
-        setUser(userObj);
-        
-        // Clean URL parameter
-        const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
-        window.history.replaceState({}, document.title, newUrl);
-
-        // Redirect based on role
-        if (userObj.role === 'admin') {
-          window.location.href = '/admin';
-        } else if (userObj.role === 'vendor') {
-          window.location.href = '/vendor';
-        } else {
-          window.location.href = '/restaurants';
-        }
-      } catch (e) {
-        console.error('Failed to parse OAuth token from URL:', e);
-      }
+      };
+      
+      fetchProfile();
     }
   }, []);
 
@@ -106,12 +115,12 @@ export function AuthProvider({ children }) {
             const { data } = await refreshToken();
             const newToken = data.data.accessToken;
             localStorage.setItem('accessToken', newToken);
-            const decoded = JSON.parse(atob(newToken.split('.')[1]));
+            const { data: meRes } = await getMe();
             setUser({ 
-              id: decoded.id, 
-              role: decoded.role, 
-              email: decoded.email || '', 
-              username: decoded.username || '' 
+              id: meRes.data.id, 
+              role: meRes.data.role, 
+              email: meRes.data.email, 
+              username: meRes.data.username 
             });
           } catch (refreshErr) {
             // Refresh failed, clear session and redirect
@@ -145,12 +154,12 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await loginUser({ email, password });
       localStorage.setItem('accessToken', data.data.accessToken);
-      const decoded = JSON.parse(atob(data.data.accessToken.split('.')[1]));
+      const { data: meRes } = await getMe();
       setUser({ 
-        id: decoded.id, 
-        role: decoded.role, 
-        email: decoded.email || '', 
-        username: decoded.username || '' 
+        id: meRes.data.id, 
+        role: meRes.data.role, 
+        email: meRes.data.email, 
+        username: meRes.data.username 
       });
       return { success: true };
     } catch (err) {
@@ -179,12 +188,12 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await verifyEmailOtp({ email, otp });
       localStorage.setItem('accessToken', data.data.accessToken);
-      const decoded = JSON.parse(atob(data.data.accessToken.split('.')[1]));
+      const { data: meRes } = await getMe();
       setUser({ 
-        id: decoded.id, 
-        role: decoded.role, 
-        email: decoded.email || '', 
-        username: decoded.username || '' 
+        id: meRes.data.id, 
+        role: meRes.data.role, 
+        email: meRes.data.email, 
+        username: meRes.data.username 
       });
       return { success: true };
     } catch (err) {

@@ -12,3 +12,5 @@ export const logoutAllDevices = () => api.post('/auth/logout-all');
 
 export const refreshToken = () =>
   api.post('/auth/refresh-token', {}, { withCredentials: true });
+
+export const getMe = () => api.get('/auth/me');
