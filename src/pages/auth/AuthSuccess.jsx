@@ -11,10 +11,14 @@ export default function AuthSuccess() {
   useEffect(() => {
     const handleSuccess = async () => {
       try {
-        // Send a POST request to generate a new access token using the HTTP-only refresh token cookie.
-        // The custom axios instance defaults to withCredentials: true. We also specify it to be explicit.
-        const { data } = await refreshToken();
-        const token = data.data.accessToken;
+        const params = new URLSearchParams(window.location.search);
+        let token = params.get('token');
+
+        if (!token) {
+          // Fallback: Send a POST request to generate a new access token using the HTTP-only refresh token cookie.
+          const { data } = await refreshToken();
+          token = data.data.accessToken;
+        }
         
         localStorage.setItem('accessToken', token);
         
