@@ -36,12 +36,37 @@ export function AuthProvider({ children }) {
           email: decoded.email || '', 
           username: decoded.username || '' 
         };
+
+        // Block delivery partners
+        if (userObj.role === 'delivery_partner') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          setUser(null);
+          localStorage.setItem('authError', 'Access Denied. Please use the Delivery Partner Portal to login.');
+          
+          // Clean URL parameters first
+          const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
+          window.history.replaceState({}, document.title, newUrl);
+          
+          window.location.href = '/login';
+          return;
+        }
+
         localStorage.setItem('user', JSON.stringify(userObj));
         setUser(userObj);
         
         // Clean URL parameter
         const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
         window.history.replaceState({}, document.title, newUrl);
+
+        // Redirect based on role
+        if (userObj.role === 'admin') {
+          window.location.href = '/admin';
+        } else if (userObj.role === 'vendor') {
+          window.location.href = '/vendor';
+        } else {
+          window.location.href = '/restaurants';
+        }
       } catch (e) {
         console.error('Failed to parse OAuth token from URL:', e);
       }

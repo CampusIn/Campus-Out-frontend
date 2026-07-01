@@ -17,6 +17,11 @@ export default function Login() {
       setShowSessionExpiredModal(true);
       localStorage.removeItem('authRedirectMessage');
     }
+    const authError = localStorage.getItem('authError');
+    if (authError) {
+      setError(authError);
+      localStorage.removeItem('authError');
+    }
   }, []);
 
   useEffect(() => {
