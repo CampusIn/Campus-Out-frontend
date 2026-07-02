@@ -4,14 +4,14 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 export default function VerifyEmail() {
-  const { verifyEmail, loading } = useAuth();
+  const { verifyEmail, resendOtp, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const email = searchParams.get('email') || '';
 
   const [otp, setOtp] = useState('');
   const [msg, setMsg] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(28); // 28 seconds timer
+  const [timeLeft, setTimeLeft] = useState(60); // 60 seconds timer
 
   // Countdown timer
   useEffect(() => {
@@ -47,10 +47,14 @@ export default function VerifyEmail() {
     }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (timeLeft > 0) return;
-    setMsg({ success: true, message: 'OTP resent successfully!' });
-    setTimeLeft(30);
+    setMsg(null);
+    const result = await resendOtp(email);
+    setMsg(result);
+    if (result.success) {
+      setTimeLeft(60);
+    }
   };
 
   const formatTime = (seconds) => {

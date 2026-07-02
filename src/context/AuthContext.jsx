@@ -7,6 +7,7 @@ import {
   logoutAllDevices,
   refreshToken,
   getMe,
+  resendOtp as resendOtpApi,
 } from '../api/auth.api';
 
 const AuthContext = createContext(null);
@@ -204,6 +205,19 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const resendOtp = async (email) => {
+    setLoading(true);
+    try {
+      const { data } = await resendOtpApi({ email });
+      return { success: true, message: data.message };
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to resend OTP';
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await logoutUser();
@@ -225,7 +239,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout, logoutAll, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, resendOtp, logout, logoutAll, setUser }}>
       {children}
     </AuthContext.Provider>
   );

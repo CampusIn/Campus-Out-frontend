@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { X, Eye, EyeOff, Lock } from 'lucide-react';
 
 export default function Login() {
-  const { login, logout, loading, user } = useAuth();
+  const { login, logout, resendOtp, loading, user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -118,9 +118,30 @@ export default function Login() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="swiggy-auth-form">
           {error && (
-            <p className="swiggy-auth-error-msg animate-shake">
-              {error}
-            </p>
+            <div className="swiggy-auth-error-msg animate-shake">
+              <span>{error}</span>
+              {error === 'Please verify your email before logging in' && (
+                <button 
+                  type="button" 
+                  onClick={async () => {
+                    await resendOtp(form.email);
+                    navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
+                  }}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#b31522', 
+                    textDecoration: 'underline', 
+                    cursor: 'pointer', 
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    padding: '2px 0'
+                  }}
+                >
+                  Click here to verify email
+                </button>
+              )}
+            </div>
           )}
 
           {/* Stacked Inputs Container */}
@@ -323,6 +344,16 @@ export default function Login() {
           flex-direction: column;
         }
 
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+          20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .animate-shake {
+          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
         .swiggy-auth-error-msg {
           background: #fff5f5;
           color: #b31522;
@@ -333,6 +364,10 @@ export default function Login() {
           text-align: center;
           border-radius: 4px;
           border: 1px solid rgba(179, 21, 34, 0.1);
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: center;
         }
 
         /* Stacked Inputs styling */
