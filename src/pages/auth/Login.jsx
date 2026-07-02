@@ -141,6 +141,24 @@ export default function Login() {
                   Click here to verify email
                 </button>
               )}
+              {error === 'Please login with Google' && (
+                <button 
+                  type="button" 
+                  onClick={handleGoogleSignIn}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#b31522', 
+                    textDecoration: 'underline', 
+                    cursor: 'pointer', 
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    padding: '2px 0'
+                  }}
+                >
+                  Click here to login with Google
+                </button>
+              )}
             </div>
           )}
 
