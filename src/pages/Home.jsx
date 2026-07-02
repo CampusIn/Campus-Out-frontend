@@ -39,23 +39,37 @@ export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [hostel, setHostel] = useState('');
+  const [locating, setLocating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const locationRef = useRef(null);
   
   const [restaurants, setRestaurants] = useState([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(true);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
+
+  // Auto-advance carousel every 3 seconds
+  useEffect(() => {
+    if (restaurants.length < 2 || carouselPaused) return;
+    const timer = setInterval(() => {
+      setCarouselIndex(prev => (prev + 1) % restaurants.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [restaurants.length, carouselPaused]);
 
   // Suggestions state
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef(null);
+  const popoverRef = useRef(null);
 
   // Click outside to close location dropdown and search suggestions dropdown
   useEffect(() => {
     function handleClickOutside(event) {
-      if (locationRef.current && !locationRef.current.contains(event.target)) {
+      if (locationRef.current && !locationRef.current.contains(event.target) &&
+          popoverRef.current && !popoverRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
@@ -69,21 +83,51 @@ export default function Home() {
   }, [locationRef, suggestionsRef]);
 
   const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setHostel('Hostel A');
-          setDropdownOpen(false);
-        },
-        () => {
-          setHostel('Hostel A');
+    if (!navigator.geolocation) {
+      setHostel('Location not supported');
+      setDropdownOpen(false);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await res.json();
+          const addr = data.address || {};
+          // Build a short human-readable label
+          const label =
+            addr.road ||
+            addr.neighbourhood ||
+            addr.suburb ||
+            addr.quarter ||
+            addr.city_district ||
+            addr.town ||
+            addr.city ||
+            'Current Location';
+          setHostel(label);
+        } catch {
+          setHostel(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        } finally {
+          setLocating(false);
           setDropdownOpen(false);
         }
-      );
-    } else {
-      setHostel('Hostel A');
-      setDropdownOpen(false);
-    }
+      },
+      (err) => {
+        setLocating(false);
+        let msg = 'Location unavailable';
+        if (err.code === 1) msg = 'Permission denied';
+        else if (err.code === 2) msg = 'Position unavailable';
+        else if (err.code === 3) msg = 'Request timed out';
+        setHostel(msg);
+        setDropdownOpen(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   // Redirect if already logged in to provide a smooth experience
@@ -224,49 +268,8 @@ export default function Home() {
                 </span>
                 <ChevronDown size={16} color="#718096" className="dropdown-arrow-icon" />
               </button>
-
-              {dropdownOpen && (
-                <div className="swiggy-location-popover animate-scale-in">
-                  {/* Current Location Option */}
-                  <button 
-                    type="button" 
-                    onClick={handleUseCurrentLocation}
-                    className="swiggy-location-popover-item current-loc-item"
-                  >
-                    <Navigation size={18} color="#b31522" className="popover-item-icon" />
-                    <div className="popover-item-details">
-                      <span className="current-loc-title">Use my current location</span>
-                    </div>
-                  </button>
-
-                  <div className="swiggy-popover-divider"></div>
-
-                  <span className="swiggy-popover-header">SAVED ADDRESSES</span>
-
-                  {/* Saved Addresses list */}
-                  {savedAddresses.map((addr) => (
-                    <button 
-                      key={addr.id}
-                      type="button"
-                      onClick={() => {
-                        setHostel(addr.name);
-                        setDropdownOpen(false);
-                      }}
-                      className="swiggy-location-popover-item address-item"
-                    >
-                      <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
-                      <div className="popover-item-details">
-                        <span className="address-name">{addr.name}</span>
-                        <span 
-                          className="address-desc" 
-                          dangerouslySetInnerHTML={{ __html: addr.detail }}
-                        />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
+
 
             <div className="search-field-divider"></div>
 
@@ -329,6 +332,60 @@ export default function Home() {
               Find Food
             </button>
           </form>
+
+          {/* Location popover - rendered OUTSIDE the form to avoid stacking context clipping */}
+          {dropdownOpen && (
+            <div
+              ref={popoverRef}
+              className="swiggy-location-popover animate-scale-in"
+              style={{ position: 'fixed', top: locationRef.current ? locationRef.current.getBoundingClientRect().bottom + 8 : 0, left: locationRef.current ? locationRef.current.getBoundingClientRect().left : 0, zIndex: 99999 }}
+            >
+              {/* Current Location Option */}
+              <button 
+                type="button" 
+                onClick={handleUseCurrentLocation}
+                disabled={locating}
+                className="swiggy-location-popover-item current-loc-item"
+                style={{ opacity: locating ? 0.7 : 1 }}
+              >
+                {locating ? (
+                  <span style={{ width: '18px', height: '18px', border: '2px solid #b31522', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                ) : (
+                  <Navigation size={18} color="#b31522" className="popover-item-icon" />
+                )}
+                <div className="popover-item-details">
+                  <span className="current-loc-title">
+                    {locating ? 'Detecting location...' : 'Use my current location'}
+                  </span>
+                </div>
+              </button>
+
+              <div className="swiggy-popover-divider"></div>
+
+              <span className="swiggy-popover-header">SAVED ADDRESSES</span>
+
+              {savedAddresses.map((addr) => (
+                <button 
+                  key={addr.id}
+                  type="button"
+                  onClick={() => {
+                    setHostel(addr.name);
+                    setDropdownOpen(false);
+                  }}
+                  className="swiggy-location-popover-item address-item"
+                >
+                  <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
+                  <div className="popover-item-details">
+                    <span className="address-name">{addr.name}</span>
+                    <span 
+                      className="address-desc" 
+                      dangerouslySetInnerHTML={{ __html: addr.detail }}
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -407,66 +464,89 @@ export default function Home() {
         <div className="section-container">
           <h2 className="explore-section-title">Restaurants to explore</h2>
           
-          {/* Swiggy Filter Chips */}
-          <div className="filter-chips-row">
-            <button type="button" onClick={() => navigate('/restaurants')} className="filter-chip">
-              Filter <SlidersHorizontal size={14} className="chip-icon-right" />
-            </button>
-            <button type="button" onClick={() => navigate('/restaurants')} className="filter-chip">
-              Sort By <ChevronDown size={14} className="chip-icon-right" />
-            </button>
-            <button type="button" onClick={() => navigate('/restaurants?category=Fast+Food')} className="filter-chip">
-              Fast Delivery <span className="new-badge-tag">NEW</span>
-            </button>
-            <button type="button" onClick={() => navigate('/restaurants?category=North+Indian')} className="filter-chip">
-              Veg/Non-Veg <ChevronDown size={14} className="chip-icon-right" />
-            </button>
-            <button type="button" onClick={() => navigate('/restaurants')} className="filter-chip">
-              Ratings <ChevronDown size={14} className="chip-icon-right" />
-            </button>
-            <button type="button" onClick={() => navigate('/restaurants')} className="filter-chip">
-              Delivery Time <ChevronDown size={14} className="chip-icon-right" />
-            </button>
-            <button type="button" onClick={() => navigate('/restaurants')} className="filter-chip">
-              Cost For Two <ChevronDown size={14} className="chip-icon-right" />
-            </button>
-          </div>
 
           {loadingRestaurants ? (
             <p style={{ textAlign: 'center', color: '#718096', padding: '40px', fontWeight: 650 }}>Loading canteens...</p>
           ) : restaurants.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#718096', padding: '40px', fontWeight: 650 }}>No canteens available on campus right now.</p>
           ) : (
-            <div className="swiggy-restaurants-grid animate-slide-up">
-              {restaurants.map((r, idx) => {
-                const foodImage = foodImages[idx % foodImages.length];
-                const promoText = promoTexts[idx % promoTexts.length];
-                return (
-                  <Link to={`/restaurants/${r._id}`} key={r._id} className="swiggy-restaurant-card">
-                    {/* Image Banner with Overlay */}
-                    <div className="swiggy-card-img-wrapper">
-                      <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
-                      <div className="swiggy-card-overlay">
-                        <span className="swiggy-promo-text">{promoText}</span>
-                      </div>
-                    </div>
-                    {/* Restaurant Info */}
-                    <div className="swiggy-card-info">
-                      <h3 className="swiggy-card-name">{r.restaurantName}</h3>
-                      <div className="swiggy-card-rating-row">
-                        <div className="swiggy-rating-star-circle">
-                          <Star size={10} color="#ffffff" fill="#ffffff" />
+            <div
+              className="restaurant-carousel-wrapper"
+              onMouseEnter={() => setCarouselPaused(true)}
+              onMouseLeave={() => setCarouselPaused(false)}
+            >
+              {/* Carousel track */}
+              <div
+                className="restaurant-carousel-track"
+                style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
+              >
+                {restaurants.map((r, idx) => {
+                  const foodImage = foodImages[idx % foodImages.length];
+                  const promoText = promoTexts[idx % promoTexts.length];
+                  return (
+                    <div className="restaurant-carousel-slide" key={r._id}>
+                      <Link to={`/restaurants/${r._id}`} className="swiggy-restaurant-card">
+                        <div className="swiggy-card-img-wrapper">
+                          <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
+                          <div className="swiggy-card-overlay">
+                            <span className="swiggy-promo-text">{promoText}</span>
+                          </div>
                         </div>
-                        <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
-                        <span className="swiggy-bullet-dot">&bull;</span>
-                        <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
-                      </div>
-                      <p className="swiggy-card-cuisines">{r.category}</p>
-                      <p className="swiggy-card-location">{r.location}</p>
+                        <div className="swiggy-card-info">
+                          <h3 className="swiggy-card-name">{r.restaurantName}</h3>
+                          <div className="swiggy-card-rating-row">
+                            <div className="swiggy-rating-star-circle">
+                              <Star size={10} color="#ffffff" fill="#ffffff" />
+                            </div>
+                            <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
+                            <span className="swiggy-bullet-dot">&bull;</span>
+                            <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
+                          </div>
+                          <p className="swiggy-card-cuisines">{r.category}</p>
+                          <p className="swiggy-card-location">{r.location}</p>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {/* Prev / Next arrows */}
+              {restaurants.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="carousel-arrow carousel-arrow-left"
+                    onClick={() => { setCarouselIndex(prev => (prev - 1 + restaurants.length) % restaurants.length); setCarouselPaused(true); setTimeout(() => setCarouselPaused(false), 5000); }}
+                    aria-label="Previous restaurant"
+                  >
+                    &#8249;
+                  </button>
+                  <button
+                    type="button"
+                    className="carousel-arrow carousel-arrow-right"
+                    onClick={() => { setCarouselIndex(prev => (prev + 1) % restaurants.length); setCarouselPaused(true); setTimeout(() => setCarouselPaused(false), 5000); }}
+                    aria-label="Next restaurant"
+                  >
+                    &#8250;
+                  </button>
+                </>
+              )}
+
+              {/* Dot indicators */}
+              {restaurants.length > 1 && (
+                <div className="carousel-dots">
+                  {restaurants.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`carousel-dot${i === carouselIndex ? ' active' : ''}`}
+                      onClick={() => { setCarouselIndex(i); setCarouselPaused(true); setTimeout(() => setCarouselPaused(false), 5000); }}
+                      aria-label={`Go to slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -761,6 +841,8 @@ export default function Home() {
           box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
           max-width: 820px;
           margin: 0 auto;
+          position: relative;
+          overflow: visible;
         }
 
         .search-field-location {
@@ -769,6 +851,7 @@ export default function Home() {
           align-items: center;
           padding: 0;
           flex: 1.1;
+          z-index: 500;
         }
 
         .location-dropdown-toggle-btn {
@@ -820,7 +903,7 @@ export default function Home() {
           width: 340px;
           max-height: 400px;
           overflow-y: auto;
-          z-index: 200;
+          z-index: 9999;
           display: flex;
           flex-direction: column;
           padding: 16px 0;
