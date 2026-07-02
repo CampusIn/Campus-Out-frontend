@@ -83,6 +83,10 @@ export default function RestaurantDetail() {
   });
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  useEffect(() => {
     if (location.state?.searchDish) {
       setDishSearch(location.state.searchDish);
     }
@@ -176,8 +180,108 @@ export default function RestaurantDetail() {
 
   if (loading) {
     return (
-      <div className="home-dashboard page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <p className="loading-text" style={{ color: '#718096' }}>Loading restaurant menu...</p>
+      <div className="restaurant-detail-page page animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc' }}>
+        {/* Dark / Premium Header Wrapper Skeleton */}
+        <div className="restaurant-detail-header-wrapper">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button 
+              type="button" 
+              onClick={() => navigate('/restaurants')}
+              style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: '4px' }}
+            >
+              <ArrowLeft size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Floating White Info Card Skeleton */}
+        <div style={{ 
+          background: '#ffffff', 
+          borderRadius: '20px', 
+          border: '1px solid #edf2f7', 
+          boxShadow: '0 8px 30px rgba(0,0,0,0.06)', 
+          margin: '-100px 16px 0 16px', 
+          padding: '35px 30px', 
+          position: 'relative', 
+          zIndex: 10 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              {/* Title shimmer */}
+              <div className="skeleton-shimmer" style={{ width: '60%', height: '24px', borderRadius: '8px', marginBottom: '12px' }}></div>
+              {/* Meta shimmer */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="skeleton-shimmer" style={{ width: '70px', height: '16px', borderRadius: '6px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '100px', height: '16px', borderRadius: '6px' }}></div>
+              </div>
+            </div>
+            {/* Rating box shimmer */}
+            <div className="skeleton-shimmer" style={{ width: '56px', height: '48px', borderRadius: '12px' }}></div>
+          </div>
+
+          <div style={{ borderTop: '1.5px dashed #edf2f7', margin: '20px 0 16px 0' }}></div>
+
+          {/* Location info shimmer */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="skeleton-shimmer" style={{ width: '16px', height: '16px', borderRadius: '50%' }}></div>
+            <div className="skeleton-shimmer" style={{ width: '40%', height: '14px', borderRadius: '4px' }}></div>
+          </div>
+        </div>
+
+        {/* Tab row shimmer */}
+        <div style={{ display: 'flex', borderBottom: '1px solid #edf2f7', margin: '24px 16px 0 16px', paddingBottom: '2px', gap: '24px' }}>
+          <div className="skeleton-shimmer" style={{ width: '80px', height: '20px', borderRadius: '4px', marginBottom: '8px' }}></div>
+          <div className="skeleton-shimmer" style={{ width: '80px', height: '20px', borderRadius: '4px', marginBottom: '8px' }}></div>
+          <div className="skeleton-shimmer" style={{ width: '80px', height: '20px', borderRadius: '4px', marginBottom: '8px' }}></div>
+        </div>
+
+        {/* Search bar shimmer */}
+        <div style={{ padding: '0 16px', marginTop: '16px' }}>
+          <div className="skeleton-shimmer" style={{ width: '100%', height: '42px', borderRadius: '16px' }}></div>
+        </div>
+
+        {/* Filters shimmer */}
+        <div style={{ padding: '0 16px', marginTop: '12px', display: 'flex', gap: '8px' }}>
+          <div className="skeleton-shimmer" style={{ width: '90px', height: '30px', borderRadius: '20px' }}></div>
+          <div className="skeleton-shimmer" style={{ width: '110px', height: '30px', borderRadius: '20px' }}></div>
+        </div>
+
+        {/* Categories / items list shimmer */}
+        <div style={{ padding: '0 16px', marginTop: '24px' }}>
+          {/* Category Title shimmer */}
+          <div className="skeleton-shimmer" style={{ width: '120px', height: '22px', borderRadius: '6px', marginBottom: '16px' }}></div>
+
+          {/* 3 food item skeletons */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              padding: '16px 0', 
+              borderBottom: '1px solid #f1f5f9',
+              gap: '16px'
+            }}>
+              <div style={{ flex: 1 }}>
+                {/* Veg icon shimmer */}
+                <div className="skeleton-shimmer" style={{ width: '14px', height: '14px', borderRadius: '3px', marginBottom: '8px' }}></div>
+                {/* Dish name shimmer */}
+                <div className="skeleton-shimmer" style={{ width: '45%', height: '18px', borderRadius: '6px', marginBottom: '8px' }}></div>
+                {/* Dish price shimmer */}
+                <div className="skeleton-shimmer" style={{ width: '20%', height: '14px', borderRadius: '4px', marginBottom: '8px' }}></div>
+                {/* Dish description shimmer */}
+                <div className="skeleton-shimmer" style={{ width: '85%', height: '12px', borderRadius: '4px', marginBottom: '4px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '60%', height: '12px', borderRadius: '4px' }}></div>
+              </div>
+              {/* Dish image + Add button shimmer */}
+              <div style={{ position: 'relative', width: '110px', height: '110px', flexShrink: 0 }}>
+                <div className="skeleton-shimmer" style={{ width: '100%', height: '100%', borderRadius: '16px' }}></div>
+                <div className="skeleton-shimmer" style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', width: '75px', height: '32px', borderRadius: '8px', border: '2px solid #ffffff' }}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <BottomNav activeTab="restaurants" />
       </div>
     );
   }

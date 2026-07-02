@@ -129,7 +129,48 @@ export default function Orders() {
       <div className="main-content-scrollable">
         
         {/* Active Orders Section */}
-        {activeOrders.length > 0 && (
+        {loading ? (
+          <div style={{ marginBottom: '28px' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111111', marginBottom: '16px' }}>Active Orders</h2>
+            <div className="orders-scroll-list responsive-grid-3">
+              <div 
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #edf2f7',
+                  borderRadius: '20px',
+                  padding: '20px',
+                  minHeight: '220px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.01)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="skeleton-shimmer" style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0 }}></div>
+                  <div style={{ flex: 1 }}>
+                    <div className="skeleton-shimmer" style={{ width: '60%', height: '18px', borderRadius: '6px', marginBottom: '6px' }}></div>
+                    <div className="skeleton-shimmer" style={{ width: '30%', height: '14px', borderRadius: '4px' }}></div>
+                  </div>
+                </div>
+                <div className="skeleton-shimmer" style={{ width: '80px', height: '22px', borderRadius: '12px', marginTop: '12px' }}></div>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '16px', borderTop: '1px solid #f7fafc', paddingTop: '12px', flex: 1, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    <div className="skeleton-shimmer" style={{ width: '56px', height: '56px', borderRadius: '12px' }}></div>
+                    <div className="skeleton-shimmer" style={{ width: '50px', height: '12px', borderRadius: '4px' }}></div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    <div className="skeleton-shimmer" style={{ width: '56px', height: '56px', borderRadius: '12px' }}></div>
+                    <div className="skeleton-shimmer" style={{ width: '40px', height: '12px', borderRadius: '4px' }}></div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #edf2f7', paddingTop: '12px', marginTop: '12px' }}>
+                  <div className="skeleton-shimmer" style={{ width: '50px', height: '12px', borderRadius: '4px' }}></div>
+                  <div className="skeleton-shimmer" style={{ width: '60px', height: '12px', borderRadius: '4px' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : activeOrders.length > 0 ? (
           <div style={{ marginBottom: '28px' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111111', marginBottom: '16px' }}>Active Orders</h2>
             
@@ -307,7 +348,7 @@ export default function Orders() {
               })}
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Database Order History Section */}
         <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111111', marginTop: '28px', marginBottom: '16px' }}>
@@ -315,7 +356,28 @@ export default function Orders() {
         </h2>
 
         {loading ? (
-          <p className="loading-text" style={{ textAlign: 'center', color: '#718096', padding: '24px' }}>Loading past orders...</p>
+          <div className="order-list responsive-grid-2 animate-slide-up">
+            {[1, 2, 3, 4].map((i) => (
+              <div 
+                key={i}
+                className="card"
+                style={{ padding: '20px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
+                  <div className="skeleton-shimmer" style={{ width: '70px', height: '14px', borderRadius: '4px' }}></div>
+                  <div className="skeleton-shimmer" style={{ width: '80px', height: '22px', borderRadius: '12px' }}></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div className="skeleton-shimmer" style={{ width: '50%', height: '18px', borderRadius: '6px' }}></div>
+                  <div className="skeleton-shimmer" style={{ width: '16px', height: '16px', borderRadius: '4px' }}></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div className="skeleton-shimmer" style={{ width: '60px', height: '14px', borderRadius: '4px' }}></div>
+                  <div className="skeleton-shimmer" style={{ width: '80px', height: '14px', borderRadius: '4px' }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : completedOrders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0', color: '#718096', border: '1px dashed #e2e8f0', borderRadius: '16px', background: '#ffffff' }}>
             <p style={{ margin: 0, fontWeight: 600 }}>No past orders found</p>

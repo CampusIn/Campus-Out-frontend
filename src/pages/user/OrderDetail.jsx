@@ -21,6 +21,10 @@ export default function OrderDetail() {
   const [reviewLoading, setReviewLoading] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [orderId]);
+
+  useEffect(() => {
     fetchOrderDetails();
   }, [orderId]);
 
@@ -67,8 +71,69 @@ export default function OrderDetail() {
 
   if (loading) {
     return (
-      <div className="home-dashboard page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <p className="loading-text" style={{ color: '#718096' }}>Loading order details...</p>
+      <div className="home-dashboard page animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc' }}>
+        {/* Back navigation shimmer */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <button 
+            type="button" 
+            onClick={() => navigate('/orders')}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div className="skeleton-shimmer" style={{ width: '100px', height: '16px', borderRadius: '4px' }}></div>
+        </div>
+
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          {/* Main Card Shimmer */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px' }}>
+            
+            {/* Header row shimmer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #edf2f7', paddingBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <div className="skeleton-shimmer" style={{ width: '120px', height: '24px', borderRadius: '6px', marginBottom: '6px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '160px', height: '16px', borderRadius: '4px' }}></div>
+              </div>
+              <div className="skeleton-shimmer" style={{ width: '90px', height: '28px', borderRadius: '50px' }}></div>
+            </div>
+
+            {/* Details list box shimmer */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', background: '#f7fafc', padding: '16px', borderRadius: '16px', border: '1px solid #edf2f7' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="skeleton-shimmer" style={{ width: '120px', height: '14px', borderRadius: '4px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '100px', height: '14px', borderRadius: '4px' }}></div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="skeleton-shimmer" style={{ width: '110px', height: '14px', borderRadius: '4px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '60px', height: '14px', borderRadius: '4px' }}></div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="skeleton-shimmer" style={{ width: '90px', height: '14px', borderRadius: '4px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '130px', height: '14px', borderRadius: '4px' }}></div>
+              </div>
+              <div style={{ borderTop: '1.5px dashed #e2e8f0', paddingTop: '12px', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <div className="skeleton-shimmer" style={{ width: '80px', height: '18px', borderRadius: '4px' }}></div>
+                <div className="skeleton-shimmer" style={{ width: '70px', height: '18px', borderRadius: '4px' }}></div>
+              </div>
+            </div>
+
+            {/* Items Summary shimmer title */}
+            <div className="skeleton-shimmer" style={{ width: '110px', height: '18px', borderRadius: '4px', marginTop: '12px', marginBottom: '4px' }}></div>
+
+            {/* 2 item rows shimmer */}
+            {[1, 2].map((i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="skeleton-shimmer" style={{ width: '40px', height: '40px', borderRadius: '8px', flexShrink: 0 }}></div>
+                  <div className="skeleton-shimmer" style={{ width: '120px', height: '16px', borderRadius: '4px' }}></div>
+                </div>
+                <div className="skeleton-shimmer" style={{ width: '50px', height: '16px', borderRadius: '4px' }}></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <BottomNav activeTab="orders" />
       </div>
     );
   }
