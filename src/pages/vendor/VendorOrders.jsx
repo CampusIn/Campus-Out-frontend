@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { getVendorOrders, changeOrderStatus } from '../../api/order.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
@@ -147,9 +147,14 @@ export default function VendorOrders() {
                         {new Date(o.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
                       </span>
                     </div>
-                    <span className={`status-badge ${o.orderStatus.toLowerCase().replace(/_/g, '-')}`}>
-                      {o.orderStatus.replace(/_/g, ' ')}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                      <span className={`status-badge ${o.orderStatus.toLowerCase().replace(/_/g, '-')}`}>
+                        {o.orderStatus.replace(/_/g, ' ')}
+                      </span>
+                      <Link to={`/vendor/orders/${o._id}`} style={{ fontSize: '0.78rem', color: 'var(--vendor-primary)', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        View Details <ChevronRight size={12} />
+                      </Link>
+                    </div>
                   </div>
 
                   {/* Customer info */}
@@ -158,16 +163,16 @@ export default function VendorOrders() {
                       <User size={14} color="#64748b" />
                       <strong>Customer:</strong> {o.user?.username || 'Unknown Customer'}
                     </span>
-                    {o.customerPhone && (
+                    {(o.customerPhone || o.phone || o.user?.phone) && (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Phone size={14} color="#64748b" />
-                        <strong>Phone:</strong> {o.customerPhone}
+                        <strong>Phone:</strong> {o.customerPhone || o.phone || o.user?.phone}
                       </span>
                     )}
-                    {o.deliveryAddress && (
+                    {(o.deliveryAddress || o.address) && (
                       <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <MapPin size={14} color="#64748b" style={{ marginTop: '2px' }} />
-                        <span><strong>Address:</strong> {o.deliveryAddress}</span>
+                        <span><strong>Address:</strong> {o.deliveryAddress || o.address}</span>
                       </span>
                     )}
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

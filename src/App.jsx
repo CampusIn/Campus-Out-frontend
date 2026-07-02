@@ -21,6 +21,7 @@ import Profile from './pages/user/Profile';
 import VendorLayout from './components/VendorLayout';
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorOrders from './pages/vendor/VendorOrders';
+import VendorOrderDetails from './pages/vendor/VendorOrderDetails';
 import VendorInventory from './pages/vendor/VendorInventory';
 import VendorMenuManagement from './pages/vendor/VendorMenuManagement';
 import VendorBulkUpload from './pages/vendor/VendorBulkUpload';
@@ -67,6 +68,7 @@ export default function App() {
                       <Route index element={<Navigate to="dashboard" replace />} />
                       <Route path="dashboard" element={<VendorDashboard />} />
                       <Route path="orders" element={<VendorOrders />} />
+                      <Route path="orders/:orderId" element={<VendorOrderDetails />} />
                       <Route path="inventory" element={<VendorInventory />} />
                       <Route path="menu" element={<VendorMenuManagement />} />
                       <Route path="menu/bulk-upload" element={<VendorBulkUpload />} />

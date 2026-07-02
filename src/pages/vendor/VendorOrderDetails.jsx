@@ -1,0 +1,347 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
+import { getSingleVendorOrder, changeOrderStatus } from '../../api/order.api';
+import { assignDeliveryPartner } from '../../api/delivery.api';
+import { useToast } from '../../context/ToastContext';
+import { 
+  ArrowLeft, Clock, User, Phone, MapPin, CreditCard, 
+  CheckCircle2, UserPlus, ChevronRight, Loader, Package 
+} from 'lucide-react';
+
+const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
+
+export default function VendorOrderDetails() {
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { restaurant } = useOutletContext();
+
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Assignment and status states
+  const [partnerId, setPartnerId] = useState('');
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+
+  useEffect(() => {
+    if (orderId && restaurant) {
+      fetchOrderDetails();
+    }
+  }, [orderId, restaurant]);
+
+  const fetchOrderDetails = async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const { data } = await getSingleVendorOrder(orderId);
+      setOrder(data.data || null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to fetch order details');
+      navigate('/vendor/orders');
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (currentStatus) => {
+    if (restaurant?.isSuspended) {
+      toast.error('Actions are disabled because your restaurant is suspended.');
+      return;
+    }
+    const idx = statusFlow.indexOf(currentStatus);
+    if (idx === -1 || idx >= statusFlow.length - 1) return;
+    const nextStatus = statusFlow[idx + 1];
+    
+    setStatusChangeLoading(true);
+    try {
+      await changeOrderStatus(orderId, nextStatus);
+      await fetchOrderDetails(true);
+      toast.success(`Order status updated to ${nextStatus}!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update order status');
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  const handleAssignPartner = async () => {
+    if (restaurant?.isSuspended) {
+      toast.error('Actions are disabled because your restaurant is suspended.');
+      return;
+    }
+    if (!partnerId.trim()) {
+      toast.error('Please enter a valid Delivery Partner ID');
+      return;
+    }
+    
+    setAssignLoading(true);
+    try {
+      await assignDeliveryPartner(orderId, partnerId.trim());
+      toast.success('Delivery partner assigned successfully!');
+      setPartnerId('');
+      await fetchOrderDetails(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign delivery partner');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const getNextStatusLabel = (currentStatus) => {
+    const idx = statusFlow.indexOf(currentStatus);
+    if (idx === -1 || idx >= statusFlow.length - 1) return null;
+    return `Move to ${statusFlow[idx + 1]}`;
+  };
+
+  if (loading || !order) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ width: '200px', height: '28px' }} className="skeleton"></div>
+        <div className="skeleton" style={{ height: '400px', borderRadius: '16px' }}></div>
+      </div>
+    );
+  }
+
+  const subTotal = order.items ? order.items.reduce((total, item) => total + (item.priceAtPurchase * item.quantity), 0) : order.totalAmount;
+  const discount = order.discountAmount || 0;
+  const gst = order.gstAmount || 0;
+  const packaging = order.packagingCharge || 0;
+  const delivery = order.deliveryCharge || 0;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
+      
+      {/* Back navigation & Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button 
+          className="btn btn-outline" 
+          onClick={() => navigate('/vendor/orders')}
+          style={{ width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
+            Order #{order.orderNumber}
+          </h1>
+          <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+            <Clock size={14} />
+            {new Date(order.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+        
+        {/* Left Column: Order details & Items */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          <div className="vendor-card" style={{ padding: '24px', border: '1px solid var(--vendor-border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Status & Actions</h3>
+              <span className={`status-badge ${order.orderStatus.toLowerCase().replace(/_/g, '-')}`}>
+                {order.orderStatus.replace(/_/g, ' ')}
+              </span>
+            </div>
+
+            {/* Status action buttons */}
+            {order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                  Update the order status below to notify the customer.
+                </p>
+                <button 
+                  className="btn btn-primary hover-lift"
+                  style={{ background: 'var(--vendor-primary)', borderColor: 'var(--vendor-primary)', color: '#ffffff', width: '100%', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px' }}
+                  disabled={restaurant?.isSuspended || statusChangeLoading}
+                  onClick={() => handleStatusChange(order.orderStatus)}
+                >
+                  {statusChangeLoading ? (
+                    <Loader size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      {getNextStatusLabel(order.orderStatus)}
+                      <ChevronRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.9rem', color: '#475569', margin: 0, fontWeight: 600 }}>
+                This order has been {order.orderStatus.toLowerCase()}. No further actions can be taken.
+              </p>
+            )}
+          </div>
+
+          <div className="vendor-card" style={{ padding: '24px', border: '1px solid var(--vendor-border)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Package size={18} color="var(--vendor-primary)" />
+              Items Ordered
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {order.items?.map((item, index) => (
+                <div key={index} style={{ display: 'flex', gap: '16px', alignItems: 'center', paddingBottom: '16px', borderBottom: index !== order.items.length - 1 ? '1px dashed #e2e8f0' : 'none' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#f8fafc', overflow: 'hidden', flexShrink: 0, border: '1px solid #edf2f7' }}>
+                    {item.menuItem?.image ? (
+                      <img src={item.menuItem.image} alt={item.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                        <Package size={24} />
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.itemName}
+                    </h4>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Qty: <strong style={{ color: '#1e293b' }}>{item.quantity}</strong> &times; ₹{item.priceAtPurchase}</span>
+                  </div>
+                  <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>
+                    ₹{item.priceAtPurchase * item.quantity}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column: Customer info, Payment, Delivery */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          <div className="vendor-card" style={{ padding: '24px', border: '1px solid var(--vendor-border)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: '0 0 16px 0' }}>Customer Details</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', color: '#475569' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <User size={16} color="#64748b" style={{ marginTop: '2px' }} />
+                <div style={{ flex: 1 }}>
+                  <strong style={{ display: 'block', color: '#1e293b', marginBottom: '2px' }}>Name</strong>
+                  {order.user?.username || 'Unknown Customer'}
+                </div>
+              </div>
+              
+              {(order.customerPhone || order.user?.phone) && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <Phone size={16} color="#64748b" style={{ marginTop: '2px' }} />
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ display: 'block', color: '#1e293b', marginBottom: '2px' }}>Phone Number</strong>
+                    <a href={`tel:${order.customerPhone || order.user?.phone}`} style={{ color: 'var(--vendor-primary)', textDecoration: 'none', fontWeight: 600 }}>
+                      {order.customerPhone || order.user?.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {(order.deliveryAddress || order.user?.address) && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <MapPin size={16} color="#64748b" style={{ marginTop: '2px' }} />
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ display: 'block', color: '#1e293b', marginBottom: '2px' }}>Delivery Address</strong>
+                    {order.deliveryAddress || order.user?.address}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="vendor-card" style={{ padding: '24px', border: '1px solid var(--vendor-border)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: '0 0 16px 0' }}>Payment Summary</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CreditCard size={18} color="#64748b" />
+              </div>
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.9rem', color: '#1e293b' }}>
+                  {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Pay on Pickup'}
+                </strong>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: order.paymentStatus === 'PAID' ? '#06c169' : '#eab308' }}>
+                  STATUS: {order.paymentStatus}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.9rem', color: '#64748b' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Subtotal</span>
+                <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{subTotal}</span>
+              </div>
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Coupon Discount {order.couponCode ? `(${order.couponCode})` : ''}</span>
+                  <span style={{ color: '#06c169', fontWeight: 700 }}>-₹{discount}</span>
+                </div>
+              )}
+              {gst > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>GST</span>
+                  <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{gst}</span>
+                </div>
+              )}
+              {packaging > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Packaging Charge</span>
+                  <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{packaging}</span>
+                </div>
+              )}
+              {delivery > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Delivery Charge</span>
+                  <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{delivery}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1', fontSize: '1.05rem', fontWeight: 800, color: '#1e293b' }}>
+                <span>Total Amount</span>
+                <span style={{ color: 'var(--vendor-primary)' }}>₹{order.totalAmount}</span>
+              </div>
+            </div>
+          </div>
+
+          {order.orderStatus !== 'CANCELLED' && (
+            <div className="vendor-card" style={{ padding: '24px', border: '1px solid var(--vendor-border)' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: '0 0 16px 0' }}>Delivery Assignment</h3>
+              {order.deliveryPartner ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e6f9f0', color: '#06c169', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.9rem', color: '#1e293b' }}>Partner Assigned</strong>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{order.deliveryPartner.username || order.deliveryPartner.name || order.deliveryPartner}</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                    Enter the Delivery Partner ID to assign this order for delivery.
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text"
+                      className="input-field" 
+                      style={{ flex: 1, padding: '12px 16px', borderRadius: '10px', border: '1.5px solid #e2e8f0', outline: 'none', fontSize: '0.9rem' }}
+                      placeholder="Partner ID..."
+                      value={partnerId}
+                      onChange={(e) => setPartnerId(e.target.value)}
+                      disabled={restaurant?.isSuspended || assignLoading}
+                    />
+                    <button 
+                      className="btn btn-outline hover-lift" 
+                      style={{ padding: '0 20px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+                      disabled={restaurant?.isSuspended || assignLoading}
+                      onClick={handleAssignPartner}
+                    >
+                      {assignLoading ? <Loader size={16} className="animate-spin" /> : <UserPlus size={16} />}
+                      Assign
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}

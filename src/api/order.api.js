@@ -15,6 +15,9 @@ export const cancelOrder = (orderId) =>
 export const getVendorOrders = (params) =>
   api.get('/user/order/restaurant', { params });
 
+export const getSingleVendorOrder = (orderId) =>
+  api.get(`/user/order/restaurant/${orderId}`);
+
 export const changeOrderStatus = (orderId, orderStatus) =>
   api.patch(`/user/order/${orderId}/status`, { orderStatus });
 
