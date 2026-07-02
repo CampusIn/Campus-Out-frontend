@@ -227,7 +227,7 @@ export default function AdminUsers() {
                     <td className="text-muted text-sm">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Calendar size={14} />
-                        {new Date(usr.createdAt).toLocaleDateString(undefined, {
+                        {new Date(usr.createdAt).toLocaleDateString('en-IN', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -285,7 +285,7 @@ export default function AdminUsers() {
                     <span>Joined:</span>
                     <span style={{ fontWeight: 650, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Calendar size={12} />
-                      {new Date(usr.createdAt).toLocaleDateString(undefined, {
+                      {new Date(usr.createdAt).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',

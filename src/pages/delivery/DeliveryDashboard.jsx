@@ -442,7 +442,7 @@ export default function DeliveryDashboard() {
                   <div className="order-card-header">
                     <div>
                       <span className="card-order-number">Order #{o.orderNumber}</span>
-                      <span className="card-order-date">{new Date(o.createdAt).toLocaleString()}</span>
+                      <span className="card-order-date">{new Date(o.createdAt).toLocaleString('en-IN')}</span>
                     </div>
                     <span className={`status-badge-ui ${o.orderStatus}`}>
                       {o.orderStatus.replace(/_/g, ' ')}
@@ -568,7 +568,7 @@ export default function DeliveryDashboard() {
                       <tr key={o._id}>
                         <td style={{ fontWeight: 800 }}>#{o.orderNumber}</td>
                         <td>{o.restaurantName}</td>
-                        <td className="text-muted">{new Date(o.createdAt).toLocaleDateString()}</td>
+                        <td className="text-muted">{new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
                         <td style={{ fontWeight: 700 }}>₹{o.totalAmount}</td>
                         <td>
                           <span className="history-status-badge">

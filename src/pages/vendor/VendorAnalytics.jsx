@@ -55,7 +55,7 @@ export default function VendorAnalytics() {
       if (revRes.status === 'fulfilled' && revRes.value?.data?.data) {
         const rawRev = revRes.value.data.data || [];
         setRevenueData(rawRev.map(item => ({
-          date: item.date ? new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '',
+          date: item.date ? new Date(item.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : '',
           rawDate: item.date || '',
           revenue: item.revenue || 0
         })));

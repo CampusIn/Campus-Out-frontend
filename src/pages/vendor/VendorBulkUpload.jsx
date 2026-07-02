@@ -43,7 +43,8 @@ export default function VendorBulkUpload() {
         description: '',
         mrp: '',
         price: '',
-        category: ''
+        category: '',
+        foodType: 'veg'
       };
     });
 
@@ -70,7 +71,8 @@ export default function VendorBulkUpload() {
         description: '',
         mrp: '',
         price: '',
-        category: ''
+        category: '',
+        foodType: 'veg'
       };
     });
 
@@ -155,7 +157,8 @@ export default function VendorBulkUpload() {
       description: item.description.trim(),
       mrp: parseFloat(item.mrp),
       price: parseFloat(item.price),
-      category: item.category
+      category: item.category,
+      foodType: item.foodType || 'veg'
     }));
 
     fd.append('items', JSON.stringify(itemsData));
@@ -327,15 +330,31 @@ export default function VendorBulkUpload() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>Category *</label>
-                      <CustomSelect
-                        options={categories}
-                        value={item.category}
-                        onChange={(val) => handleFieldChange(item.id, 'category', val)}
-                        placeholder="Select Cuisine"
-                        style={{ height: '38px' }}
-                      />
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>Category *</label>
+                        <CustomSelect
+                          options={categories}
+                          value={item.category}
+                          onChange={(val) => handleFieldChange(item.id, 'category', val)}
+                          placeholder="Select Cuisine"
+                          style={{ height: '38px' }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>Food Type *</label>
+                        <CustomSelect
+                          options={[
+                            { value: 'veg', label: 'Veg' },
+                            { value: 'non-veg', label: 'Non-Veg' }
+                          ]}
+                          value={item.foodType || 'veg'}
+                          onChange={(val) => handleFieldChange(item.id, 'foodType', val)}
+                          placeholder="Select Type"
+                          style={{ height: '38px' }}
+                        />
+                      </div>
                     </div>
 
                     {hasValError && (

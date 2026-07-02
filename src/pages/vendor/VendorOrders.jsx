@@ -144,7 +144,7 @@ export default function VendorOrders() {
                       <span style={{ fontWeight: 850, fontSize: '1.05rem', color: '#1e293b' }}>#{o.orderNumber}</span>
                       <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                         <Clock size={12} />
-                        {new Date(o.createdAt).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
+                        {new Date(o.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
                       </span>
                     </div>
                     <span className={`status-badge ${o.orderStatus.toLowerCase().replace(/_/g, '-')}`}>

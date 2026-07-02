@@ -133,7 +133,7 @@ export default function OrderDetail() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#718096', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> Placed On</span>
-              <span style={{ fontWeight: 700, color: '#111111' }}>{new Date(order.createdAt).toLocaleString()}</span>
+              <span style={{ fontWeight: 700, color: '#111111' }}>{new Date(order.createdAt).toLocaleString('en-IN')}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 800, borderTop: '1.5px dashed #e2e8f0', paddingTop: '12px', marginTop: '4px', color: '#111111' }}>
               <span>Total Paid</span>

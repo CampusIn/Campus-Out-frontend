@@ -456,7 +456,7 @@ export default function AdminDashboard() {
                           <td className="text-muted text-sm">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <Calendar size={14} />
-                              {new Date(ord.createdAt).toLocaleString(undefined, {
+                              {new Date(ord.createdAt).toLocaleString('en-IN', {
                                 dateStyle: 'short',
                                 timeStyle: 'short'
                               })}
@@ -503,7 +503,7 @@ export default function AdminDashboard() {
                           <span>Date:</span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Calendar size={12} />
-                            {new Date(ord.createdAt).toLocaleString(undefined, {
+                            {new Date(ord.createdAt).toLocaleString('en-IN', {
                               dateStyle: 'short',
                               timeStyle: 'short'
                             })}
@@ -629,7 +629,7 @@ export default function AdminDashboard() {
               <div className="modal-grid-cols-2" style={{ gap: '8px 16px', marginTop: '4px' }}>
                 <div>
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Placed On</span>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>{new Date(selectedOrder.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>{new Date(selectedOrder.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Status</span>

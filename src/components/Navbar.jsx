@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike, MapPin, ChevronDown, Navigation, Search } from 'lucide-react';
+import { getMenuSuggestions } from '../api/menu.api';
 
 const savedAddresses = [
   { id: 'hostel_a', name: 'Hostel A', detail: 'Hostel A (Boys) &bull; Men\'s Hostel Block, Campus Road' },
@@ -28,22 +29,61 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const locationRef = useRef(null);
 
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
+
   // Sync state with URL search params when URL changes
   useEffect(() => {
     setSearch(searchParams.get('search') || '');
     setActiveLocation(searchParams.get('hostel') || '');
   }, [searchParams]);
 
-  // Close dropdown on click outside
+  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (locationRef.current && !locationRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Fetch search suggestions with debounce
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (!trimmed) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      setShowSuggestions(true);
+      try {
+        const res = await getMenuSuggestions(trimmed);
+        if (res.data?.success) {
+          setSuggestions(res.data.data || []);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -116,7 +156,7 @@ export default function Navbar() {
   const isHomepage = location.pathname === '/restaurants';
 
   return (
-    <nav className="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000 }}>
+    <nav className="navbar" style={{ position: 'sticky', top: 0, zIndex: 10000 }}>
       <ContentWrapper className="navbar-flex-row">
         <div className="navbar-left-content">
           <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
@@ -219,15 +259,66 @@ export default function Navbar() {
         {isHomepage ? (
           <div className="navbar-right-content-homepage">
             {/* Search Bar */}
-            <form onSubmit={handleSearchSubmit} className="desktop-header-search-form-nav">
+            <form onSubmit={handleSearchSubmit} className="desktop-header-search-form-nav" ref={suggestionsRef}>
               <input 
                 type="text" 
                 className="desktop-search-input-field-nav"
                 placeholder="Search for restaurant and food" 
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
+                onFocus={() => {
+                  if (search.trim()) {
+                    setShowSuggestions(true);
+                  }
+                }}
               />
               <Search size={16} color="#686b78" className="search-right-lens-icon-nav" style={{ cursor: 'pointer' }} onClick={handleSearchSubmit} />
+
+              {showSuggestions && (
+                <div className="nav-search-suggestions-dropdown">
+                  {loadingSuggestions ? (
+                    <div className="nav-suggestion-loading">
+                      <div className="nav-suggestion-spinner"></div>
+                      <span>Searching for dishes...</span>
+                    </div>
+                  ) : suggestions.length > 0 ? (
+                    suggestions.map((item) => (
+                      <div 
+                        key={item._id} 
+                        className="nav-suggestion-item"
+                        onClick={() => {
+                          setShowSuggestions(false);
+                          if (item.restaurant) {
+                            navigate(`/restaurants/${item.restaurant}`, { state: { searchDish: item.name } });
+                          } else {
+                            navigate(`/restaurants`);
+                          }
+                        }}
+                      >
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="nav-suggestion-image" />
+                        ) : (
+                          <div className="nav-suggestion-image-placeholder">
+                            <Search size={14} color="#a0aec0" />
+                          </div>
+                        )}
+                        <div className="nav-suggestion-info">
+                          <span className="nav-suggestion-name">{item.name}</span>
+                          <span className="nav-suggestion-meta">
+                            {item.category && <span className="nav-suggestion-category">{item.category}</span>}
+                            {item.category && item.price && <span className="nav-suggestion-dot">&bull;</span>}
+                            {item.price && <span className="nav-suggestion-price">₹{item.price}</span>}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="nav-suggestion-empty">
+                      No dishes found matching "{search}"
+                    </div>
+                  )}
+                </div>
+              )}
             </form>
 
             {/* Homepage Desktop-Only circular Profile User Avatar button */}

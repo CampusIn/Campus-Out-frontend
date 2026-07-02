@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCart, updateCartItemQty, deleteCartItem, clearCart } from '../../api/cart.api';
-import { createOrder, getCoupons, applyCoupon } from '../../api/order.api';
+import { getCart, clearCart } from '../../api/cart.api';
+import { createOrder, getCoupons, applyCoupon, getPlatformSettings } from '../../api/order.api';
 import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent, Phone } from 'lucide-react';
 
 export default function Cart() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { cart, setCart, fetchCart, loading } = useCart();
+  const confirm = useConfirm();
+  const { cart, setCart, fetchCart, loading, updateCartItemQtyOptimistic, deleteCartItemOptimistic } = useCart();
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
   const [deliveryAddress, setDeliveryAddress] = useState('Hostel Block 3, Room 204');
   const [paymentMethod, setPaymentMethod] = useState('COD');
@@ -24,6 +26,8 @@ export default function Cart() {
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [shakePhone, setShakePhone] = useState(false);
+  const [shakeAddress, setShakeAddress] = useState(false);
 
   // Resize listener for responsive modal/bottom-sheet toggle
   useEffect(() => {
@@ -62,19 +66,38 @@ export default function Cart() {
     reapplyActiveCoupon();
   }, [cart?.totalAmount, cart?.items?.length]);
 
-  const DEFAULT_SETTINGS = {
+  const [platformSettings, setPlatformSettings] = useState({
     deliveryCharge: 20,
     freeDeliveryAbove: 80,
     gstPercentage: 0,
     packagingCharge: 0
-  };
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await getPlatformSettings();
+        if (data.success && data.data) {
+          setPlatformSettings({
+            deliveryCharge: Number(data.data.deliveryCharge ?? 20),
+            freeDeliveryAbove: Number(data.data.freeDeliveryAbove ?? 80),
+            gstPercentage: Number(data.data.gstPercentage ?? 0),
+            packagingCharge: Number(data.data.packagingCharge ?? 0)
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch platform settings, using defaults.', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const getDefaultPricing = () => {
     if (!cart) return null;
     const subTotal = cart.totalAmount;
-    const gstAmount = Math.round((subTotal * DEFAULT_SETTINGS.gstPercentage) / 100);
-    const packagingCharge = DEFAULT_SETTINGS.packagingCharge;
-    const deliveryCharge = subTotal >= DEFAULT_SETTINGS.freeDeliveryAbove ? 0 : DEFAULT_SETTINGS.deliveryCharge;
+    const gstAmount = Math.round((subTotal * platformSettings.gstPercentage) / 100);
+    const packagingCharge = platformSettings.packagingCharge;
+    const deliveryCharge = subTotal >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge;
     const finalAmount = subTotal + gstAmount + deliveryCharge + packagingCharge;
 
     return {
@@ -101,15 +124,13 @@ export default function Cart() {
   const handleQtyChange = async (menuItemId, quantity) => {
     if (quantity < 1) return;
     try {
-      await updateCartItemQty(menuItemId, quantity);
-      fetchCart();
+      await updateCartItemQtyOptimistic(menuItemId, quantity);
     } catch {}
   };
 
   const handleRemove = async (menuItemId) => {
     try {
-      await deleteCartItem(menuItemId);
-      fetchCart();
+      await deleteCartItemOptimistic(menuItemId);
     } catch {}
   };
 
@@ -121,13 +142,28 @@ export default function Cart() {
   };
 
   const handleOrder = async (paymentMethod) => {
-    if (!customerPhone.trim() || !/^[6-9]\d{9}$/.test(customerPhone.trim())) {
-      toast.error('Please enter a valid 10-digit mobile number');
-      return;
+    let hasError = false;
+
+    if (!deliveryAddress.trim()) {
+      setShakeAddress(true);
+      setTimeout(() => setShakeAddress(false), 500);
+      hasError = true;
     }
+
+    if (!customerPhone.trim() || !/^[6-9]\d{9}$/.test(customerPhone.trim())) {
+      setShakePhone(true);
+      setTimeout(() => setShakePhone(false), 500);
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const isConfirmed = await confirm('Are you sure you want to place this order?');
+    if (!isConfirmed) return;
+
     try {
       const { data } = await createOrder(paymentMethod, selectedCoupon?.couponId, customerPhone.trim(), deliveryAddress.trim());
-      toast.success(`Order placed successfully! #${data.data.orderNumber}`);
+      toast.success(`Order placed successfully! #${data.data?.order?.orderNumber || ''}`);
       setCart(null);
       setSelectedCoupon(null);
       setPricingSummary(null);
@@ -445,6 +481,7 @@ export default function Cart() {
                   <input
                     type="text"
                     id="deliveryAddress"
+                    className={shakeAddress ? 'shake-input' : ''}
                     placeholder="Enter delivery room, department or hostel location..."
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
@@ -488,6 +525,7 @@ export default function Cart() {
                   <input
                     type="tel"
                     id="customerPhone"
+                    className={shakePhone ? 'shake-input' : ''}
                     placeholder="Enter your 10-digit mobile number..."
                     value={customerPhone}
                     maxLength={10}
@@ -653,7 +691,7 @@ export default function Cart() {
                   type="button"
                   className="btn btn-primary hover-lift hover-darken" 
                   onClick={() => handleOrder(paymentMethod)}
-                  disabled={!deliveryAddress.trim() || !customerPhone.trim() || !/^[6-9]\d{9}$/.test(customerPhone)}
+                  disabled={false}
                   style={{ 
                     padding: '16px', 
                     background: '#b31522', 
@@ -662,8 +700,8 @@ export default function Cart() {
                     borderRadius: '12px', 
                     fontWeight: 700, 
                     fontSize: '0.95rem', 
-                    cursor: !deliveryAddress.trim() ? 'not-allowed' : 'pointer',
-                    opacity: !deliveryAddress.trim() ? 0.6 : 1
+                    cursor: 'pointer',
+                    opacity: 1
                   }}
                 >
                   Confirm & Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
@@ -771,19 +809,7 @@ export default function Cart() {
             {/* Right Col: Summary Card */}
             <div className="split-right-aside" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
               
-              {/* Make it a gift card */}
-              <div className="card gift-promo-card hover-lift" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: '#fff5f5', color: '#b31522', padding: '8px', borderRadius: '8px', display: 'flex' }}>
-                    <Gift size={20} />
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: '#111111' }}>Make it a gift</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#718096' }}>Add a personalized gift note</p>
-                  </div>
-                </div>
-                <button type="button" style={{ background: 'none', border: 'none', color: '#b31522', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}>Add</button>
-              </div>
+
 
               {/* Premium Coupons & Offers Section */}
               <div className="card hover-lift" style={{

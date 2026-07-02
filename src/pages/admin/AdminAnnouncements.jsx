@@ -353,7 +353,7 @@ export default function AdminAnnouncements() {
                       {a.description}
                     </td>
                     <td className="text-muted text-sm">
-                      {new Date(a.expiresAt || a.expiresDate).toLocaleDateString(undefined, {
+                      {new Date(a.expiresAt || a.expiresDate).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -420,7 +420,7 @@ export default function AdminAnnouncements() {
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Expires:</span>
                     <span style={{ fontWeight: 650, color: '#1e293b' }}>
-                      {new Date(a.expiresAt || a.expiresDate).toLocaleDateString(undefined, {
+                      {new Date(a.expiresAt || a.expiresDate).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -548,7 +548,7 @@ export default function AdminAnnouncements() {
               <div className="drawer-item">
                 <span className="drawer-label">Expires On</span>
                 <span className="drawer-value">
-                  {new Date(selectedAnnouncement.expiresAt || selectedAnnouncement.expiresDate).toLocaleString(undefined, {
+                  {new Date(selectedAnnouncement.expiresAt || selectedAnnouncement.expiresDate).toLocaleString('en-IN', {
                     dateStyle: 'long',
                     timeStyle: 'short'
                   })}
@@ -563,7 +563,7 @@ export default function AdminAnnouncements() {
 
                 <div className="drawer-item">
                   <span className="drawer-label">Published Date</span>
-                  <span className="drawer-value">{new Date(selectedAnnouncement.createdAt || Date.now()).toLocaleString()}</span>
+                  <span className="drawer-value">{new Date(selectedAnnouncement.createdAt || Date.now()).toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>

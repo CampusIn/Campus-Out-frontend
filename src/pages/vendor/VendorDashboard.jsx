@@ -120,7 +120,7 @@ export default function VendorDashboard() {
         const rawRev = revenueRes.value.data.data || [];
         // Map to format required for chart
         const formattedData = rawRev.map(item => ({
-          date: item.date ? new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '',
+          date: item.date ? new Date(item.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : '',
           revenue: item.revenue || 0
         }));
         setRevenueData(formattedData);

@@ -14,3 +14,5 @@ export const refreshToken = () =>
   api.post('/auth/refresh-token', {}, { withCredentials: true });
 
 export const getMe = () => api.get('/auth/me');
+
+export const updateMe = (data) => api.patch('/auth/me', data);

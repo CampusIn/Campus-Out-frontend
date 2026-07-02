@@ -4,11 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { getCoupons } from '../../api/order.api';
+import { updateMe } from '../../api/auth.api';
 import BottomNav from '../../components/BottomNav';
 import { ShieldAlert, Heart, HelpCircle, Tag, Bell, LogOut, ChevronRight, User, Copy, Check } from 'lucide-react';
 
 export default function Profile() {
-  const { user, logout, logoutAll } = useAuth();
+  const { user, logout, logoutAll, setUser } = useAuth();
   const navigate = useNavigate();
   const confirm = useConfirm();
   const toast = useToast();
@@ -17,6 +18,35 @@ export default function Profile() {
   const [isPromotionsOpen, setIsPromotionsOpen] = useState(false);
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
   const [copiedCode, setCopiedCode] = useState('');
+
+  // Edit profile states
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editUsername, setEditUsername] = useState(user?.username || '');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleOpenEditProfile = () => {
+    setEditUsername(user?.username || '');
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!editUsername.trim()) {
+      toast.error('Username cannot be empty');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const { data } = await updateMe({ username: editUsername.trim() });
+      setUser(prev => ({ ...prev, username: data.data.username }));
+      toast.success('Username updated successfully!');
+      setIsEditOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update username');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleLogoutAll = async () => {
     if (!await confirm('Log out of all devices?')) return;
@@ -49,7 +79,6 @@ export default function Profile() {
   if (!user) return null;
 
   const settingsItems = [
-    { label: 'Your favourites', icon: <Heart size={20} />, color: '#b31522' },
     { label: 'Help', icon: <HelpCircle size={20} />, color: '#319795' },
     { label: 'Promotions', icon: <Tag size={20} />, color: '#dd6b20', action: handleOpenPromotions },
     { label: 'Notification', icon: <Bell size={20} />, color: '#d69e2e' },
@@ -68,7 +97,13 @@ export default function Profile() {
         <div>
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111' }}>{user.username}</h2>
           <p style={{ margin: '2px 0 6px 0', fontSize: '0.85rem', color: '#718096' }}>{user.email} &middot; <strong style={{ textTransform: 'capitalize' }}>{user.role}</strong></p>
-          <span style={{ fontSize: '0.85rem', color: '#b31522', fontWeight: 700, cursor: 'pointer' }} className="hover-scale">Edit Account settings</span>
+          <span 
+            style={{ fontSize: '0.85rem', color: '#b31522', fontWeight: 700, cursor: 'pointer' }} 
+            className="hover-scale"
+            onClick={handleOpenEditProfile}
+          >
+            Edit Account settings
+          </span>
         </div>
       </div>
 
@@ -247,6 +282,140 @@ export default function Profile() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {isEditOpen && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.45)', 
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setIsEditOpen(false)}
+        >
+          <div 
+            className="animate-slide-up"
+            style={{ 
+              background: '#ffffff', 
+              borderRadius: '24px', 
+              width: '100%', 
+              maxWidth: '420px', 
+              padding: '24px',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111' }}>Edit Profile</h3>
+              <button 
+                onClick={() => setIsEditOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#718096', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Username field (Editable) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Username</label>
+                <input 
+                  type="text" 
+                  value={editUsername} 
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '50px',
+                    border: '1.5px solid #edf2f7',
+                    outline: 'none',
+                    fontSize: '0.9rem',
+                    color: '#111111',
+                    fontWeight: 600,
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+
+              {/* Email field (Read Only) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>Email Address (Cannot be changed)</label>
+                <input 
+                  type="text" 
+                  value={user.email} 
+                  disabled
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '50px',
+                    border: '1.5px solid #edf2f7',
+                    background: '#f8fafc',
+                    color: '#94a3b8',
+                    cursor: 'not-allowed',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Submit Buttons */}
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditOpen(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '50px',
+                    border: '1.5px solid #edf2f7',
+                    background: '#ffffff',
+                    color: '#4a5568',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSaving}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '50px',
+                    border: 'none',
+                    background: '#b31522',
+                    color: '#ffffff',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

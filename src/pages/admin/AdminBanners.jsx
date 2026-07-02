@@ -535,7 +535,7 @@ export default function AdminBanners() {
                     </td>
                     <td>{banner.createdBy?.username || 'Admin'}</td>
                     <td className="text-muted text-sm">
-                      {new Date(banner.createdAt).toLocaleDateString(undefined, {
+                      {new Date(banner.createdAt).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -878,14 +878,14 @@ export default function AdminBanners() {
                   <div className="drawer-item">
                     <span className="drawer-label">Created Date</span>
                     <span className="drawer-value">
-                      {new Date(selectedBanner.createdAt).toLocaleString()}
+                      {new Date(selectedBanner.createdAt).toLocaleString('en-IN')}
                     </span>
                   </div>
 
                   <div className="drawer-item">
                     <span className="drawer-label">Updated Date</span>
                     <span className="drawer-value">
-                      {new Date(selectedBanner.updatedAt || selectedBanner.createdAt).toLocaleString()}
+                      {new Date(selectedBanner.updatedAt || selectedBanner.createdAt).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>

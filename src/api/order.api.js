@@ -23,3 +23,6 @@ export const getCoupons = () =>
 
 export const applyCoupon = (couponId) =>
   api.post('/user/coupons/apply', { couponId });
+
+export const getPlatformSettings = () =>
+  api.get('/user/settings');

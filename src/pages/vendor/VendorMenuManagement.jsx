@@ -20,7 +20,7 @@ export default function VendorMenuManagement() {
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [form, setForm] = useState({ name: '', description: '', mrp: '', price: '', category: '' });
+  const [form, setForm] = useState({ name: '', description: '', mrp: '', price: '', category: '', foodType: 'veg' });
   const [image, setImage] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
@@ -47,7 +47,7 @@ export default function VendorMenuManagement() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', description: '', mrp: '', price: '', category: '' });
+    setForm({ name: '', description: '', mrp: '', price: '', category: '', foodType: 'veg' });
     setImage(null);
     setEditingItem(null);
     setShowForm(false);
@@ -64,7 +64,8 @@ export default function VendorMenuManagement() {
       description: item.description || '',
       mrp: item.mrp || '',
       price: item.price || '',
-      category: item.category || ''
+      category: item.category || '',
+      foodType: item.foodType || 'veg'
     });
     setImage(null);
     setShowForm(true);
@@ -89,6 +90,7 @@ export default function VendorMenuManagement() {
     fd.append('price', priceNum);
     fd.append('mrp', mrpNum);
     fd.append('category', form.category);
+    fd.append('foodType', form.foodType || 'veg');
     if (image) fd.append('image', image);
 
     try {
@@ -213,7 +215,7 @@ export default function VendorMenuManagement() {
             className="btn" 
             style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', background: 'var(--vendor-primary)', borderColor: 'var(--vendor-primary)', color: '#ffffff', fontWeight: 700 }}
             disabled={restaurant.isSuspended}
-            onClick={() => { setShowForm(!showForm); setEditingItem(null); setForm({ name: '', description: '', mrp: '', price: '', category: '' }); setImage(null); }}
+            onClick={() => { setShowForm(!showForm); setEditingItem(null); setForm({ name: '', description: '', mrp: '', price: '', category: '', foodType: 'veg' }); setImage(null); }}
           >
             <Plus size={16} />
             {showForm ? 'Cancel Form' : 'Add Menu Item'}
@@ -290,6 +292,19 @@ export default function VendorMenuManagement() {
                   value={form.category}
                   onChange={(val) => setForm({ ...form, category: val })}
                   placeholder="Select Category"
+                />
+              </div>
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Food Type *</label>
+                <CustomSelect
+                  options={[
+                    { value: 'veg', label: 'Veg' },
+                    { value: 'non-veg', label: 'Non-Veg' }
+                  ]}
+                  value={form.foodType}
+                  onChange={(val) => setForm({ ...form, foodType: val })}
+                  placeholder="Select Food Type"
                 />
               </div>
 
@@ -372,7 +387,26 @@ export default function VendorMenuManagement() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 700 }}>{item.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: 700 }}>{item.name}</span>
+                          {item.foodType && (
+                            <span 
+                              style={{ 
+                                display: 'inline-block',
+                                fontSize: '0.65rem', 
+                                padding: '2px 6px', 
+                                borderRadius: '4px',
+                                textTransform: 'uppercase',
+                                fontWeight: 800,
+                                background: item.foodType === 'veg' ? '#e6fffa' : '#fff5f5',
+                                color: item.foodType === 'veg' ? '#047481' : '#e53e3e',
+                                border: `1px solid ${item.foodType === 'veg' ? '#047481' : '#e53e3e'}`
+                              }}
+                            >
+                              {item.foodType}
+                            </span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
                           Stock: {item.stockQty} units (low threshold: {item.lowStockThreshold})
                         </span>
@@ -447,7 +481,27 @@ export default function VendorMenuManagement() {
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                      <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1e293b', wordBreak: 'break-word' }}>{item.name}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1e293b', wordBreak: 'break-word' }}>{item.name}</span>
+                        {item.foodType && (
+                          <span 
+                            style={{ 
+                              display: 'inline-block',
+                              alignSelf: 'flex-start',
+                              fontSize: '0.65rem', 
+                              padding: '1px 6px', 
+                              borderRadius: '4px',
+                              textTransform: 'uppercase',
+                              fontWeight: 800,
+                              background: item.foodType === 'veg' ? '#e6fffa' : '#fff5f5',
+                              color: item.foodType === 'veg' ? '#047481' : '#e53e3e',
+                              border: `1px solid ${item.foodType === 'veg' ? '#047481' : '#e53e3e'}`
+                            }}
+                          >
+                            {item.foodType}
+                          </span>
+                        )}
+                      </div>
                       <button 
                         className={`status-badge ${item.isAvailable ? 'available' : 'unavailable'}`}
                         style={{ border: 'none', cursor: 'pointer', padding: '2px 8px', fontSize: '0.68rem', flexShrink: 0 }}

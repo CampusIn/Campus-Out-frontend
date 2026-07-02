@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getRestaurants } from '../api/restaurant.api';
-import { getRestaurantMenu } from '../api/menu.api';
+import { getRestaurantMenu, getMenuSuggestions } from '../api/menu.api';
 import { getActiveBanners, getActiveAnnouncements } from '../api/homepageCMS.api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -83,6 +83,12 @@ export default function Restaurants() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const locationRef = useRef(null);
   const carouselRef = useRef(null);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
   const autoScrollTimerRef = useRef(null);
 
   // Homepage CMS states
@@ -171,18 +177,51 @@ export default function Restaurants() {
     }
   };
 
-  // Click outside to close location dropdown
+  // Click outside to close location dropdown and search suggestions dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (locationRef.current && !locationRef.current.contains(event.target)) {
         setDropdownOpen(false);
+      }
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [locationRef]);
+  }, [locationRef, suggestionsRef]);
+
+  // Fetch search suggestions with debounce
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (!trimmed) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      setShowSuggestions(true);
+      try {
+        const res = await getMenuSuggestions(trimmed);
+        if (res.data?.success) {
+          setSuggestions(res.data.data || []);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
 
   const handleCustomAddressSubmit = (val) => {
     if (!val.trim()) return;
@@ -474,15 +513,66 @@ export default function Restaurants() {
         </div>
 
         {/* Search Bar (hidden on desktop) */}
-        <form onSubmit={handleSearchSubmit} className="dashboard-search-container mobile-only-header animate-slide-up delay-1" style={{ position: 'relative', marginBottom: '24px' }}>
+        <form onSubmit={handleSearchSubmit} className="dashboard-search-container mobile-only-header animate-slide-up delay-1" style={{ position: 'relative', marginBottom: '24px', zIndex: 1000 }} ref={suggestionsRef}>
           <input 
             className="dashboard-search-input"
             placeholder="Search for restaurants or dishes..." 
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
+            onFocus={() => {
+              if (search.trim()) {
+                setShowSuggestions(true);
+              }
+            }}
             style={{ width: '100%', padding: '16px 16px 16px 48px', borderRadius: '12px', border: '1px solid #cbd5e0', background: '#f7fafc', fontSize: '0.95rem' }}
           />
           <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#718096' }} />
+
+          {showSuggestions && (
+            <div className="search-suggestions-dropdown">
+              {loadingSuggestions ? (
+                <div className="suggestion-loading">
+                  <div className="suggestion-spinner"></div>
+                  <span>Searching for dishes...</span>
+                </div>
+              ) : suggestions.length > 0 ? (
+                suggestions.map((item) => (
+                  <div 
+                    key={item._id} 
+                    className="suggestion-item"
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      if (item.restaurant) {
+                        navigate(`/restaurants/${item.restaurant}`, { state: { searchDish: item.name } });
+                      } else {
+                        navigate(`/restaurants`);
+                      }
+                    }}
+                  >
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="suggestion-image" />
+                    ) : (
+                      <div className="suggestion-image-placeholder">
+                        <Search size={16} color="#a0aec0" />
+                      </div>
+                    )}
+                    <div className="suggestion-info">
+                      <span className="suggestion-name">{item.name}</span>
+                      <span className="suggestion-meta">
+                        {item.category && <span className="suggestion-category">{item.category}</span>}
+                        {item.category && item.price && <span className="suggestion-dot">&bull;</span>}
+                        {item.price && <span className="suggestion-price">₹{item.price}</span>}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="suggestion-empty">
+                  No dishes found matching "{search}"
+                </div>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Active Announcement Banner */}
@@ -655,25 +745,6 @@ export default function Restaurants() {
         </div>
       </ContentWrapper>
 
-      {/* Filter Quick Pills */}
-      <ContentWrapper className="home-section-spacer">
-        <div className="filter-quick-pills-row animate-fade-in" style={{ marginBottom: 0 }}>
-          <button 
-            type="button" 
-            className="quick-filter-pill hover-scale"
-            onClick={() => { toast.success("Applied filter: Minimum Rs. 100 OFF"); }}
-          >
-            MIN Rs. 100 OFF
-          </button>
-          <button 
-            type="button" 
-            className="quick-filter-pill hover-scale"
-            onClick={() => { toast.success("Applied filter: Fast Delivery (< 20 mins)"); }}
-          >
-            FAST DELIVERY
-          </button>
-        </div>
-      </ContentWrapper>
 
       {/* Horizontal Category Badges Scrolling */}
       <ContentWrapper className="home-section-spacer">
@@ -1678,6 +1749,135 @@ export default function Restaurants() {
             grid-template-columns: 1fr !important;
             gap: 20px !important;
           }
+        }
+
+        /* Suggestions Dropdown Styling */
+        .search-suggestions-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: #ffffff;
+          border-radius: 16px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+          margin-top: 10px;
+          z-index: 1000;
+          overflow: hidden;
+          border: 1px solid #edf2f7;
+          display: flex;
+          flex-direction: column;
+          animation: slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideDownFade {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .suggestion-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          border-bottom: 1px solid #f7fafc;
+          text-align: left;
+        }
+
+        .suggestion-item:last-child {
+          border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+          background-color: #f7fafc;
+        }
+
+        .suggestion-image {
+          width: 44px;
+          height: 44px;
+          object-fit: cover;
+          border-radius: 8px;
+          background-color: #edf2f7;
+        }
+
+        .suggestion-image-placeholder {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          background-color: #edf2f7;
+        }
+
+        .suggestion-info {
+          display: flex;
+          flex-grow: 1;
+          min-width: 0;
+          flex-direction: column;
+        }
+
+        .suggestion-name {
+          font-size: 0.95rem;
+          font-weight: 650;
+          color: #2d3748;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .suggestion-meta {
+          font-size: 0.8rem;
+          color: #718096;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 2px;
+        }
+
+        .suggestion-category {
+          text-transform: capitalize;
+        }
+
+        .suggestion-dot {
+          color: #cbd5e0;
+        }
+
+        .suggestion-price {
+          font-weight: 700;
+          color: #b31522;
+        }
+
+        .suggestion-loading, .suggestion-empty {
+          padding: 20px;
+          text-align: center;
+          font-size: 0.9rem;
+          color: #718096;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .suggestion-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid #edf2f7;
+          border-top: 2px solid #b31522;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>

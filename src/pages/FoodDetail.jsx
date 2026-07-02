@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMenuItemById } from '../api/menu.api';
-import { addToCart, updateCartItemQty, deleteCartItem } from '../api/cart.api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import BottomNav from '../components/BottomNav';
@@ -12,7 +11,7 @@ export default function FoodDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const { cart, fetchCart } = useCart();
+  const { cart, fetchCart, addToCartOptimistic, updateCartItemQtyOptimistic, deleteCartItemOptimistic } = useCart();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -30,8 +29,7 @@ export default function FoodDetail() {
 
   const handleIncrement = async (menuItemId, currentQty) => {
     try {
-      await updateCartItemQty(menuItemId, currentQty + 1);
-      await fetchCart();
+      await updateCartItemQtyOptimistic(menuItemId, currentQty + 1);
     } catch (err) {
       setCartMsg('Failed to update quantity');
       setTimeout(() => setCartMsg(''), 2500);
@@ -41,11 +39,10 @@ export default function FoodDetail() {
   const handleDecrement = async (menuItemId, currentQty) => {
     try {
       if (currentQty === 1) {
-        await deleteCartItem(menuItemId);
+        await deleteCartItemOptimistic(menuItemId);
       } else {
-        await updateCartItemQty(menuItemId, currentQty - 1);
+        await updateCartItemQtyOptimistic(menuItemId, currentQty - 1);
       }
-      await fetchCart();
     } catch (err) {
       setCartMsg('Failed to update quantity');
       setTimeout(() => setCartMsg(''), 2500);
@@ -98,6 +95,8 @@ export default function FoodDetail() {
         const { data } = await getMenuItemById(id);
         const fetched = data.data;
         setItem({
+          _id: fetched._id,
+          restaurant: fetched.restaurant,
           name: fetched.name,
           price: fetched.price,
           image: fetched.image || '/onboarding_burger.png',
@@ -133,9 +132,8 @@ export default function FoodDetail() {
         return;
       }
       
-      await addToCart({ menuItemId: id, quantity });
+      await addToCartOptimistic(item, item.restaurant, quantity);
       setCartMsg('Added to cart!');
-      await fetchCart();
       setTimeout(() => setCartMsg(''), 2500);
     } catch (err) {
       setCartMsg(err.response?.data?.message || 'Failed to add to cart');

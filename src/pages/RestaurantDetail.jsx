@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { getRestaurantById } from '../api/restaurant.api';
 import { getRestaurantMenu } from '../api/menu.api';
-import { addToCart, updateCartItemQty, deleteCartItem } from '../api/cart.api';
 import { getRestaurantReviews } from '../api/review.api';
 import { getCoupons } from '../api/order.api';
 import { useAuth } from '../context/AuthContext';
@@ -16,12 +15,13 @@ export default function RestaurantDetail() {
   const { user } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [restaurant, setRestaurant] = useState(null);
   const [menu, setMenu] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const { cart, fetchCart } = useCart();
+  const { cart, fetchCart, addToCartOptimistic, updateCartItemQtyOptimistic, deleteCartItemOptimistic } = useCart();
   
   const [activeTab, setActiveTab] = useState('Menu'); // 'Menu', 'Reviews', 'Info'
   const [activeSubcategory, setActiveSubcategory] = useState('All');
@@ -83,6 +83,12 @@ export default function RestaurantDetail() {
   });
 
   useEffect(() => {
+    if (location.state?.searchDish) {
+      setDishSearch(location.state.searchDish);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
     const fetch = async () => {
       try {
         const [restRes, menuRes, revRes] = await Promise.all([
@@ -129,9 +135,10 @@ export default function RestaurantDetail() {
 
   const handleAdd = async (menuItemId) => {
     if (!user) return navigate('/login');
+    const menuItemObj = menu.find(item => item._id === menuItemId);
+    if (!menuItemObj) return;
     try {
-      await addToCart({ menuItemId, quantity: 1 });
-      await fetchCart();
+      await addToCartOptimistic(menuItemObj, id);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add to cart');
     }
@@ -139,8 +146,7 @@ export default function RestaurantDetail() {
 
   const handleIncrement = async (menuItemId, currentQty) => {
     try {
-      await updateCartItemQty(menuItemId, currentQty + 1);
-      await fetchCart();
+      await updateCartItemQtyOptimistic(menuItemId, currentQty + 1);
     } catch (err) {
       toast.error('Failed to update quantity');
     }
@@ -149,11 +155,10 @@ export default function RestaurantDetail() {
   const handleDecrement = async (menuItemId, currentQty) => {
     try {
       if (currentQty === 1) {
-        await deleteCartItem(menuItemId);
+        await deleteCartItemOptimistic(menuItemId);
       } else {
-        await updateCartItemQty(menuItemId, currentQty - 1);
+        await updateCartItemQtyOptimistic(menuItemId, currentQty - 1);
       }
-      await fetchCart();
     } catch (err) {
       toast.error('Failed to update quantity');
     }
@@ -200,6 +205,9 @@ export default function RestaurantDetail() {
   const coverImage = restaurant.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
 
   const isVegItem = (item) => {
+    if (item.foodType) {
+      return item.foodType === 'veg';
+    }
     const name = (item.name || '').toLowerCase();
     const desc = (item.description || '').toLowerCase();
     const cat = (item.category || '').toLowerCase();
@@ -240,18 +248,7 @@ export default function RestaurantDetail() {
       background: '#ffffff',
       flexShrink: 0
     }}>
-      {isVeg ? (
-        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#1f8a4c' }}></div>
-      ) : (
-        <div style={{ 
-          width: 0, 
-          height: 0, 
-          borderLeft: '3.5px solid transparent', 
-          borderRight: '3.5px solid transparent', 
-          borderBottom: '6px solid #e53e3e',
-          marginTop: '-1.2px'
-        }}></div>
-      )}
+      <div style={{ width: '5.5px', height: '5.5px', borderRadius: '50%', background: isVeg ? '#1f8a4c' : '#e53e3e' }}></div>
     </div>
   );
 
@@ -282,20 +279,7 @@ export default function RestaurantDetail() {
           >
             <ArrowLeft size={24} />
           </button>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button 
-              type="button"
-              onClick={() => setIsFavorite(!isFavorite)}
-              style={{ background: 'none', border: 'none', color: isFavorite ? '#b31522' : '#ffffff', cursor: 'pointer', padding: '4px' }}
-            >
-              <Heart size={22} fill={isFavorite ? '#b31522' : 'none'} />
-            </button>
-            
-            <button style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: '4px' }}>
-              <Share2 size={22} />
-            </button>
-          </div>
+          {/* Header Actions removed */}
         </div>
       </div>
 
@@ -452,6 +436,61 @@ export default function RestaurantDetail() {
                 style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '0.9rem', color: '#111111', fontWeight: 600 }}
               />
             </div>
+          </div>
+
+          {/* Veg / Non-Veg Quick Filters */}
+          <div style={{ padding: '0 16px', marginTop: '12px', display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => {
+                setVegOnly(!vegOnly);
+                if (nonVegOnly) setNonVegOnly(false);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: '1px solid',
+                background: vegOnly ? '#e6fffa' : '#ffffff',
+                color: vegOnly ? '#319795' : '#718096',
+                borderColor: vegOnly ? '#319795' : '#e2e8f0',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: vegOnly ? '0 2px 4px rgba(49, 151, 149, 0.15)' : 'none'
+              }}
+            >
+              <VegIcon isVeg={true} />
+              Veg Only
+            </button>
+
+            <button
+              onClick={() => {
+                setNonVegOnly(!nonVegOnly);
+                if (vegOnly) setVegOnly(false);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: '1px solid',
+                background: nonVegOnly ? '#fff5f5' : '#ffffff',
+                color: nonVegOnly ? '#e53e3e' : '#718096',
+                borderColor: nonVegOnly ? '#e53e3e' : '#e2e8f0',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: nonVegOnly ? '0 2px 4px rgba(229, 62, 62, 0.15)' : 'none'
+              }}
+            >
+              <VegIcon isVeg={false} />
+              Non-Veg Only
+            </button>
           </div>
 
 

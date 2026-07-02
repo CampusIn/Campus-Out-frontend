@@ -117,12 +117,7 @@ export default function Orders() {
           <ArrowLeft size={18} />
         </button>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 850, color: '#111111', margin: 0 }}>Orders</h1>
-        <button 
-          className="circle-icon-btn hover-scale"
-          style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#718096' }}
-        >
-          <MoreVertical size={18} />
-        </button>
+        <div style={{ width: '40px' }} />
       </div>
 
       {actionMsg && (
@@ -155,7 +150,7 @@ export default function Orders() {
                   colorClass = 'green-card';
                 }
 
-                const formattedTime = new Date(o.createdAt).toLocaleTimeString([], { 
+                const formattedTime = new Date(o.createdAt).toLocaleTimeString('en-IN', { 
                   hour: '2-digit', 
                   minute: '2-digit' 
                 });
@@ -352,7 +347,7 @@ export default function Orders() {
                     <span style={{ color: '#b31522', fontWeight: 800 }}>&#8377;{o.totalAmount}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Calendar size={12} />
-                      <span>{new Date(o.createdAt).toLocaleDateString()}</span>
+                      <span>{new Date(o.createdAt).toLocaleDateString('en-IN')}</span>
                     </span>
                   </div>
                 </Link>

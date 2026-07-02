@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
 import { Flame, Search, MapPin, ChevronDown, ArrowRight, Clock, Heart, Award, Star, SlidersHorizontal, Navigation } from 'lucide-react';
 import { getRestaurants } from '../api/restaurant.api';
+import { getMenuSuggestions } from '../api/menu.api';
 
 const foodImages = [
   'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80', // Burger
@@ -45,18 +46,27 @@ export default function Home() {
   const [restaurants, setRestaurants] = useState([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(true);
 
-  // Click outside to close location dropdown
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
+
+  // Click outside to close location dropdown and search suggestions dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (locationRef.current && !locationRef.current.contains(event.target)) {
         setDropdownOpen(false);
+      }
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [locationRef]);
+  }, [locationRef, suggestionsRef]);
 
   const handleUseCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -89,6 +99,36 @@ export default function Home() {
       fetchTopRestaurants();
     }
   }, [user]);
+
+  // Fetch search suggestions with debounce
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      setShowSuggestions(true);
+      try {
+        const res = await getMenuSuggestions(trimmed);
+        if (res.data?.success) {
+          setSuggestions(res.data.data || []);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   const fetchTopRestaurants = async () => {
     setLoadingRestaurants(true);
@@ -230,15 +270,59 @@ export default function Home() {
 
             <div className="search-field-divider"></div>
 
-            <div className="search-field-query">
+            <div className="search-field-query" ref={suggestionsRef}>
               <Search size={20} color="#718096" className="field-icon" />
               <input 
                 type="text" 
                 placeholder="Search for restaurants, dishes or drinks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => {
+                  if (searchQuery.trim()) {
+                    setShowSuggestions(true);
+                  }
+                }}
                 className="query-text-input"
               />
+
+              {showSuggestions && (
+                <div className="search-suggestions-dropdown">
+                  {loadingSuggestions ? (
+                    <div className="suggestion-loading">
+                      <div className="suggestion-spinner"></div>
+                      <span>Searching for dishes...</span>
+                    </div>
+                  ) : suggestions.length > 0 ? (
+                    suggestions.map((item) => (
+                      <div 
+                        key={item._id} 
+                        className="suggestion-item"
+                        onClick={() => navigate('/login')}
+                      >
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="suggestion-image" />
+                        ) : (
+                          <div className="suggestion-image-placeholder">
+                            <Search size={16} color="#a0aec0" />
+                          </div>
+                        )}
+                        <div className="suggestion-info">
+                          <span className="suggestion-name">{item.name}</span>
+                          <span className="suggestion-meta">
+                            {item.category && <span className="suggestion-category">{item.category}</span>}
+                            {item.category && item.price && <span className="suggestion-dot">&bull;</span>}
+                            {item.price && <span className="suggestion-price">₹{item.price}</span>}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="suggestion-empty">
+                      No dishes found matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <button type="submit" className="search-submit-btn hover-scale">
@@ -852,6 +936,139 @@ export default function Home() {
 
         .search-submit-btn:hover {
           background: #b31522;
+        }
+
+        /* Suggestions Dropdown Styling */
+        .search-field-query {
+          position: relative;
+        }
+
+        .search-suggestions-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: #ffffff;
+          border-radius: 16px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+          margin-top: 14px;
+          z-index: 1000;
+          overflow: hidden;
+          border: 1px solid #edf2f7;
+          display: flex;
+          flex-direction: column;
+          animation: slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideDownFade {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .suggestion-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          border-bottom: 1px solid #f7fafc;
+          text-align: left;
+        }
+
+        .suggestion-item:last-child {
+          border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+          background-color: #f7fafc;
+        }
+
+        .suggestion-image {
+          width: 44px;
+          height: 44px;
+          object-fit: cover;
+          border-radius: 8px;
+          background-color: #edf2f7;
+        }
+
+        .suggestion-image-placeholder {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          background-color: #edf2f7;
+        }
+
+        .suggestion-info {
+          display: flex;
+          flex-grow: 1;
+          min-width: 0;
+          flex-direction: column;
+        }
+
+        .suggestion-name {
+          font-size: 0.95rem;
+          font-weight: 650;
+          color: #2d3748;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .suggestion-meta {
+          font-size: 0.8rem;
+          color: #718096;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 2px;
+        }
+
+        .suggestion-category {
+          text-transform: capitalize;
+        }
+
+        .suggestion-dot {
+          color: #cbd5e0;
+        }
+
+        .suggestion-price {
+          font-weight: 700;
+          color: #b31522;
+        }
+
+        .suggestion-loading, .suggestion-empty {
+          padding: 20px;
+          text-align: center;
+          font-size: 0.9rem;
+          color: #718096;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .suggestion-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid #edf2f7;
+          border-top: 2px solid #b31522;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
         /* 3. Promo Cards Section */

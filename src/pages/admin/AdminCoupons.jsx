@@ -391,7 +391,7 @@ export default function AdminCoupons() {
                     <td>₹{c.minimumOrderValue || 0}</td>
                     <td>{c.discountType === 'PERCENTAGE' ? `₹${c.maximumDiscount}` : 'N/A'}</td>
                     <td className="text-muted text-sm">
-                      {new Date(c.expiryDate).toLocaleDateString(undefined, {
+                      {new Date(c.expiryDate).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -472,7 +472,7 @@ export default function AdminCoupons() {
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Expiry Date:</span>
                     <span style={{ fontWeight: 650, color: '#1e293b' }}>
-                      {new Date(c.expiryDate).toLocaleDateString(undefined, {
+                      {new Date(c.expiryDate).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -595,7 +595,7 @@ export default function AdminCoupons() {
               <div className="drawer-item">
                 <span className="drawer-label">Expiry Date</span>
                 <span className="drawer-value">
-                  {new Date(selectedCoupon.expiryDate).toLocaleString(undefined, {
+                  {new Date(selectedCoupon.expiryDate).toLocaleString('en-IN', {
                     dateStyle: 'long',
                     timeStyle: 'short'
                   })}
@@ -627,12 +627,12 @@ export default function AdminCoupons() {
 
                 <div className="drawer-item" style={{ marginBottom: '12px' }}>
                   <span className="drawer-label">Created Date</span>
-                  <span className="drawer-value">{new Date(selectedCoupon.createdAt).toLocaleString()}</span>
+                  <span className="drawer-value">{new Date(selectedCoupon.createdAt).toLocaleString('en-IN')}</span>
                 </div>
 
                 <div className="drawer-item">
                   <span className="drawer-label">Last Updated Date</span>
-                  <span className="drawer-value">{new Date(selectedCoupon.updatedAt).toLocaleString()}</span>
+                  <span className="drawer-value">{new Date(selectedCoupon.updatedAt).toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>
