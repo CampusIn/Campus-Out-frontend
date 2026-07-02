@@ -55,7 +55,7 @@ const statusDetails = {
     color: '#c53030', // red
     bgColor: '#fff5f5',
     borderColor: '#fed7d7',
-    animation: 'bikeDrive 2s infinite linear',
+    animation: 'pulseGlow 2s infinite',
     title: 'Out for Delivery',
     desc: 'Delivery executive is on the way'
   }
@@ -240,7 +240,7 @@ export default function Orders() {
                         borderRadius: '12px',
                         textTransform: 'uppercase'
                       }}>
-                        {o.orderStatus}
+                        {o.orderStatus.replace(/_/g, ' ')}
                       </div>
                     </div>
 
