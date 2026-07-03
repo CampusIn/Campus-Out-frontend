@@ -133,7 +133,15 @@ export default function Home() {
   // Redirect if already logged in to provide a smooth experience
   useEffect(() => {
     if (user) {
-      navigate(user.role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+      if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'vendor') {
+        navigate('/vendor', { replace: true });
+      } else if (user.role === 'delivery_partner') {
+        navigate('/delivery/dashboard', { replace: true });
+      } else {
+        navigate('/restaurants', { replace: true });
+      }
     }
   }, [user, navigate]);
 

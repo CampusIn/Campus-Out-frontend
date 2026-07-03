@@ -23,6 +23,8 @@ export default function DeliveryLogin() {
     if (user) {
       if (user.role === 'delivery_partner') {
         navigate('/delivery/dashboard', { replace: true });
+      } else if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
         // Redirect normal users who are already logged in to their respective portals
         navigate(user.role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });

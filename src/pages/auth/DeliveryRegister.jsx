@@ -15,6 +15,8 @@ export default function DeliveryRegister() {
     if (user) {
       if (user.role === 'delivery_partner') {
         navigate('/delivery/dashboard', { replace: true });
+      } else if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
         navigate(user.role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
       }

@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
     const token = params.get('token');
     if (token) {
       localStorage.setItem('accessToken', token);
+      localStorage.setItem('lastActive', Date.now().toString());
       
       const fetchProfile = async () => {
         try {
@@ -91,8 +92,56 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  // Activity Tracking: Listen for user interactions and throttle writing to localStorage
+  useEffect(() => {
+    let lastSaved = Date.now();
+    
+    // Set initial lastActive on mount if user is logged in
+    const token = localStorage.getItem('accessToken');
+    if (token && !localStorage.getItem('lastActive')) {
+      localStorage.setItem('lastActive', Date.now().toString());
+    }
+
+    const updateActivity = () => {
+      const now = Date.now();
+      if (now - lastSaved > 10000) { // Update at most once every 10 seconds
+        localStorage.setItem('lastActive', now.toString());
+        lastSaved = now;
+      }
+    };
+
+    window.addEventListener('mousemove', updateActivity);
+    window.addEventListener('keydown', updateActivity);
+    window.addEventListener('click', updateActivity);
+    window.addEventListener('scroll', updateActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', updateActivity);
+      window.removeEventListener('keydown', updateActivity);
+      window.removeEventListener('click', updateActivity);
+      window.removeEventListener('scroll', updateActivity);
+    };
+  }, [user]);
+
+  // Automatic token refresh / logout checking
   useEffect(() => {
     let timer;
+
+    const handleAutoLogout = () => {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      const userRole = user?.role;
+      setUser(null);
+      localStorage.setItem('authRedirectMessage', 'Your session has expired. Please log in again.');
+      
+      const redirectUrl = userRole === 'delivery_partner' ? '/delivery/login' : '/login';
+      const protectedPaths = ['/admin', '/vendor', '/delivery/dashboard', '/cart', '/orders', '/profile'];
+      const isCurrentPathProtected = protectedPaths.some(path => window.location.pathname.startsWith(path));
+      
+      if (isCurrentPathProtected) {
+        window.location.href = redirectUrl;
+      }
+    };
 
     const checkToken = async () => {
       const token = localStorage.getItem('accessToken');
@@ -110,36 +159,69 @@ export function AuthProvider({ children }) {
         const expiry = payload.exp * 1000;
         const remaining = expiry - Date.now();
 
+        const savedLastActive = localStorage.getItem('lastActive');
+        const lastActiveTime = savedLastActive ? parseInt(savedLastActive, 10) : Date.now();
+        const INACTIVITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes inactivity limit
+        const isActive = (Date.now() - lastActiveTime) < INACTIVITY_THRESHOLD;
+
         if (remaining <= 0) {
-          // Token expired, attempt refresh
-          try {
-            const { data } = await refreshToken();
-            const newToken = data.data.accessToken;
-            localStorage.setItem('accessToken', newToken);
-            const { data: meRes } = await getMe();
-            setUser({ 
-              id: meRes.data.id, 
-              role: meRes.data.role, 
-              email: meRes.data.email, 
-              username: meRes.data.username 
-            });
-          } catch (refreshErr) {
-            // Refresh failed, clear session and redirect
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('user');
-            setUser(null);
-            localStorage.setItem('authRedirectMessage', 'Your session has expired. Please log in again to continue.');
-            const redirectUrl = user?.role === 'delivery_partner' ? '/delivery/login' : '/login';
-            window.location.href = redirectUrl;
+          if (isActive) {
+            // User is actively using the portal -> generate a new access token
+            try {
+              const { data } = await refreshToken();
+              const newToken = data.data.accessToken;
+              localStorage.setItem('accessToken', newToken);
+              const { data: meRes } = await getMe();
+              setUser({ 
+                id: meRes.data.id, 
+                role: meRes.data.role, 
+                email: meRes.data.email, 
+                username: meRes.data.username 
+              });
+              const newPayload = JSON.parse(atob(newToken.split('.')[1]));
+              const newExpiry = newPayload.exp * 1000;
+              const newRemaining = newExpiry - Date.now();
+              timer = setTimeout(checkToken, Math.max(0, newRemaining - 60000));
+            } catch (refreshErr) {
+              handleAutoLogout();
+            }
+          } else {
+            // User is not using the portal -> log out automatically
+            handleAutoLogout();
           }
         } else {
-          // Set timer to check again when it expires
-          timer = setTimeout(checkToken, remaining);
+          const refreshBuffer = 60000; // 1 minute buffer to refresh early if active
+          if (remaining <= refreshBuffer) {
+            if (isActive) {
+              try {
+                const { data } = await refreshToken();
+                const newToken = data.data.accessToken;
+                localStorage.setItem('accessToken', newToken);
+                const { data: meRes } = await getMe();
+                setUser({ 
+                  id: meRes.data.id, 
+                  role: meRes.data.role, 
+                  email: meRes.data.email, 
+                  username: meRes.data.username 
+                });
+                const newPayload = JSON.parse(atob(newToken.split('.')[1]));
+                const newExpiry = newPayload.exp * 1000;
+                const newRemaining = newExpiry - Date.now();
+                timer = setTimeout(checkToken, Math.max(0, newRemaining - refreshBuffer));
+              } catch (refreshErr) {
+                handleAutoLogout();
+              }
+            } else {
+              // Idle, check again right at expiration
+              timer = setTimeout(checkToken, remaining);
+            }
+          } else {
+            // Schedule the check 1 minute before expiration
+            timer = setTimeout(checkToken, remaining - refreshBuffer);
+          }
         }
       } catch (e) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        setUser(null);
+        handleAutoLogout();
       }
     };
 
@@ -155,6 +237,7 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await loginUser({ email, password });
       localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('lastActive', Date.now().toString());
       const { data: meRes } = await getMe();
       setUser({ 
         id: meRes.data.id, 
@@ -189,6 +272,7 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await verifyEmailOtp({ email, otp });
       localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('lastActive', Date.now().toString());
       const { data: meRes } = await getMe();
       setUser({ 
         id: meRes.data.id, 
