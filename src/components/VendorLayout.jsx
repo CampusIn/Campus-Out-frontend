@@ -21,7 +21,8 @@ import {
   MapPin,
   Phone,
   Clock,
-  DollarSign
+  DollarSign,
+  AlertTriangle
 } from 'lucide-react';
 import '../pages/vendor/VendorPortal.css';
 
@@ -404,8 +405,8 @@ export default function VendorLayout() {
         <main className="vendor-content">
           {restaurant.isSuspended && (
             <div className="low-stock-alert-card" style={{ marginBottom: '24px', backgroundColor: '#fef2f2', borderColor: '#fca5a5', color: '#b91c1c' }}>
-              <div className="low-stock-alert-details">
-                <span>⚠️</span>
+              <div className="low-stock-alert-details" style={{ alignItems: 'center' }}>
+                <AlertTriangle size={20} style={{ flexShrink: 0 }} />
                 <strong>Your eatery has been suspended by campus administration. Status changes and inventory updates are disabled.</strong>
               </div>
             </div>

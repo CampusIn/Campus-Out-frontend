@@ -5,6 +5,7 @@ import {
   getAdminOrders,
   getAdminOrderById,
   getTopRestaurants,
+  getPlatformSettingsAdmin,
 } from '../../api/admin.api';
 import {
   DollarSign,
@@ -40,6 +41,31 @@ export default function AdminDashboard() {
   // Top restaurants states
   const [topRestaurantsList, setTopRestaurantsList] = useState([]);
   const [topRestaurantsLoading, setTopRestaurantsLoading] = useState(true);
+  const [platformSettings, setPlatformSettings] = useState({
+    deliveryCharge: 0,
+    freeDeliveryAbove: 0,
+    gstPercentage: 0,
+    packagingCharge: 0
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await getPlatformSettingsAdmin();
+        if (data.success && data.data) {
+          setPlatformSettings({
+            deliveryCharge: Number(data.data.deliveryCharge ?? 0),
+            freeDeliveryAbove: Number(data.data.freeDeliveryAbove ?? 0),
+            gstPercentage: Number(data.data.gstPercentage ?? 0),
+            packagingCharge: Number(data.data.packagingCharge ?? 0)
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch platform settings for admin dashboard', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const fetchTopRestaurants = useCallback(async () => {
     setTopRestaurantsLoading(true);
@@ -613,6 +639,54 @@ export default function AdminDashboard() {
                   })}
                 </div>
               </div>
+
+              {/* Invoice Breakdown */}
+              {(() => {
+                const subTotal = selectedOrder.items ? selectedOrder.items.reduce((total, item) => total + ((item.priceAtPurchase || item.price || 0) * item.quantity), 0) : selectedOrder.totalAmount;
+                const discount = selectedOrder.discountAmount || 0;
+                const subTotalAfterDiscount = subTotal - discount;
+
+                const gst = selectedOrder.gstAmount !== undefined && selectedOrder.gstAmount !== null && selectedOrder.gstAmount !== 0 ? selectedOrder.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
+                const packaging = selectedOrder.packagingCharge !== undefined && selectedOrder.packagingCharge !== null && selectedOrder.packagingCharge !== 0 ? selectedOrder.packagingCharge : platformSettings.packagingCharge;
+                const delivery = selectedOrder.deliveryCharge !== undefined && selectedOrder.deliveryCharge !== null && selectedOrder.deliveryCharge !== 0 ? selectedOrder.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge);
+
+                const hasBreakdown = gst > 0 || packaging > 0 || delivery > 0 || discount > 0;
+
+                if (!hasBreakdown) return null;
+
+                return (
+                  <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #edf2f7', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem', color: '#64748b' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Subtotal</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{subTotal}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Coupon Discount {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
+                        <span style={{ color: '#06c169', fontWeight: 700 }}>-₹{discount}</span>
+                      </div>
+                    )}
+                    {gst > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>GST ({selectedOrder.gstPercentage ?? platformSettings.gstPercentage}%)</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{gst}</span>
+                      </div>
+                    )}
+                    {packaging > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Packaging Charge</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{packaging}</span>
+                      </div>
+                    )}
+                    {delivery > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Delivery Charge</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{delivery}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Order Transaction Grid */}
               <div className="modal-grid-cols-2" style={{ gap: '8px 16px', alignItems: 'center' }}>

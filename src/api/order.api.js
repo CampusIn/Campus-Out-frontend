@@ -18,8 +18,8 @@ export const getVendorOrders = (params) =>
 export const getSingleVendorOrder = (orderId) =>
   api.get(`/user/order/restaurant/${orderId}`);
 
-export const changeOrderStatus = (orderId, orderStatus) =>
-  api.patch(`/user/order/${orderId}/status`, { orderStatus });
+export const changeOrderStatus = (orderId, orderStatus, rejectionMsg) =>
+  api.patch(`/user/order/${orderId}/status`, { orderStatus, rejectionMsg });
 
 export const getCoupons = () =>
   api.get('/user/coupons/view');
@@ -29,3 +29,7 @@ export const applyCoupon = (couponId) =>
 
 export const getPlatformSettings = () =>
   api.get('/user/settings');
+
+export const getPlatformSettingsVendor = () =>
+  api.get('/user/view/settings');
+

@@ -46,3 +46,6 @@ export const updateBanner = (bannerId, data) => api.patch(`/admin/banners/${bann
 export const updateBannerStatus = (bannerId) => api.patch(`/admin/banners/${bannerId}/status`);
 
 export const getTopRestaurants = () => api.get('/admin/dashboard/top-restaurant');
+
+export const getPlatformSettingsAdmin = () => api.get('/admin/view/settings');
+

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getMyOrders } from '../../api/order.api';
 import BottomNav from '../../components/BottomNav';
-import { ArrowLeft, MoreVertical, Calendar, DollarSign, Clock, Store, ChevronRight, Bike, ChefHat, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Calendar, DollarSign, Clock, Store, ChevronRight, Bike, ChefHat, CheckCircle2, ShoppingBag, XCircle } from 'lucide-react';
 
 const statusColors = {
   PENDING: 'status-pending',
@@ -11,6 +11,7 @@ const statusColors = {
   READY: 'status-ready',
   DELIVERED: 'status-delivered',
   CANCELLED: 'status-cancelled',
+  REJECTED: 'status-rejected',
 };
 
 const statusDetails = {
@@ -58,6 +59,33 @@ const statusDetails = {
     animation: 'pulseGlow 2s infinite',
     title: 'Out for Delivery',
     desc: 'Delivery executive is on the way'
+  },
+  DELIVERED: {
+    icon: CheckCircle2,
+    color: '#2f855a', // green
+    bgColor: '#f0fff4',
+    borderColor: '#c6f6d5',
+    animation: 'none',
+    title: 'Order Delivered',
+    desc: 'Enjoy your meal!'
+  },
+  CANCELLED: {
+    icon: XCircle,
+    color: '#e53e3e', // red
+    bgColor: '#fff5f5',
+    borderColor: '#fed7d7',
+    animation: 'none',
+    title: 'Order Cancelled',
+    desc: 'This order was cancelled'
+  },
+  REJECTED: {
+    icon: XCircle,
+    color: '#e53e3e', // red
+    bgColor: '#fff5f5',
+    borderColor: '#fed7d7',
+    animation: 'none',
+    title: 'Order Rejected',
+    desc: 'The eatery rejected this order'
   }
 };
 
@@ -102,7 +130,7 @@ export default function Orders() {
     ? dbOrders.filter(o => ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(o.orderStatus))
     : [];
 
-  const completedOrders = dbOrders.filter(o => ['DELIVERED', 'CANCELLED'].includes(o.orderStatus));
+  const completedOrders = dbOrders.filter(o => ['DELIVERED', 'CANCELLED', 'REJECTED'].includes(o.orderStatus));
 
   return (
     <div className="orders-screen page home-dashboard animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc', minHeight: '100vh' }}>
@@ -233,15 +261,23 @@ export default function Orders() {
                     
                     {/* Status badge */}
                     <div style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginTop: '12px' }}>
-                      <div className={`order-status-badge ${o.orderStatus}`} style={{
-                        fontSize: '0.72rem',
-                        fontWeight: 800,
-                        padding: '4px 10px',
-                        borderRadius: '12px',
-                        textTransform: 'uppercase'
-                      }}>
-                        {o.orderStatus.replace(/_/g, ' ')}
-                      </div>
+                      {(() => {
+                        const info = getStatusDetails(o.orderStatus);
+                        return (
+                          <div className={`order-status-badge ${o.orderStatus}`} style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            textTransform: 'uppercase',
+                            color: info.color,
+                            backgroundColor: info.bgColor,
+                            border: `1.5px solid ${info.borderColor}`
+                          }}>
+                            {o.orderStatus.replace(/_/g, ' ')}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Middle: Horizontal Item Images Row */}
@@ -338,6 +374,12 @@ export default function Orders() {
                       })()}
                     </div>
 
+                    {o.orderStatus === 'REJECTED' && o.rejectionMsg && (
+                      <div style={{ marginTop: '12px', width: '100%', padding: '10px 12px', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '10px', color: '#c53030', fontSize: '0.78rem', fontWeight: 600, boxSizing: 'border-box' }}>
+                        <strong style={{ color: '#9b2c2c' }}>Rejection Reason:</strong> {o.rejectionMsg}
+                      </div>
+                    )}
+
                     {/* Bottom: Order details */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.78rem', color: '#718096', borderTop: '1px solid #edf2f7', paddingTop: '12px', marginTop: '12px' }}>
                       <span style={{ fontWeight: 700 }}>#{o.orderNumber}</span>
@@ -397,9 +439,23 @@ export default function Orders() {
                       <Store size={14} />
                       <span>#{o.orderNumber}</span>
                     </span>
-                    <span className={`order-status-badge ${o.orderStatus}`} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px', fontWeight: 800, textTransform: 'uppercase' }}>
-                      {o.orderStatus}
-                    </span>
+                    {(() => {
+                      const info = getStatusDetails(o.orderStatus);
+                      return (
+                        <span className={`order-status-badge ${o.orderStatus}`} style={{
+                          fontSize: '0.75rem',
+                          padding: '4px 10px',
+                          borderRadius: '12px',
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          color: info.color,
+                          backgroundColor: info.bgColor,
+                          border: `1.5px solid ${info.borderColor}`
+                        }}>
+                          {o.orderStatus.replace(/_/g, ' ')}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111111', margin: '0 0 8px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{o.restaurantName}</span>
@@ -412,6 +468,11 @@ export default function Orders() {
                       <span>{new Date(o.createdAt).toLocaleDateString('en-IN')}</span>
                     </span>
                   </div>
+                  {o.orderStatus === 'REJECTED' && o.rejectionMsg && (
+                    <div style={{ marginTop: '12px', padding: '10px 12px', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '10px', color: '#c53030', fontSize: '0.78rem', fontWeight: 600 }}>
+                      <strong style={{ color: '#9b2c2c' }}>Rejection Reason:</strong> {o.rejectionMsg}
+                    </div>
+                  )}
                 </Link>
               ))}
             </div>

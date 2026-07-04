@@ -613,6 +613,11 @@ input:checked + .slider:before {
   color: #dc2626;
 }
 
+.status-badge.rejected {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 /* === Pagination styles === */
 .vendor-pagination {
   display: flex;

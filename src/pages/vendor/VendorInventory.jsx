@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import { getInventory, getLowStock, updateStock } from '../../api/vendor.api';
-import { Search, SlidersHorizontal, AlertTriangle, ArrowUpDown, X, Loader } from 'lucide-react';
+import { Search, SlidersHorizontal, AlertTriangle, AlertCircle, ArrowUpDown, X, Loader } from 'lucide-react';
 
 export default function VendorInventory() {
   const { restaurant } = useOutletContext();
@@ -146,7 +146,7 @@ export default function VendorInventory() {
           {lowStockItems.map(item => (
             <div key={item._id} className="low-stock-alert-card">
               <div className="low-stock-alert-details">
-                <span style={{ fontSize: '1.1rem', marginTop: '2px' }}>⚠️</span>
+                <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2.5px', color: '#dc2626' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <span className="low-stock-alert-title">{item.name}</span>
                   <span style={{ fontSize: '0.82rem', opacity: 0.9 }}>

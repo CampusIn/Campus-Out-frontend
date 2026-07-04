@@ -13,6 +13,20 @@ export default function OrderDetail() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+
+  const getStatusColors = (status) => {
+    const colors = {
+      PENDING: { color: '#dd6b20', bgColor: '#fffaf0', borderColor: '#feebc8' },
+      CONFIRMED: { color: '#2b6cb0', bgColor: '#ebf8ff', borderColor: '#bee3f8' },
+      PREPARING: { color: '#2f855a', bgColor: '#f0fff4', borderColor: '#c6f6d5' },
+      READY: { color: '#6b46c1', bgColor: '#faf5ff', borderColor: '#e9d8fd' },
+      OUT_FOR_DELIVERY: { color: '#c53030', bgColor: '#fff5f5', borderColor: '#fed7d7' },
+      DELIVERED: { color: '#2f855a', bgColor: '#f0fff4', borderColor: '#c6f6d5' },
+      CANCELLED: { color: '#e53e3e', bgColor: '#fff5f5', borderColor: '#fed7d7' },
+      REJECTED: { color: '#e53e3e', bgColor: '#fff5f5', borderColor: '#fed7d7' }
+    };
+    return colors[status] || { color: '#4a5568', bgColor: '#f7fafc', borderColor: '#e2e8f0' };
+  };
   
   // Review form states
   const [rating, setRating] = useState(5);
@@ -170,10 +184,36 @@ export default function OrderDetail() {
               </p>
             </div>
             
-            <span className={`order-status-badge ${order.orderStatus}`} style={{ fontSize: '0.8rem', padding: '6px 14px', borderRadius: '50px', fontWeight: 800, textTransform: 'uppercase' }}>
-              {order.orderStatus}
-            </span>
+            {(() => {
+              const colors = getStatusColors(order.orderStatus);
+              return (
+                <span className={`order-status-badge ${order.orderStatus}`} style={{
+                  fontSize: '0.8rem',
+                  padding: '6px 14px',
+                  borderRadius: '50px',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  color: colors.color,
+                  backgroundColor: colors.bgColor,
+                  border: `1.5px solid ${colors.borderColor}`
+                }}>
+                  {order.orderStatus.replace(/_/g, ' ')}
+                </span>
+              );
+            })()}
           </div>
+
+          {order.orderStatus === 'REJECTED' && order.rejectionMsg && (
+            <div className="animate-scale-in" style={{ padding: '16px', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '16px', color: '#c53030' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertCircle size={16} style={{ color: '#dc2626' }} />
+                <span>Order Rejected</span>
+              </p>
+              <p style={{ margin: '6px 0 0 0', fontSize: '0.82rem', fontWeight: 600, color: '#9b2c2c', lineHeight: 1.4 }}>
+                <strong>Reason:</strong> {order.rejectionMsg}
+              </p>
+            </div>
+          )}
 
           {msg && (
             <div className="animate-scale-in">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { getVendorOrders, changeOrderStatus } from '../../api/order.api';
+import { getVendorOrders, changeOrderStatus, getPlatformSettingsVendor } from '../../api/order.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
 import { ShoppingBag, User, Clock, CreditCard, UserPlus, CheckCircle2, ChevronRight, Loader, Phone, MapPin } from 'lucide-react';
@@ -15,11 +15,38 @@ export default function VendorOrders() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [platformSettings, setPlatformSettings] = useState({
+    deliveryCharge: 0,
+    freeDeliveryAbove: 0,
+    gstPercentage: 0,
+    packagingCharge: 0
+  });
+  const [rejectingOrderId, setRejectingOrderId] = useState(null);
+  const [rejectionMessage, setRejectionMessage] = useState('');
 
   // Assignment states
   const [partnerIds, setPartnerIds] = useState({});
   const [assignLoading, setAssignLoading] = useState(null);
   const [statusChangeLoading, setStatusChangeLoading] = useState(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await getPlatformSettingsVendor();
+        if (data.success && data.data) {
+          setPlatformSettings({
+            deliveryCharge: Number(data.data.deliveryCharge ?? 0),
+            freeDeliveryAbove: Number(data.data.freeDeliveryAbove ?? 0),
+            gstPercentage: Number(data.data.gstPercentage ?? 0),
+            packagingCharge: Number(data.data.packagingCharge ?? 0)
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch platform settings for vendor', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     if (restaurant) {
@@ -58,6 +85,22 @@ export default function VendorOrders() {
       toast.error(err.response?.data?.message || 'Failed to update order status');
     } finally {
       setStatusChangeLoading(null);
+    }
+  };
+
+  const handleConfirmReject = async (orderId, message) => {
+    if (!message.trim()) return;
+    setStatusChangeLoading(orderId);
+    setRejectingOrderId(null);
+    try {
+      await changeOrderStatus(orderId, 'REJECTED', message.trim());
+      await fetchOrders(true);
+      toast.success('Order rejected successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reject order');
+    } finally {
+      setStatusChangeLoading(null);
+      setRejectionMessage('');
     }
   };
 
@@ -198,16 +241,18 @@ export default function VendorOrders() {
                     {/* Invoice Breakdown */}
                     {(() => {
                       const subTotal = o.items ? o.items.reduce((total, item) => total + (item.priceAtPurchase * item.quantity), 0) : o.totalAmount;
-                      const hasBreakdown = o.deliveryCharge !== undefined || o.discountAmount !== undefined || o.gstAmount !== undefined || o.packagingCharge !== undefined;
+                      const discount = o.discountAmount || 0;
+                      const subTotalAfterDiscount = subTotal - discount;
+
+                      const gst = o.gstAmount !== undefined && o.gstAmount !== null && o.gstAmount !== 0 ? o.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
+                      const packaging = o.packagingCharge !== undefined && o.packagingCharge !== null && o.packagingCharge !== 0 ? o.packagingCharge : platformSettings.packagingCharge;
+                      const delivery = o.deliveryCharge !== undefined && o.deliveryCharge !== null && o.deliveryCharge !== 0 ? o.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge);
+
+                      const hasBreakdown = gst > 0 || packaging > 0 || delivery > 0 || discount > 0;
                       
-                      if (!hasBreakdown && subTotal === o.totalAmount) {
+                      if (!hasBreakdown) {
                         return null; // No extra breakdown needed
                       }
-
-                      const discount = o.discountAmount || 0;
-                      const gst = o.gstAmount || 0;
-                      const packaging = o.packagingCharge || 0;
-                      const delivery = o.deliveryCharge || 0;
 
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: '#64748b', borderBottom: '1px dashed #cbd5e1', paddingBottom: '8px', marginBottom: '8px' }}>
@@ -223,7 +268,7 @@ export default function VendorOrders() {
                           )}
                           {gst > 0 && (
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span>GST</span>
+                              <span>GST ({o.gstPercentage ?? platformSettings.gstPercentage}%)</span>
                               <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{gst}</span>
                             </div>
                           )}
@@ -247,10 +292,16 @@ export default function VendorOrders() {
                       <span>Total Invoice</span>
                       <span style={{ color: 'var(--vendor-primary)' }}>₹{o.totalAmount}</span>
                     </div>
+                    {o.orderStatus === 'REJECTED' && o.rejectionMsg && (
+                      <div style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '0.82rem' }}>
+                        <strong style={{ display: 'block', marginBottom: '2px' }}>Rejection Reason:</strong>
+                        {o.rejectionMsg}
+                      </div>
+                    )}
                   </div>
 
                   {/* Delivery partner section */}
-                  {o.orderStatus !== 'CANCELLED' && (
+                  {o.orderStatus !== 'CANCELLED' && o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'REJECTED' && (
                     <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px' }}>
                       {o.deliveryPartner ? (
                         <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -285,22 +336,52 @@ export default function VendorOrders() {
                 </div>
 
                 {/* Status action buttons */}
-                {o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'CANCELLED' && (
-                  <button 
-                    className="btn btn-primary"
-                    style={{ background: 'var(--vendor-primary)', borderColor: 'var(--vendor-primary)', color: '#ffffff', width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px' }}
-                    disabled={restaurant.isSuspended || statusChangeLoading === o._id}
-                    onClick={() => handleStatusChange(o._id, o.orderStatus)}
-                  >
-                    {statusChangeLoading === o._id ? (
-                      <Loader size={16} className="animate-spin" />
+                {o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'CANCELLED' && o.orderStatus !== 'REJECTED' && (
+                  <div>
+                    {o.orderStatus === 'PENDING' ? (
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <button 
+                          className="btn btn-primary"
+                          style={{ background: 'var(--vendor-primary)', borderColor: 'var(--vendor-primary)', color: '#ffffff', flex: 1, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px' }}
+                          disabled={restaurant.isSuspended || statusChangeLoading === o._id}
+                          onClick={() => handleStatusChange(o._id, o.orderStatus)}
+                        >
+                          {statusChangeLoading === o._id ? (
+                            <Loader size={16} className="animate-spin" />
+                          ) : (
+                            <>
+                              Accept Order
+                              <ChevronRight size={16} />
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          style={{ borderColor: '#dc2626', color: '#dc2626', flex: 1, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px' }}
+                          disabled={restaurant.isSuspended || statusChangeLoading === o._id}
+                          onClick={() => setRejectingOrderId(o._id)}
+                        >
+                          Reject
+                        </button>
+                      </div>
                     ) : (
-                      <>
-                        {getNextStatusLabel(o.orderStatus)}
-                        <ChevronRight size={16} />
-                      </>
+                      <button 
+                        className="btn btn-primary"
+                        style={{ background: 'var(--vendor-primary)', borderColor: 'var(--vendor-primary)', color: '#ffffff', width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px' }}
+                        disabled={restaurant.isSuspended || statusChangeLoading === o._id}
+                        onClick={() => handleStatusChange(o._id, o.orderStatus)}
+                      >
+                        {statusChangeLoading === o._id ? (
+                          <Loader size={16} className="animate-spin" />
+                        ) : (
+                          <>
+                            {getNextStatusLabel(o.orderStatus)}
+                            <ChevronRight size={16} />
+                          </>
+                        )}
+                      </button>
                     )}
-                  </button>
+                  </div>
                 )}
               </div>
             ))}
@@ -331,6 +412,41 @@ export default function VendorOrders() {
             </div>
           )}
         </>
+      )}
+      {/* Rejection Modal */}
+      {rejectingOrderId && (
+        <div className="vendor-modal-overlay" onClick={() => { setRejectingOrderId(null); setRejectionMessage(''); }}>
+          <div className="vendor-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', padding: '24px' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px' }}>Reject Order</h3>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>
+              Please enter a reason for rejecting this order. This message will be visible to the customer.
+            </p>
+            <textarea
+              className="input-field"
+              style={{ width: '100%', height: '100px', borderRadius: '12px', border: '1.5px solid #e2e8f0', padding: '12px', outline: 'none', resize: 'none', marginBottom: '16px', fontSize: '0.9rem' }}
+              placeholder="Reason (e.g. Restaurant is closing, out of stock...)"
+              value={rejectionMessage}
+              onChange={(e) => setRejectionMessage(e.target.value)}
+            />
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                className="btn btn-outline" 
+                style={{ width: 'auto', padding: '8px 20px', borderRadius: '10px' }}
+                onClick={() => { setRejectingOrderId(null); setRejectionMessage(''); }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ width: 'auto', padding: '8px 20px', borderRadius: '10px', background: '#dc2626', borderColor: '#dc2626', color: '#ffffff' }}
+                onClick={() => handleConfirmReject(rejectingOrderId, rejectionMessage)}
+                disabled={!rejectionMessage.trim()}
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
