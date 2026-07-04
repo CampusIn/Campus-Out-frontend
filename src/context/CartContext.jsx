@@ -8,18 +8,22 @@ export function CartProvider({ children }) {
   const { user } = useAuth();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchCart = useCallback(async () => {
     if (!user || user.role !== 'user') {
       setCart(null);
+      setError(null);
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       const { data } = await getCart();
       setCart(data.data);
     } catch (e) {
       setCart(null);
+      setError(e.response?.data?.message || 'Failed to fetch cart');
     } finally {
       setLoading(false);
     }
@@ -145,6 +149,8 @@ export function CartProvider({ children }) {
       fetchCart,
       cartTotalQty,
       loading,
+      error,
+      setError,
       addToCartOptimistic,
       updateCartItemQtyOptimistic,
       deleteCartItemOptimistic

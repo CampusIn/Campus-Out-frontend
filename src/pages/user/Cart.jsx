@@ -6,13 +6,13 @@ import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
 import { useConfirm } from '../../context/ConfirmContext';
-import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent, Phone } from 'lucide-react';
+import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent, Phone, AlertTriangle } from 'lucide-react';
 
 export default function Cart() {
   const navigate = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
-  const { cart, setCart, fetchCart, loading, updateCartItemQtyOptimistic, deleteCartItemOptimistic } = useCart();
+  const { cart, setCart, fetchCart, loading, updateCartItemQtyOptimistic, deleteCartItemOptimistic, error: cartError } = useCart();
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
   const [deliveryAddress, setDeliveryAddress] = useState('Hostel Block 3, Room 204');
   const [paymentMethod, setPaymentMethod] = useState('COD');
@@ -125,7 +125,9 @@ export default function Cart() {
     if (quantity < 1) return;
     try {
       await updateCartItemQtyOptimistic(menuItemId, quantity);
-    } catch {}
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update quantity');
+    }
   };
 
   const handleRemove = async (menuItemId) => {
@@ -346,6 +348,44 @@ export default function Cart() {
     return (
       <div className="home-dashboard page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <p className="loading-text" style={{ color: '#718096' }}>Loading your cart...</p>
+      </div>
+    );
+  }
+
+  if (cartError) {
+    return (
+      <div className="home-dashboard page animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <button 
+            className="circle-icon-btn hover-scale" 
+            onClick={() => navigate(-1)}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#718096' }}>Back</span>
+        </div>
+
+        <div className="card animate-scale-in" style={{ background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px', textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <div style={{ background: '#fee2e2', color: '#dc2626', borderRadius: '50%', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <AlertTriangle size={36} />
+          </div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111111', margin: 0 }}>Unable to Load Cart</h2>
+          <p style={{ fontSize: '0.95rem', color: '#dc2626', maxWidth: '400px', margin: 0, lineHeight: 1.5, fontWeight: 700 }}>
+            {cartError}
+          </p>
+          <p style={{ fontSize: '0.88rem', color: '#718096', maxWidth: '320px', margin: '0 auto', lineHeight: 1.4 }}>
+            Some items in your cart may be out of stock or unavailable. Please clear your cart to start fresh.
+          </p>
+          <button 
+            onClick={handleClear}
+            className="btn btn-primary hover-lift hover-darken" 
+            style={{ width: 'auto', padding: '12px 28px', borderRadius: '12px', background: '#dc2626', borderColor: '#dc2626', color: '#ffffff', fontWeight: 700, border: 'none', cursor: 'pointer', fontSize: '0.9rem', marginTop: '8px' }}
+          >
+            Clear Cart & Start Over
+          </button>
+        </div>
+        <BottomNav activeTab="cart" />
       </div>
     );
   }
@@ -757,9 +797,24 @@ export default function Cart() {
                     <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111111', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {item.menuItem?.name}
                     </h3>
-                    <p style={{ fontSize: '0.95rem', fontWeight: 800, color: '#b31522', marginBottom: '8px' }}>
-                      &#8377;{item.menuItem?.price}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#b31522' }}>
+                        &#8377;{item.menuItem?.price}
+                      </span>
+                      {item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty && (
+                        <span style={{ 
+                          fontSize: '0.68rem', 
+                          color: '#d97706', 
+                          background: '#fef3c7', 
+                          padding: '2px 6px', 
+                          borderRadius: '4px', 
+                          fontWeight: 800,
+                          border: '1px solid #f59e0b'
+                        }}>
+                          Max stock reached ({item.menuItem.stockQty} available)
+                        </span>
+                      )}
+                    </div>
 
                     {/* Quantity controls and remove button */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
@@ -775,7 +830,15 @@ export default function Cart() {
                         <button 
                           className="qty-btn hover-scale" 
                           onClick={() => handleQtyChange(item.menuItem?._id, item.quantity + 1)}
-                          style={{ fontSize: '1rem', width: '20px', border: 'none', background: 'none', cursor: 'pointer', color: '#718096' }}
+                          disabled={item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty}
+                          style={{ 
+                            fontSize: '1rem', 
+                            width: '20px', 
+                            border: 'none', 
+                            background: 'none', 
+                            cursor: (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty) ? 'not-allowed' : 'pointer', 
+                            color: (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty) ? '#cbd5e0' : '#718096' 
+                          }}
                         >
                           <Plus size={14} />
                         </button>

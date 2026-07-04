@@ -152,7 +152,7 @@ export default function RestaurantDetail() {
     try {
       await updateCartItemQtyOptimistic(menuItemId, currentQty + 1);
     } catch (err) {
-      toast.error('Failed to update quantity');
+      toast.error(err.response?.data?.message || 'Failed to update quantity');
     }
   };
 
@@ -170,8 +170,9 @@ export default function RestaurantDetail() {
 
   const displayTopPicks = useMemo(() => {
     if (!menu || menu.length === 0) return [];
-    const withImages = menu.filter(item => item.image);
-    const sourceList = withImages.length > 0 ? withImages : menu;
+    const availableMenu = menu.filter(item => item.isAvailable && item.stockQty > 0);
+    const withImages = availableMenu.filter(item => item.image);
+    const sourceList = withImages.length > 0 ? withImages : availableMenu;
     // Stable random shuffle
     return [...sourceList]
       .sort(() => 0.5 - Math.random())
@@ -685,8 +686,23 @@ export default function RestaurantDetail() {
                           return (
                             <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 16px', borderBottom: '1px solid #f1f5f9', gap: '16px' }}>
                               <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                                   <VegIcon isVeg={isVeg} />
+                                  {item.isAvailable && item.stockQty > 0 && item.stockQty <= (item.lowStockThreshold || 5) && (
+                                    <span style={{ 
+                                      fontSize: '0.65rem', 
+                                      fontWeight: 850, 
+                                      color: '#d97706', 
+                                      background: '#fef3c7', 
+                                      padding: '2px 8px', 
+                                      borderRadius: '6px',
+                                      border: '1.5px solid #f59e0b',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.3px'
+                                    }}>
+                                      Only {item.stockQty} left!
+                                    </span>
+                                  )}
                                 </div>
                                 <h4 style={{ fontSize: '0.98rem', fontWeight: 850, color: '#1d232c', margin: '0 0 4px 0' }}>{item.name}</h4>
                                 <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#111111', marginBottom: '6px' }}>₹{item.price}</div>
@@ -719,9 +735,23 @@ export default function RestaurantDetail() {
                                     }}>
                                       <button type="button" onClick={() => handleDecrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, cursor: 'pointer', fontSize: '0.9rem' }}>-</button>
                                       <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#111111' }}>{qty}</span>
-                                      <button type="button" onClick={() => handleIncrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, cursor: 'pointer', fontSize: '0.9rem' }}>+</button>
+                                      <button 
+                                        type="button" 
+                                        onClick={() => handleIncrement(item._id, qty)} 
+                                        disabled={qty >= (item.stockQty ?? Infinity)}
+                                        style={{ 
+                                          border: 'none', 
+                                          background: 'none', 
+                                          color: qty >= (item.stockQty ?? Infinity) ? '#cbd5e0' : '#b31522', 
+                                          fontWeight: 900, 
+                                          cursor: qty >= (item.stockQty ?? Infinity) ? 'not-allowed' : 'pointer', 
+                                          fontSize: '0.9rem' 
+                                        }}
+                                      >
+                                        +
+                                      </button>
                                     </div>
-                                  ) : item.isAvailable ? (
+                                  ) : (item.isAvailable && item.stockQty > 0) ? (
                                     <button 
                                       type="button" 
                                       onClick={() => handleAdd(item._id)}
@@ -740,7 +770,17 @@ export default function RestaurantDetail() {
                                       ADD
                                     </button>
                                   ) : (
-                                    <span style={{ background: '#e2e8f0', color: '#718096', padding: '4px 12px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>Unavailable</span>
+                                    <span style={{ 
+                                      background: (!item.isAvailable && item.stockQty > 0) ? '#e2e8f0' : '#fee2e2', 
+                                      color: (!item.isAvailable && item.stockQty > 0) ? '#718096' : '#dc2626', 
+                                      padding: '4px 12px', 
+                                      borderRadius: '12px', 
+                                      fontSize: '0.72rem', 
+                                      fontWeight: 800,
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {item.stockQty === 0 ? 'Out of Stock' : 'Unavailable'}
+                                    </span>
                                   )}
                                 </div>
                               </div>
