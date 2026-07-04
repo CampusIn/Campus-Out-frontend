@@ -51,4 +51,8 @@ export const getPlatformSettingsAdmin = () => api.get('/admin/view/settings');
 
 export const downloadOrderInvoice = (orderId) => api.get(`/admin/orders/${orderId}/invoice`, { responseType: 'blob' });
 
+export const getAbandonedCarts = (params) => api.get('/admin/abandoned-carts', { params });
+export const sendAbandonedCartReminder = (userId) => api.post(`/admin/abandoned-carts/${userId}/remind`);
+
+
 

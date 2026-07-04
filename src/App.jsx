@@ -40,6 +40,7 @@ const AdminAnnouncements = lazy(() => import('./pages/admin/AdminAnnouncements')
 const AdminRestaurants = lazy(() => import('./pages/admin/AdminRestaurants'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
+const AdminAbandonedCarts = lazy(() => import('./pages/admin/AdminAbandonedCarts'));
 
 export default function App() {
   return (
@@ -98,6 +99,7 @@ export default function App() {
                       <Route path="banners" element={<AdminBanners />} />
                       <Route path="restaurants" element={<AdminRestaurants />} />
                       <Route path="users" element={<AdminUsers />} />
+                      <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
                     </Route>
                     <Route path="/delivery/login" element={<DeliveryLogin />} />
                     <Route path="/delivery/register" element={<DeliveryRegister />} />

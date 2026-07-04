@@ -13,7 +13,8 @@ import {
   LogOut,
   RefreshCw,
   ChevronDown,
-  Image
+  Image,
+  ShoppingBag
 } from 'lucide-react';
 import '../pages/admin/AdminPortal.css';
 
@@ -75,6 +76,7 @@ export default function AdminLayout() {
     { path: '/admin/banners', label: 'Banner Ads', icon: <Image size={18} /> },
     { path: '/admin/restaurants', label: `Cafeteria Directory (${stats.restaurantCount})`, icon: <Store size={18} /> },
     { path: '/admin/users', label: `User Directory (${stats.userCount + stats.vendorCount})`, icon: <Users size={18} /> },
+    { path: '/admin/abandoned-carts', label: 'Abandoned Carts', icon: <ShoppingBag size={18} /> },
   ];
 
   const getCurrentPageLabel = () => {
@@ -159,6 +161,14 @@ export default function AdminLayout() {
             >
               <Users size={20} />
               <span>Users ({stats.userCount + stats.vendorCount})</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/abandoned-carts"
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <ShoppingBag size={20} />
+              <span>Abandoned Carts</span>
             </NavLink>
           </nav>
 
