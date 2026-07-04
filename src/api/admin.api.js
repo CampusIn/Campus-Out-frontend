@@ -49,3 +49,6 @@ export const getTopRestaurants = () => api.get('/admin/dashboard/top-restaurant'
 
 export const getPlatformSettingsAdmin = () => api.get('/admin/view/settings');
 
+export const downloadOrderInvoice = (orderId) => api.get(`/admin/orders/${orderId}/invoice`, { responseType: 'blob' });
+
+

@@ -40,3 +40,8 @@ export const bulkUploadMenu = (formData) =>
       'Content-Type': 'multipart/form-data',
     },
   });
+
+// Invoice Download
+export const downloadVendorOrderInvoice = (orderId) => 
+  api.get(`/vendor/orders/${orderId}/invoice`, { responseType: 'blob' });
+

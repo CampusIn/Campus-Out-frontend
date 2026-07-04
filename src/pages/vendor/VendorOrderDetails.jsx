@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { getSingleVendorOrder, changeOrderStatus, getPlatformSettingsVendor } from '../../api/order.api';
+import { downloadVendorOrderInvoice } from '../../api/vendor.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
 import { 
   ArrowLeft, Clock, User, Phone, MapPin, CreditCard, 
-  CheckCircle2, UserPlus, ChevronRight, Loader, Package 
+  CheckCircle2, UserPlus, ChevronRight, Loader, Package, FileDown 
 } from 'lucide-react';
 
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
@@ -23,6 +24,7 @@ export default function VendorOrderDetails() {
   const [partnerId, setPartnerId] = useState('');
   const [assignLoading, setAssignLoading] = useState(false);
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
   const [platformSettings, setPlatformSettings] = useState({
     deliveryCharge: 0,
     freeDeliveryAbove: 0,
@@ -130,6 +132,44 @@ export default function VendorOrderDetails() {
     }
   };
 
+  const handleDownloadInvoice = async (orderId, orderNumber) => {
+    setDownloadingInvoice(true);
+    try {
+      const response = await downloadVendorOrderInvoice(orderId);
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${orderNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Invoice #${orderNumber} downloaded successfully`);
+    } catch (err) {
+      console.error('Invoice download failed:', err);
+      let errorMsg = 'Failed to download invoice';
+      
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          errorMsg = parsed.message || errorMsg;
+        } catch (e) {
+          console.error('Failed to parse error blob:', e);
+        }
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      }
+      
+      toast.error(errorMsg);
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  };
+
   const getNextStatusLabel = (currentStatus) => {
     const idx = statusFlow.indexOf(currentStatus);
     if (idx === -1 || idx >= statusFlow.length - 1) return null;
@@ -157,23 +197,48 @@ export default function VendorOrderDetails() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
       
       {/* Back navigation & Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button 
-          className="btn btn-outline" 
-          onClick={() => navigate('/vendor/orders')}
-          style={{ width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
-            Order #{order.orderNumber}
-          </h1>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-            <Clock size={14} />
-            {new Date(order.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button 
+            className="btn btn-outline" 
+            onClick={() => navigate('/vendor/orders')}
+            style={{ width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
+              Order #{order.orderNumber}
+            </h1>
+            <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+              <Clock size={14} />
+              {new Date(order.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
         </div>
+
+        <button 
+          className="btn btn-outline hover-lift" 
+          style={{ 
+            width: 'auto', 
+            padding: '0 16px', 
+            borderRadius: '10px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            fontWeight: 700,
+            height: '40px',
+            fontSize: '0.85rem',
+            borderColor: 'rgba(179, 21, 34, 0.2)',
+            color: 'var(--vendor-primary)',
+            background: 'transparent'
+          }}
+          disabled={downloadingInvoice}
+          onClick={() => handleDownloadInvoice(order._id, order.orderNumber)}
+        >
+          {downloadingInvoice ? <Loader size={16} className="animate-spin" /> : <FileDown size={16} />}
+          Download Invoice
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>

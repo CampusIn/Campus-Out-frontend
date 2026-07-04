@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { getVendorOrders, changeOrderStatus, getPlatformSettingsVendor } from '../../api/order.api';
+import { downloadVendorOrderInvoice } from '../../api/vendor.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
-import { ShoppingBag, User, Clock, CreditCard, UserPlus, CheckCircle2, ChevronRight, Loader, Phone, MapPin } from 'lucide-react';
+import { ShoppingBag, User, Clock, CreditCard, UserPlus, CheckCircle2, ChevronRight, Loader, Phone, MapPin, FileDown } from 'lucide-react';
 
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
 
@@ -28,6 +29,7 @@ export default function VendorOrders() {
   const [partnerIds, setPartnerIds] = useState({});
   const [assignLoading, setAssignLoading] = useState(null);
   const [statusChangeLoading, setStatusChangeLoading] = useState(null);
+  const [downloadingInvoiceMap, setDownloadingInvoiceMap] = useState({});
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -132,6 +134,44 @@ export default function VendorOrders() {
     setPartnerIds(prev => ({ ...prev, [orderId]: val }));
   };
 
+  const handleDownloadInvoice = async (orderId, orderNumber) => {
+    setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: true }));
+    try {
+      const response = await downloadVendorOrderInvoice(orderId);
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${orderNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Invoice #${orderNumber} downloaded successfully`);
+    } catch (err) {
+      console.error('Invoice download failed:', err);
+      let errorMsg = 'Failed to download invoice';
+      
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          errorMsg = parsed.message || errorMsg;
+        } catch (e) {
+          console.error('Failed to parse error blob:', e);
+        }
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      }
+      
+      toast.error(errorMsg);
+    } finally {
+      setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: false }));
+    }
+  };
+
   const getNextStatusLabel = (currentStatus) => {
     const idx = statusFlow.indexOf(currentStatus);
     if (idx === -1 || idx >= statusFlow.length - 1) return null;
@@ -194,9 +234,36 @@ export default function VendorOrders() {
                       <span className={`status-badge ${o.orderStatus.toLowerCase().replace(/_/g, '-')}`}>
                         {o.orderStatus.replace(/_/g, ' ')}
                       </span>
-                      <Link to={`/vendor/orders/${o._id}`} style={{ fontSize: '0.78rem', color: 'var(--vendor-primary)', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        View Details <ChevronRight size={12} />
-                      </Link>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <Link to={`/vendor/orders/${o._id}`} style={{ fontSize: '0.78rem', color: 'var(--vendor-primary)', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          View Details <ChevronRight size={12} />
+                        </Link>
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => handleDownloadInvoice(o._id, o.orderNumber)}
+                          disabled={downloadingInvoiceMap[o._id]}
+                          title="Download Invoice PDF"
+                          style={{ 
+                            width: '26px', 
+                            height: '26px', 
+                            padding: 0, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            borderRadius: '6px',
+                            borderWidth: '1px',
+                            color: 'var(--vendor-primary)',
+                            borderColor: 'rgba(179, 21, 34, 0.2)',
+                            background: 'transparent'
+                          }}
+                        >
+                          {downloadingInvoiceMap[o._id] ? (
+                            <Loader size={12} className="animate-spin" />
+                          ) : (
+                            <FileDown size={12} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

@@ -6,6 +6,7 @@ import {
   getAdminOrderById,
   getTopRestaurants,
   getPlatformSettingsAdmin,
+  downloadOrderInvoice,
 } from '../../api/admin.api';
 import {
   DollarSign,
@@ -19,6 +20,8 @@ import {
   Calendar,
   ClipboardList,
   ChevronDown,
+  FileDown,
+  Loader2,
 } from 'lucide-react';
 import './AdminPortal.css';
 
@@ -37,6 +40,7 @@ export default function AdminDashboard() {
   const [orderDetailLoading, setOrderDetailLoading] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [downloadingInvoiceMap, setDownloadingInvoiceMap] = useState({});
 
   // Top restaurants states
   const [topRestaurantsList, setTopRestaurantsList] = useState([]);
@@ -122,6 +126,44 @@ export default function AdminDashboard() {
       toast.error(err.response?.data?.message || 'Error fetching order details');
     } finally {
       setOrderDetailLoading(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (orderId, orderNumber) => {
+    setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: true }));
+    try {
+      const response = await downloadOrderInvoice(orderId);
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${orderNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Invoice #${orderNumber} downloaded successfully`);
+    } catch (err) {
+      console.error('Invoice download failed:', err);
+      let errorMsg = 'Failed to download invoice';
+      
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          errorMsg = parsed.message || errorMsg;
+        } catch (e) {
+          console.error('Failed to parse error blob:', e);
+        }
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      }
+      
+      toast.error(errorMsg);
+    } finally {
+      setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -495,13 +537,36 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td>
-                            <button
-                              className="btn btn-sm btn-outline"
-                              onClick={() => handleViewOrderDetails(ord._id)}
-                              style={{ width: 'auto', padding: '4px 10px', height: '30px', fontSize: '0.75rem' }}
-                            >
-                              View Details
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <button
+                                className="btn btn-sm btn-outline"
+                                onClick={() => handleViewOrderDetails(ord._id)}
+                                style={{ width: 'auto', padding: '4px 10px', height: '30px', fontSize: '0.75rem' }}
+                              >
+                                View Details
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline"
+                                onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
+                                disabled={downloadingInvoiceMap[ord._id]}
+                                title="Download Invoice PDF"
+                                style={{ 
+                                  width: '30px', 
+                                  height: '30px', 
+                                  padding: 0, 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  borderRadius: '8px'
+                                }}
+                              >
+                                {downloadingInvoiceMap[ord._id] ? (
+                                  <Loader2 size={14} className="spin-anim" />
+                                ) : (
+                                  <FileDown size={14} />
+                                )}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -540,13 +605,37 @@ export default function AdminDashboard() {
                           <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>₹{ord.totalAmount}</span>
                         </div>
                       </div>
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => handleViewOrderDetails(ord._id)}
-                        style={{ width: '100%', height: '36px', borderRadius: '10px', fontSize: '0.8rem' }}
-                      >
-                        View Details
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => handleViewOrderDetails(ord._id)}
+                          style={{ flex: 1, height: '36px', borderRadius: '10px', fontSize: '0.8rem' }}
+                        >
+                          View Details
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
+                          disabled={downloadingInvoiceMap[ord._id]}
+                          style={{ 
+                            width: '36px', 
+                            height: '36px', 
+                            padding: 0, 
+                            borderRadius: '10px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}
+                          title="Download Invoice PDF"
+                        >
+                          {downloadingInvoiceMap[ord._id] ? (
+                            <Loader2 size={16} className="spin-anim" />
+                          ) : (
+                            <FileDown size={16} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -714,7 +803,35 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ 
+                  width: 'auto', 
+                  padding: '8px 20px', 
+                  borderRadius: '10px', 
+                  fontWeight: 700, 
+                  height: '36px', 
+                  fontSize: '0.8rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }} 
+                onClick={() => handleDownloadInvoice(selectedOrder._id, selectedOrder.orderNumber)}
+                disabled={downloadingInvoiceMap[selectedOrder._id]}
+              >
+                {downloadingInvoiceMap[selectedOrder._id] ? (
+                  <>
+                    <Loader2 size={14} className="spin-anim" />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileDown size={14} />
+                    <span>Download Invoice</span>
+                  </>
+                )}
+              </button>
               <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 20px', borderRadius: '10px', fontWeight: 700, height: '36px', fontSize: '0.8rem' }} onClick={() => setShowOrderModal(false)}>
                 Close Window
               </button>
