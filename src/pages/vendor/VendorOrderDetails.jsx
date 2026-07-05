@@ -6,16 +6,30 @@ import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
 import { 
   ArrowLeft, Clock, User, Phone, MapPin, CreditCard, 
-  CheckCircle2, UserPlus, ChevronRight, Loader, Package, FileDown 
+  CheckCircle2, UserPlus, ChevronRight, Loader, Package, FileDown,
+  Copy, MessageSquare, MessageCircle
 } from 'lucide-react';
 
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
+
+const getWhatsAppLink = (phone) => {
+  if (!phone) return '';
+  const cleaned = phone.replace(/\D/g, '');
+  const number = cleaned.length === 10 ? `91${cleaned}` : cleaned;
+  return `https://wa.me/${number}`;
+};
 
 export default function VendorOrderDetails() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
   const { restaurant } = useOutletContext();
+
+  const handleCopyToClipboard = (text, type = 'Phone number') => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} copied to clipboard!`);
+  };
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -358,7 +372,7 @@ export default function VendorOrderDetails() {
           
           <div className="vendor-card" style={{ padding: '24px', border: '1px solid var(--vendor-border)' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: '0 0 16px 0' }}>Customer Details</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', color: '#475569' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.9rem', color: '#475569' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                 <User size={16} color="#64748b" style={{ marginTop: '2px' }} />
                 <div style={{ flex: 1 }}>
@@ -372,9 +386,101 @@ export default function VendorOrderDetails() {
                   <Phone size={16} color="#64748b" style={{ marginTop: '2px' }} />
                   <div style={{ flex: 1 }}>
                     <strong style={{ display: 'block', color: '#1e293b', marginBottom: '2px' }}>Phone Number</strong>
-                    <a href={`tel:${order.customerPhone || order.user?.phone}`} style={{ color: 'var(--vendor-primary)', textDecoration: 'none', fontWeight: 600 }}>
-                      {order.customerPhone || order.user?.phone}
-                    </a>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      <a href={`tel:${order.customerPhone || order.user?.phone}`} style={{ color: 'var(--vendor-primary)', textDecoration: 'none', fontWeight: 600 }}>
+                        {order.customerPhone || order.user?.phone}
+                      </a>
+                      
+                      {/* Copy Icon */}
+                      <button 
+                        onClick={() => handleCopyToClipboard(order.customerPhone || order.user?.phone, 'Phone number')}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#64748b',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          transition: 'color 0.2s, background-color 0.2s',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#1e293b'; e.currentTarget.style.backgroundColor = '#f1f5f9'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        title="Copy Phone Number"
+                      >
+                        <Copy size={14} />
+                      </button>
+
+                      {/* Call Icon Link */}
+                      <a 
+                        href={`tel:${order.customerPhone || order.user?.phone}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          background: '#f1f5f9',
+                          color: '#475569',
+                          transition: 'transform 0.2s, background-color 0.2s, color 0.2s',
+                          textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.color = '#1e293b'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#475569'; }}
+                        title="Call Customer"
+                      >
+                        <Phone size={13} />
+                      </a>
+
+                      {/* SMS Icon Link */}
+                      <a 
+                        href={`sms:${order.customerPhone || order.user?.phone}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          background: '#f1f5f9',
+                          color: '#475569',
+                          transition: 'transform 0.2s, background-color 0.2s, color 0.2s',
+                          textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.color = '#1e293b'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#475569'; }}
+                        title="SMS Customer"
+                      >
+                        <MessageSquare size={13} />
+                      </a>
+
+                      {/* WhatsApp Icon Link */}
+                      <a 
+                        href={getWhatsAppLink(order.customerPhone || order.user?.phone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          background: '#e6f4ea',
+                          color: '#137333',
+                          transition: 'transform 0.2s, background-color 0.2s, color 0.2s',
+                          textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.backgroundColor = '#ceead6'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = '#e6f4ea'; }}
+                        title="WhatsApp Customer"
+                      >
+                        <MessageCircle size={13} />
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
