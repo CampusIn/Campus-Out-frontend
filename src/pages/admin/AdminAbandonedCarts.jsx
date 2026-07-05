@@ -136,10 +136,12 @@ export default function AdminAbandonedCarts() {
           <p>Fetching inactive carts...</p>
         </div>
       ) : cartsList.length === 0 ? (
-        <div className="empty-state">
-          <ShoppingBag size={48} className="empty-icon" style={{ color: '#94a3b8' }} />
-          <h3>No Abandoned Carts</h3>
-          <p>Hooray! There are currently no carts left abandoned for more than 24 hours.</p>
+        <div className="empty-state" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <ShoppingBag size={48} className="empty-icon" style={{ color: '#94a3b8', margin: '0 auto' }} />
+          <h3 style={{ textAlign: 'center', margin: '8px 0 4px 0', fontWeight: 700 }}>No Abandoned Carts</h3>
+          <p style={{ textAlign: 'center', maxWidth: '320px', margin: '0 auto', color: '#64748b', fontSize: '0.9rem', lineHeight: '1.4' }}>
+            Hooray! There are currently no carts left abandoned for more than 24 hours.
+          </p>
         </div>
       ) : (
         <>

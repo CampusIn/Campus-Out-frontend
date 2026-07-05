@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getOrderById, cancelOrder } from '../../api/order.api';
-import { createReview } from '../../api/review.api';
-import { ArrowLeft, Star, Calendar, CreditCard, Clock, Store, Check, AlertCircle } from 'lucide-react';
+import { createReview, updateReview, deleteReview, getRestaurantReviews } from '../../api/review.api';
+import { ArrowLeft, Star, CreditCard, Clock, Store, Check, AlertCircle } from 'lucide-react';
 import BottomNav from '../../components/BottomNav';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function OrderDetail() {
   const { orderId } = useParams();
@@ -13,6 +14,9 @@ export default function OrderDetail() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+  
+  const { user } = useAuth();
+  const [myReview, setMyReview] = useState(null);
 
   const getStatusColors = (status) => {
     const colors = {
@@ -34,26 +38,49 @@ export default function OrderDetail() {
   const [reviewMsg, setReviewMsg] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [orderId]);
+  const confirm = useConfirm();
 
-  useEffect(() => {
-    fetchOrderDetails();
-  }, [orderId]);
+  const fetchMyReview = useCallback(async (restaurantId) => {
+    if (!user?.username) return;
+    try {
+      const { data: revData } = await getRestaurantReviews(restaurantId);
+      const found = (revData.data?.reviews || []).find(r => r.user?.username === user.username);
+      if (found) {
+        setMyReview(found);
+        setRating(found.rating);
+        setComment(found.comment);
+      } else {
+        setMyReview(null);
+      }
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    }
+  }, [user]);
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const { data } = await getOrderById(orderId);
       setOrder(data.data);
+      if (data.data?.orderStatus === 'DELIVERED') {
+        await fetchMyReview(data.data.restaurant);
+      }
     } catch {
       navigate('/orders');
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, fetchMyReview, navigate]);
 
-  const confirm = useConfirm();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [orderId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchOrderDetails();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchOrderDetails]);
 
   const handleCancel = async () => {
     if (!await confirm('Are you sure you want to cancel this order?')) return;
@@ -73,11 +100,36 @@ export default function OrderDetail() {
     setReviewLoading(true);
     setReviewMsg('');
     try {
-      await createReview(order.restaurant, { rating, comment });
-      setReviewMsg('Thank you! Review submitted successfully.');
-      setComment('');
+      if (myReview) {
+        await updateReview(myReview._id, { rating, comment });
+        setReviewMsg('Review updated successfully.');
+        setMyReview({ ...myReview, rating, comment });
+      } else {
+        await createReview(order.restaurant, { rating, comment });
+        setReviewMsg('Thank you! Review submitted successfully.');
+        await fetchMyReview(order.restaurant);
+      }
     } catch (err) {
       setReviewMsg(err.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    if (!myReview) return;
+    if (!await confirm('Are you sure you want to delete your review?')) return;
+    
+    setReviewLoading(true);
+    setReviewMsg('');
+    try {
+      await deleteReview(myReview._id);
+      setReviewMsg('Review deleted successfully.');
+      setMyReview(null);
+      setRating(5);
+      setComment('');
+    } catch (err) {
+      setReviewMsg(err.response?.data?.message || 'Failed to delete review');
     } finally {
       setReviewLoading(false);
     }
@@ -282,14 +334,18 @@ export default function OrderDetail() {
         {/* Rate & Review Form */}
         {order.orderStatus === 'DELIVERED' && (
           <div className="card animate-scale-in" style={{ padding: '24px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111111', margin: '0 0 4px 0' }}>Rate Your Meal</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111111', margin: '0 0 4px 0' }}>
+              {myReview ? 'Edit Your Review' : 'Rate Your Meal'}
+            </h3>
             <p style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '20px', margin: '0 0 20px 0' }}>
-              Let us know how your experience was at {order.restaurantName}.
+              {myReview 
+                ? `You reviewed your experience at ${order.restaurantName}. Modify or remove it here.`
+                : `Let us know how your experience was at ${order.restaurantName}.`}
             </p>
 
             {reviewMsg && (
               <div style={{ marginBottom: '16px' }} className="animate-scale-in">
-                <p className={`msg ${reviewMsg.includes('Thank') ? 'msg-success' : 'msg-error'}`}>
+                <p className={`msg ${reviewMsg.toLowerCase().includes('success') || reviewMsg.toLowerCase().includes('thank') ? 'msg-success' : 'msg-error'}`}>
                   {reviewMsg}
                 </p>
               </div>
@@ -344,15 +400,31 @@ export default function OrderDetail() {
                 />
               </div>
 
-              {/* Submit Review Button */}
-              <button 
-                type="submit" 
-                className="btn btn-primary hover-lift hover-darken" 
-                disabled={reviewLoading}
-                style={{ padding: '16px', borderRadius: '12px', background: '#b31522', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', marginTop: '8px' }}
-              >
-                {reviewLoading ? 'Submitting Review...' : 'Submit Review'}
-              </button>
+              {/* Buttons Row */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary hover-lift hover-darken" 
+                  disabled={reviewLoading}
+                  style={{ padding: '16px', borderRadius: '12px', background: '#b31522', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', width: '100%' }}
+                >
+                  {reviewLoading 
+                    ? (myReview ? 'Updating Review...' : 'Submitting Review...') 
+                    : (myReview ? 'Update Review' : 'Submit Review')}
+                </button>
+
+                {myReview && (
+                  <button 
+                    type="button" 
+                    className="btn btn-outline hover-lift" 
+                    onClick={handleDeleteReview}
+                    disabled={reviewLoading}
+                    style={{ padding: '16px', borderRadius: '12px', color: '#dc2626', borderColor: '#dc2626', background: 'transparent', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', width: '100%', border: '1px solid #dc2626' }}
+                  >
+                    {reviewLoading ? 'Deleting...' : 'Delete Review'}
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         )}
