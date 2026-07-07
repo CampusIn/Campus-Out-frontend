@@ -173,7 +173,7 @@ export default function Restaurants() {
     } else if (redirectType === 'COUPON') {
       navigate('/cart');
     } else if (redirectType === 'MARKETPLACE') {
-      navigate('/restaurants');
+      navigate('/marketplace');
     }
   };
 

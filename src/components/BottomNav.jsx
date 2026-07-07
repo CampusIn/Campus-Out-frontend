@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { Home, ClipboardList, ShoppingCart, User } from 'lucide-react';
+import { Home, ClipboardList, ShoppingCart, User, ShoppingBag } from 'lucide-react';
 
 export default function BottomNav({ activeTab = 'home' }) {
   const { user } = useAuth();
@@ -17,6 +17,16 @@ export default function BottomNav({ activeTab = 'home' }) {
       >
         <Home size={22} style={{ strokeWidth: activeTab === 'home' ? 2.5 : 2 }} />
         <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'home' ? 800 : 600, marginTop: '4px' }}>Home</span>
+      </Link>
+
+      {/* Marketplace Tab */}
+      <Link 
+        to="/marketplace" 
+        className={`bottom-nav-item ${activeTab === 'marketplace' ? 'active' : ''}`}
+        style={{ color: activeTab === 'marketplace' ? '#b31522' : '#718096' }}
+      >
+        <ShoppingBag size={22} style={{ strokeWidth: activeTab === 'marketplace' ? 2.5 : 2 }} />
+        <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'marketplace' ? 800 : 600, marginTop: '4px' }}>Market</span>
       </Link>
 
       {/* Orders Tab */}

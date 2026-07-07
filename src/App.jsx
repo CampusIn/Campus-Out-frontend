@@ -41,6 +41,9 @@ const AdminRestaurants = lazy(() => import('./pages/admin/AdminRestaurants'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
 const AdminAbandonedCarts = lazy(() => import('./pages/admin/AdminAbandonedCarts'));
+const AdminMarketplace = lazy(() => import('./pages/admin/AdminMarketplace'));
+const Marketplace = lazy(() => import('./pages/user/Marketplace'));
+const MarketplaceProductDetail = lazy(() => import('./pages/user/MarketplaceProductDetail'));
 
 export default function App() {
   return (
@@ -65,6 +68,36 @@ export default function App() {
                     <Route path="/orders" element={<ProtectedRoute allowedRoles={['user']}><Orders /></ProtectedRoute>} />
                     <Route path="/orders/:orderId" element={<ProtectedRoute allowedRoles={['user']}><OrderDetail /></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
+                    <Route 
+                      path="/marketplace" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Marketplace...</p>
+                            </div>
+                          }>
+                            <Marketplace />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/marketplace/product/:productId" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Item Details...</p>
+                            </div>
+                          }>
+                            <MarketplaceProductDetail />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
                       <Route index element={<Navigate to="dashboard" replace />} />
                       <Route path="dashboard" element={<VendorDashboard />} />
@@ -94,6 +127,7 @@ export default function App() {
                       <Route index element={<Navigate to="dashboard" replace />} />
                       <Route path="dashboard" element={<AdminDashboard />} />
                       <Route path="settings" element={<AdminSettings />} />
+                      <Route path="marketplace" element={<AdminMarketplace />} />
                       <Route path="coupons" element={<AdminCoupons />} />
                       <Route path="announcements" element={<AdminAnnouncements />} />
                       <Route path="banners" element={<AdminBanners />} />

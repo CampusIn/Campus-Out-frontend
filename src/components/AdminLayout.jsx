@@ -14,7 +14,8 @@ import {
   RefreshCw,
   ChevronDown,
   Image,
-  ShoppingBag
+  ShoppingBag,
+  Package
 } from 'lucide-react';
 import '../pages/admin/AdminPortal.css';
 
@@ -71,6 +72,7 @@ export default function AdminLayout() {
   const menuOptions = [
     { path: '/admin/dashboard', label: 'Dashboard Overview', icon: <LayoutDashboard size={18} /> },
     { path: '/admin/settings', label: 'Platform Settings', icon: <Settings size={18} /> },
+    { path: '/admin/marketplace', label: 'Marketplace Console', icon: <Package size={18} /> },
     { path: '/admin/coupons', label: 'Coupon Campaigns', icon: <Ticket size={18} /> },
     { path: '/admin/announcements', label: 'Announcements Bulletin', icon: <Megaphone size={18} /> },
     { path: '/admin/banners', label: 'Banner Ads', icon: <Image size={18} /> },
@@ -121,6 +123,14 @@ export default function AdminLayout() {
             >
               <Settings size={20} />
               <span>Platform Settings</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/marketplace"
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <Package size={20} />
+              <span>Marketplace</span>
             </NavLink>
 
             <NavLink

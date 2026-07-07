@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike, MapPin, ChevronDown, Navigation, Search } from 'lucide-react';
+import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike, MapPin, ChevronDown, Navigation, Search, ShoppingBag } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
 
 const savedAddresses = [
@@ -58,7 +58,7 @@ export default function Navbar() {
   // Fetch search suggestions with debounce
   useEffect(() => {
     const trimmed = search.trim();
-    if (!trimmed) {
+    if (!trimmed || location.pathname.startsWith('/marketplace')) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -93,7 +93,8 @@ export default function Navbar() {
     } else {
       newParams.delete('search');
     }
-    navigate(`/restaurants?${newParams.toString()}`);
+    const targetPath = location.pathname.startsWith('/marketplace') ? '/marketplace' : '/restaurants';
+    navigate(`${targetPath}?${newParams.toString()}`);
   };
 
   const handleCustomAddressSubmit = (val) => {
@@ -102,7 +103,8 @@ export default function Navbar() {
     setDropdownOpen(false);
     const newParams = new URLSearchParams(searchParams);
     newParams.set('hostel', val.trim());
-    navigate(`/restaurants?${newParams.toString()}`);
+    const targetPath = location.pathname.startsWith('/marketplace') ? '/marketplace' : '/restaurants';
+    navigate(`${targetPath}?${newParams.toString()}`);
   };
 
   const handleUseCurrentLocation = () => {
@@ -113,6 +115,7 @@ export default function Navbar() {
           setActiveLocation("Locating...");
           setDropdownOpen(false);
           
+          const targetPath = location.pathname.startsWith('/marketplace') ? '/marketplace' : '/restaurants';
           try {
             const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
             const data = await res.json();
@@ -122,14 +125,14 @@ export default function Navbar() {
             setActiveLocation(resolvedName);
             const newParams = new URLSearchParams(searchParams);
             newParams.set('hostel', resolvedName);
-            navigate(`/restaurants?${newParams.toString()}`);
+            navigate(`${targetPath}?${newParams.toString()}`);
           } catch (error) {
             console.error("Reverse geocoding failed, using fallback:", error);
             const fallbackName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
             setActiveLocation(fallbackName);
             const newParams = new URLSearchParams(searchParams);
             newParams.set('hostel', fallbackName);
-            navigate(`/restaurants?${newParams.toString()}`);
+            navigate(`${targetPath}?${newParams.toString()}`);
           }
         },
         (error) => {
@@ -153,7 +156,7 @@ export default function Navbar() {
   }
 
   const isActive = (path) => location.pathname === path;
-  const isHomepage = location.pathname === '/restaurants';
+  const isHomepage = location.pathname === '/restaurants' || location.pathname === '/marketplace';
 
   return (
     <nav className="navbar" style={{ position: 'sticky', top: 0, zIndex: 10000 }}>
@@ -235,7 +238,8 @@ export default function Navbar() {
                           setDropdownOpen(false);
                           const newParams = new URLSearchParams(searchParams);
                           newParams.set('hostel', addr.name);
-                          navigate(`/restaurants?${newParams.toString()}`);
+                          const targetPath = location.pathname.startsWith('/marketplace') ? '/marketplace' : '/restaurants';
+                          navigate(`${targetPath}?${newParams.toString()}`);
                         }}
                         className="swiggy-location-popover-item address-item"
                       >
@@ -263,7 +267,7 @@ export default function Navbar() {
               <input 
                 type="text" 
                 className="desktop-search-input-field-nav"
-                placeholder="Search for restaurant and food" 
+                placeholder={location.pathname === '/marketplace' ? "Search for textbooks, cycles, coolers..." : "Search for restaurant and food"} 
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
                 onFocus={() => {
@@ -345,6 +349,23 @@ export default function Navbar() {
             >
               <Store size={18} />
               Restaurants
+            </Link>
+            
+            <Link 
+              to="/marketplace" 
+              className="nav-link"
+              style={{ 
+                color: isActive('/marketplace') ? '#b31522' : '#718096', 
+                fontWeight: 700, 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                fontSize: '0.9rem',
+                transition: 'color 0.2s'
+              }}
+            >
+              <ShoppingBag size={18} />
+              Marketplace
             </Link>
             
             {user ? (
