@@ -67,9 +67,6 @@ export default function Register() {
             <p className="swiggy-auth-subtitle">
               or <Link to="/login" className="swiggy-auth-link">login to your account</Link>
             </p>
-            <p className="swiggy-auth-subtitle" style={{ marginTop: '8px', fontSize: '0.85rem' }}>
-              Are you a Delivery Partner? <Link to="/delivery/register" className="swiggy-auth-link" style={{ color: '#06c169' }}>Register here</Link>
-            </p>
             <div className="swiggy-title-line"></div>
           </div>
         </div>
@@ -240,7 +237,7 @@ export default function Register() {
           max-width: 480px;
           padding: 40px;
           background: #ffffff;
-          border-radius: 8px;
+          border-radius: 20px;
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
           border: 1px solid #f0f0f0;
           display: flex;
@@ -368,6 +365,9 @@ export default function Register() {
           border: 1px solid #d4d5d9;
           border-bottom: none;
           background: #ffffff;
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+          overflow: hidden;
         }
 
         .swiggy-role-btn {
@@ -394,6 +394,16 @@ export default function Register() {
           background: #ffffff;
           border: 1px solid #d4d5d9;
           transition: all 0.2s ease;
+        }
+
+        .swiggy-inputs-stack .swiggy-input-container:first-child {
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+        }
+
+        .swiggy-inputs-stack .swiggy-input-container:last-child {
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 12px;
         }
 
         .border-bottom-none {
@@ -462,6 +472,7 @@ export default function Register() {
           color: #ffffff;
           border: none;
           padding: 16px;
+          border-radius: 12px;
           font-size: 0.95rem;
           font-weight: 800;
           letter-spacing: 0.5px;
@@ -522,7 +533,7 @@ export default function Register() {
           justify-content: center;
           gap: 12px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-          border-radius: 4px;
+          border-radius: 12px;
         }
 
         .swiggy-google-btn:hover {

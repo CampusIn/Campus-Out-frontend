@@ -108,9 +108,6 @@ export default function Login() {
             <p className="swiggy-auth-subtitle">
               or <Link to="/register" className="swiggy-auth-link">create an account</Link>
             </p>
-            <p className="swiggy-auth-subtitle" style={{ marginTop: '8px', fontSize: '0.85rem' }}>
-              Are you a Delivery Partner? <Link to="/delivery/login" className="swiggy-auth-link" style={{ color: '#06c169' }}>Access Portal</Link>
-            </p>
             <div className="swiggy-title-line"></div>
           </div>
         </div>
@@ -264,7 +261,7 @@ export default function Login() {
           max-width: 480px;
           padding: 40px;
           background: #ffffff;
-          border-radius: 8px;
+          border-radius: 20px;
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
           border: 1px solid #f0f0f0;
           display: flex;
@@ -402,6 +399,16 @@ export default function Login() {
           transition: all 0.2s ease;
         }
 
+        .swiggy-inputs-stack .swiggy-input-container:first-child {
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+        }
+
+        .swiggy-inputs-stack .swiggy-input-container:last-child {
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 12px;
+        }
+
         .border-bottom-none {
           border-bottom: none;
         }
@@ -477,6 +484,7 @@ export default function Login() {
           color: #ffffff;
           border: none;
           padding: 16px;
+          border-radius: 12px;
           font-size: 0.95rem;
           font-weight: 800;
           letter-spacing: 0.5px;
@@ -537,7 +545,7 @@ export default function Login() {
           justify-content: center;
           gap: 12px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-          border-radius: 4px;
+          border-radius: 12px;
         }
 
         .swiggy-google-btn:hover {

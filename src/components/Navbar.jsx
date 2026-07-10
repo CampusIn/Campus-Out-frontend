@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike, MapPin, ChevronDown, Navigation, Search, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike, ChevronDown, Navigation, Search } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
 
 const savedAddresses = [
@@ -334,40 +334,7 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <Link 
-              to="/restaurants" 
-              className="nav-link"
-              style={{ 
-                color: isActive('/restaurants') ? '#b31522' : '#718096', 
-                fontWeight: 700, 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px',
-                fontSize: '0.9rem',
-                transition: 'color 0.2s'
-              }}
-            >
-              <Store size={18} />
-              Restaurants
-            </Link>
-            
-            <Link 
-              to="/marketplace" 
-              className="nav-link"
-              style={{ 
-                color: isActive('/marketplace') ? '#b31522' : '#718096', 
-                fontWeight: 700, 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px',
-                fontSize: '0.9rem',
-                transition: 'color 0.2s'
-              }}
-            >
-              <ShoppingBag size={18} />
-              Marketplace
-            </Link>
-            
+
             {user ? (
               <>
                 {user.role === 'user' && (
@@ -527,18 +494,7 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link 
-                  to="/delivery/login" 
-                  className="nav-link"
-                  style={{ 
-                    color: isActive('/delivery/login') ? '#06c169' : '#718096', 
-                    fontWeight: 700, 
-                    fontSize: '0.9rem',
-                    marginRight: '8px'
-                  }}
-                >
-                  Delivery Portal
-                </Link>
+
                 <Link 
                   to="/login" 
                   className="nav-link"

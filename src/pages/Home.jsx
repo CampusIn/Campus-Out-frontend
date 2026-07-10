@@ -1,77 +1,23 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
-import { Flame, Search, MapPin, ChevronDown, ArrowRight, Clock, Heart, Award, Star, SlidersHorizontal, Navigation } from 'lucide-react';
-import { getRestaurants } from '../api/restaurant.api';
+import { Flame, Search, ChefHat, Percent, Gift, BookOpen, ShoppingBag, CreditCard, Sparkles, Home as HomeIcon } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
-
-const foodImages = [
-  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80', // Burger
-  'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80', // Pizza
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=80', // Mixed foods
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80', // Salad bowl
-  'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=500&q=80', // Chinese/Dumplings
-  'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=500&q=80', // Tacos/Mexican
-  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80', // Coffee/Desserts
-  'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80'  // Extra Pizza
-];
-
-const promoTexts = [
-  '50% OFF UPTO ₹80',
-  '70% OFF UPTO ₹130',
-  'ITEMS AT ₹119',
-  '50% OFF',
-  'ITEMS AT ₹19',
-  'ITEMS AT ₹59',
-  'ITEMS AT ₹139',
-  '60% OFF UPTO ₹120'
-];
-
-const savedAddresses = [
-  { id: 'hostel_a', name: 'Hostel A', detail: 'Hostel A (Boys) &bull; Men\'s Hostel Block, Campus Road' },
-  { id: 'hostel_b', name: 'Hostel B', detail: 'Hostel B (Girls) &bull; Women\'s Hostel Block, Campus Road' },
-  { id: 'hostel_c', name: 'Hostel C', detail: 'Hostel C &bull; PG Block C, Campus East' },
-  { id: 'library', name: 'Central Library', detail: 'Central Library &bull; Main Campus Academic Center' },
-  { id: 'academic', name: 'Academic Block', detail: 'Academic Block &bull; Science & Arts Department' }
-];
 
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [hostel, setHostel] = useState('');
-  const [locating, setLocating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const locationRef = useRef(null);
-  
-  const [restaurants, setRestaurants] = useState([]);
-  const [loadingRestaurants, setLoadingRestaurants] = useState(true);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const [carouselPaused, setCarouselPaused] = useState(false);
-
-  // Auto-advance carousel every 3 seconds
-  useEffect(() => {
-    if (restaurants.length < 2 || carouselPaused) return;
-    const timer = setInterval(() => {
-      setCarouselIndex(prev => (prev + 1) % restaurants.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [restaurants.length, carouselPaused]);
 
   // Suggestions state
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef(null);
-  const popoverRef = useRef(null);
 
-  // Click outside to close location dropdown and search suggestions dropdown
+  // Click outside to close search suggestions dropdown
   useEffect(() => {
     function handleClickOutside(event) {
-      if (locationRef.current && !locationRef.current.contains(event.target) &&
-          popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
@@ -80,55 +26,87 @@ export default function Home() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [locationRef, suggestionsRef]);
+  }, [suggestionsRef]);
 
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setHostel('Location not supported');
-      setDropdownOpen(false);
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { 'Accept-Language': 'en' } }
-          );
-          const data = await res.json();
-          const addr = data.address || {};
-          // Build a short human-readable label
-          const label =
-            addr.road ||
-            addr.neighbourhood ||
-            addr.suburb ||
-            addr.quarter ||
-            addr.city_district ||
-            addr.town ||
-            addr.city ||
-            'Current Location';
-          setHostel(label);
-        } catch {
-          setHostel(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-        } finally {
-          setLocating(false);
-          setDropdownOpen(false);
-        }
+  // Scroll triggered promo section visibility
+  const [promoSectionVisible, setPromoSectionVisible] = useState(false);
+  const promoSectionRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setPromoSectionVisible(entry.isIntersecting);
       },
-      (err) => {
-        setLocating(false);
-        let msg = 'Location unavailable';
-        if (err.code === 1) msg = 'Permission denied';
-        else if (err.code === 2) msg = 'Position unavailable';
-        else if (err.code === 3) msg = 'Request timed out';
-        setHostel(msg);
-        setDropdownOpen(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      {
+        threshold: 0.55,
+        rootMargin: '0px 0px -5% 0px',
+      }
     );
-  };
+
+    const currentRef = promoSectionRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
+  const heroSectionRef = useRef(null);
+  const heroContentRef = useRef(null);
+  const promoContentRef = useRef(null);
+
+  // Scroll listener to fade out Hero content and Promo content dynamically based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const heroEl = heroSectionRef.current;
+      const heroContentEl = heroContentRef.current;
+      const promoEl = promoSectionRef.current;
+      const promoContentEl = promoContentRef.current;
+
+      // 1. Fade out Hero section content as user scrolls down
+      if (heroEl && heroContentEl) {
+        const heroOpacity = Math.max(0, 1 - scrollY / 350);
+        heroContentEl.style.opacity = heroOpacity;
+      }
+
+      // 2. Fade out Promo section content as it scrolls off the top of the viewport
+      if (promoEl && promoContentEl) {
+        const threshold = promoEl.offsetTop;
+
+        if (threshold && scrollY > threshold) {
+          const diff = scrollY - threshold;
+          const opacity = Math.max(0, 1 - diff / 350);
+
+          promoContentEl.style.opacity = opacity;
+
+          const floatingAssets = promoEl.querySelectorAll('.floating-asset, .deco-item');
+          floatingAssets.forEach(asset => {
+            asset.style.opacity = opacity;
+          });
+        } else {
+          promoContentEl.style.opacity = 1;
+          const floatingAssets = promoEl.querySelectorAll('.floating-asset, .deco-item');
+          floatingAssets.forEach(asset => {
+            asset.style.opacity = 1;
+          });
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+
 
   // Redirect if already logged in to provide a smooth experience
   useEffect(() => {
@@ -145,20 +123,17 @@ export default function Home() {
     }
   }, [user, navigate]);
 
-  // Fetch canteens for homepage listing
-  useEffect(() => {
-    if (!user) {
-      fetchTopRestaurants();
-    }
-  }, [user]);
+
 
   // Fetch search suggestions with debounce
   useEffect(() => {
     const trimmed = searchQuery.trim();
     if (!trimmed) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
+      const timer = setTimeout(() => {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     const delayDebounceFn = setTimeout(async () => {
@@ -182,30 +157,11 @@ export default function Home() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  const fetchTopRestaurants = async () => {
-    setLoadingRestaurants(true);
-    try {
-      const { data } = await getRestaurants({ page: 1, limit: 8 });
-      setRestaurants(data?.data?.restaurant || []);
-    } catch (e) {
-      setRestaurants([]);
-    } finally {
-      setLoadingRestaurants(false);
-    }
-  };
-
   if (user) return null;
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim() || hostel) {
-      const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append('search', searchQuery.trim());
-      if (hostel) params.append('hostel', hostel);
-      navigate(`/restaurants?${params.toString()}`);
-    } else {
-      navigate('/restaurants');
-    }
+    navigate('/login');
   };
 
   return (
@@ -222,11 +178,7 @@ export default function Home() {
             </span>
           </Link>
 
-          <nav className="header-nav hide-mobile">
-            <Link to="/restaurants" className="nav-link-item">Restaurants</Link>
-            <Link to="/register" className="nav-link-item">Partner with us</Link>
-            <a href="#help" className="nav-link-item">Get Help</a>
-          </nav>
+
 
           <div className="header-actions">
             <Link to="/login" className="btn-signin-nav">Sign In</Link>
@@ -236,55 +188,24 @@ export default function Home() {
       </header>
 
       {/* 2. Hero Section (Red Background with Floating Food and Search Box) */}
-      <section className="hero-section">
-        {/* Floating food items (Hidden on Mobile for cleaner view) */}
-        <div className="floating-food food-left hide-mobile">
-          <img 
-            src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80" 
-            alt="Delicious Burger" 
-            className="floating-image"
-          />
-        </div>
-        <div className="floating-food food-right hide-mobile">
-          <img 
-            src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80" 
-            alt="Hot Pizza" 
-            className="floating-image"
-          />
-        </div>
+      <section ref={heroSectionRef} className="hero-section">
 
-        <div className="hero-content-wrapper">
+
+        <div ref={heroContentRef} className="hero-content-wrapper">
           <h1 className="hero-title animate-slide-up">
-            Order food & canteens.<br />
-            Discover best meals. <span className="highlight-yellow">CampusIn</span> it!
+            Cravings called. <br></br>We answered.<br />
+            Craving It?
+            <span className="highlight-yellow">CampusIn</span> It!
           </h1>
           <p className="hero-subtitle animate-slide-up delay-1">
-            Fresh, hot meals from your favorite campus restaurants delivered straight to your hostel door.
-          </p>
+            Your campus favourites, delivered hot and fresh to your hostel.          </p>
 
           {/* Search bar Widget */}
           <form onSubmit={handleSearchSubmit} className="hero-search-form animate-slide-up delay-2">
-            <div className="search-field-location" ref={locationRef}>
-              <button 
-                type="button" 
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="location-dropdown-toggle-btn"
-              >
-                <MapPin size={20} color="#b31522" className="field-icon" />
-                <span className="location-toggle-label-text">
-                  {hostel ? savedAddresses.find(a => a.name === hostel)?.name || hostel : 'Select Hostel / Building'}
-                </span>
-                <ChevronDown size={16} color="#718096" className="dropdown-arrow-icon" />
-              </button>
-            </div>
-
-
-            <div className="search-field-divider"></div>
-
             <div className="search-field-query" ref={suggestionsRef}>
               <Search size={20} color="#718096" className="field-icon" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search for restaurants, dishes or drinks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -305,8 +226,8 @@ export default function Home() {
                     </div>
                   ) : suggestions.length > 0 ? (
                     suggestions.map((item) => (
-                      <div 
-                        key={item._id} 
+                      <div
+                        key={item._id}
                         className="suggestion-item"
                         onClick={() => navigate('/login')}
                       >
@@ -340,304 +261,270 @@ export default function Home() {
               Find Food
             </button>
           </form>
-
-          {/* Location popover - rendered OUTSIDE the form to avoid stacking context clipping */}
-          {dropdownOpen && (
-            <div
-              ref={popoverRef}
-              className="swiggy-location-popover animate-scale-in"
-              style={{ position: 'fixed', top: locationRef.current ? locationRef.current.getBoundingClientRect().bottom + 8 : 0, left: locationRef.current ? locationRef.current.getBoundingClientRect().left : 0, zIndex: 99999 }}
-            >
-              {/* Current Location Option */}
-              <button 
-                type="button" 
-                onClick={handleUseCurrentLocation}
-                disabled={locating}
-                className="swiggy-location-popover-item current-loc-item"
-                style={{ opacity: locating ? 0.7 : 1 }}
-              >
-                {locating ? (
-                  <span style={{ width: '18px', height: '18px', border: '2px solid #b31522', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-                ) : (
-                  <Navigation size={18} color="#b31522" className="popover-item-icon" />
-                )}
-                <div className="popover-item-details">
-                  <span className="current-loc-title">
-                    {locating ? 'Detecting location...' : 'Use my current location'}
-                  </span>
-                </div>
-              </button>
-
-              <div className="swiggy-popover-divider"></div>
-
-              <span className="swiggy-popover-header">SAVED ADDRESSES</span>
-
-              {savedAddresses.map((addr) => (
-                <button 
-                  key={addr.id}
-                  type="button"
-                  onClick={() => {
-                    setHostel(addr.name);
-                    setDropdownOpen(false);
-                  }}
-                  className="swiggy-location-popover-item address-item"
-                >
-                  <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
-                  <div className="popover-item-details">
-                    <span className="address-name">{addr.name}</span>
-                    <span 
-                      className="address-desc" 
-                      dangerouslySetInnerHTML={{ __html: addr.detail }}
-                    />
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
-      {/* 3. Promo/Service Cards Section */}
-      <section className="services-section">
-        <div className="section-container">
-          <div className="services-grid">
-            {/* Card 1: Canteen Delivery */}
-            <div className="service-card hover-lift">
-              <div className="service-card-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=80" 
-                  alt="Campus Canteen Food" 
-                  className="service-card-image"
-                />
+      {/* 3. Promo/Service Cards Section (Replaced with Scroll-Triggered Zomato-style Food Section) */}
+      <section
+        ref={promoSectionRef}
+        className={`zomato-promo-section ${promoSectionVisible ? 'active' : ''}`}
+      >
+        {/* Floating animated food items */}
+        <img src="/burger.avif" alt="Burger" className="floating-asset floating-burger" />
+        <img src="/momo.avif" alt="Momo" className="floating-asset floating-momo" />
+        <img src="/pizza.avif" alt="Pizza" className="floating-asset floating-pizza" />
+
+        {/* Decorative items */}
+        <span className="deco-item deco-leaf">🍃</span>
+        <span className="deco-item deco-tomato">🍅</span>
+        <span className="deco-item deco-leaf-2">🌿</span>
+
+        <div ref={promoContentRef} className="section-container promo-content-wrapper">
+          <h2 className="promo-heading">Better campus food, closer to you.</h2>
+          <p className="promo-subtext">
+            From canteen favourites to late-night cravings, CampusIn brings the best food around your campus straight to your hostel.
+          </p>
+
+          <div className="promo-cards-container">
+            {/* Card 1: Restaurants */}
+            <div className="promo-stat-card card-left">
+              <div className="stat-info">
+                <span className="stat-number">One Campus</span>
+                <span className="stat-label">all your favourites</span>
               </div>
-              <div className="service-card-info">
-                <span className="promo-badge badge-red">UP TO 40% OFF</span>
-                <h3 className="service-card-title">Campus Delivery</h3>
-                <p className="service-card-desc">
-                  Order from your favorite canteens and enjoy fresh meals on campus.
-                </p>
-                <Link to="/restaurants" className="service-card-arrow-btn">
-                  <ArrowRight size={20} color="#ffffff" />
-                </Link>
+              <div className="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b31522" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
               </div>
             </div>
 
-            {/* Card 2: Hostel Delivery */}
-            <div className="service-card hover-lift">
-              <div className="service-card-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80" 
-                  alt="Late Night Snacks" 
-                  className="service-card-image"
-                />
+            {/* Card 2: Cities */}
+            <div className="promo-stat-card card-right">
+              <div className="stat-info">
+                <span className="stat-number">Quick delivery</span>
+                <span className="stat-label">straight to your hostel</span>
               </div>
-              <div className="service-card-info">
-                <span className="promo-badge badge-yellow">LATE NIGHT SHIFT</span>
-                <h3 className="service-card-title">Hostel Drop</h3>
-                <p className="service-card-desc">
-                  Late night cravings or study sessions? We deliver straight to your room.
-                </p>
-                <Link to="/restaurants" className="service-card-arrow-btn">
-                  <ArrowRight size={20} color="#ffffff" />
-                </Link>
+              <div className="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b31522" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
               </div>
             </div>
 
-            {/* Card 3: Self-Pickup */}
-            <div className="service-card hover-lift">
-              <div className="service-card-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80" 
-                  alt="Coffee Coffee" 
-                  className="service-card-image"
-                />
+            {/* Card 3: Orders Delivered */}
+            <div className="promo-stat-card card-left-2">
+              <div className="stat-info">
+                <span className="stat-number">Zero hassle</span>
+                <span className="stat-label">just CampusIn it</span>
               </div>
-              <div className="service-card-info">
-                <span className="promo-badge badge-green">SKIP THE QUEUE</span>
-                <h3 className="service-card-title">Self Pickup</h3>
-                <p className="service-card-desc">
-                  Pre-order coffee and snacks. Beat the rush and pick up when ready.
-                </p>
-                <Link to="/restaurants" className="service-card-arrow-btn">
-                  <ArrowRight size={20} color="#ffffff" />
-                </Link>
+              <div className="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b31522" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. Restaurants to Explore Grid Section (Swiggy Style) */}
-      <section className="restaurants-explore-section">
-        <div className="section-container">
-          <h2 className="explore-section-title">Restaurants to explore</h2>
-          
+      {/* 4. App Features Section ("More than food. It's campus life, simplified.") */}
+      <section className="app-features-section">
+        <div className="section-container app-features-wrapper">
+          <h2 className="features-heading">More than food. It’s campus life, simplified.</h2>
+          <p className="features-subtext">
+            From hostel cravings to college essentials, CampusIn brings everything students need into one place.
+          </p>
 
-          {loadingRestaurants ? (
-            <p style={{ textAlign: 'center', color: '#718096', padding: '40px', fontWeight: 650 }}>Loading canteens...</p>
-          ) : restaurants.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#718096', padding: '40px', fontWeight: 650 }}>No canteens available on campus right now.</p>
-          ) : (
-            <div
-              className="restaurant-carousel-wrapper"
-              onMouseEnter={() => setCarouselPaused(true)}
-              onMouseLeave={() => setCarouselPaused(false)}
-            >
-              {/* Carousel track */}
-              <div
-                className="restaurant-carousel-track"
-                style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
-              >
-                {restaurants.map((r, idx) => {
-                  const foodImage = foodImages[idx % foodImages.length];
-                  const promoText = promoTexts[idx % promoTexts.length];
-                  return (
-                    <div className="restaurant-carousel-slide" key={r._id}>
-                      <Link to={`/restaurants/${r._id}`} className="swiggy-restaurant-card">
-                        <div className="swiggy-card-img-wrapper">
-                          <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
-                          <div className="swiggy-card-overlay">
-                            <span className="swiggy-promo-text">{promoText}</span>
-                          </div>
-                        </div>
-                        <div className="swiggy-card-info">
-                          <h3 className="swiggy-card-name">{r.restaurantName}</h3>
-                          <div className="swiggy-card-rating-row">
-                            <div className="swiggy-rating-star-circle">
-                              <Star size={10} color="#ffffff" fill="#ffffff" />
-                            </div>
-                            <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
-                            <span className="swiggy-bullet-dot">&bull;</span>
-                            <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
-                          </div>
-                          <p className="swiggy-card-cuisines">{r.category}</p>
-                          <p className="swiggy-card-location">{r.location}</p>
-                        </div>
-                      </Link>
-                    </div>
-                  );
-                })}
+          <div className="features-icon-grid">
+            {/* Card 1: Campus Food */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <ChefHat size={32} className="feature-icon-svg red-tint" />
               </div>
-
-              {/* Prev / Next arrows */}
-              {restaurants.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    className="carousel-arrow carousel-arrow-left"
-                    onClick={() => { setCarouselIndex(prev => (prev - 1 + restaurants.length) % restaurants.length); setCarouselPaused(true); setTimeout(() => setCarouselPaused(false), 5000); }}
-                    aria-label="Previous restaurant"
-                  >
-                    &#8249;
-                  </button>
-                  <button
-                    type="button"
-                    className="carousel-arrow carousel-arrow-right"
-                    onClick={() => { setCarouselIndex(prev => (prev + 1) % restaurants.length); setCarouselPaused(true); setTimeout(() => setCarouselPaused(false), 5000); }}
-                    aria-label="Next restaurant"
-                  >
-                    &#8250;
-                  </button>
-                </>
-              )}
-
-              {/* Dot indicators */}
-              {restaurants.length > 1 && (
-                <div className="carousel-dots">
-                  {restaurants.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`carousel-dot${i === carouselIndex ? ' active' : ''}`}
-                      onClick={() => { setCarouselIndex(i); setCarouselPaused(true); setTimeout(() => setCarouselPaused(false), 5000); }}
-                      aria-label={`Go to slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
+              <span className="card-label">Campus Food</span>
             </div>
-          )}
+
+            {/* Card 2: College Essentials */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <BookOpen size={32} className="feature-icon-svg orange-tint" />
+              </div>
+              <span className="card-label">College Essentials</span>
+            </div>
+
+            {/* Card 3: Campus Resale */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <ShoppingBag size={32} className="feature-icon-svg blue-tint" />
+              </div>
+              <span className="card-label">Campus Resale</span>
+            </div>
+
+            {/* Card 4: Smart Recommendations */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <Sparkles size={32} className="feature-icon-svg green-tint-2" />
+              </div>
+              <span className="card-label">Smart Recommendations</span>
+            </div>
+
+            {/* Card 5: Student Deals */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <Percent size={32} className="feature-icon-svg yellow-tint" />
+              </div>
+              <span className="card-label">Student Deals</span>
+            </div>
+
+            {/* Card 6: Quick Search */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <Search size={32} className="feature-icon-svg blue-tint-2" />
+              </div>
+              <span className="card-label">Quick Search</span>
+            </div>
+
+            {/* Card 7: Special Gifts */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <Gift size={32} className="feature-icon-svg pink-tint" />
+              </div>
+              <span className="card-label">Special Gifts</span>
+            </div>
+
+            {/* Card 8: Easy Payments */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <CreditCard size={32} className="feature-icon-svg purple-tint" />
+              </div>
+              <span className="card-label">Easy Payments</span>
+            </div>
+
+            {/* Card 9: Hostel Delivery */}
+            <div className="feature-icon-card">
+              <div className="card-icon-container">
+                <HomeIcon size={32} className="feature-icon-svg red-tint" />
+              </div>
+              <span className="card-label">Hostel Delivery</span>
+            </div>
+          </div>
+
+          <h3 className="and-more-text">One campus. One app. A lot more.</h3>
         </div>
       </section>
 
-      {/* 5. Trust/Features Badges */}
-      <section className="features-section">
-        <div className="section-container">
-          <div className="features-grid">
-            <div className="feature-item">
-              <div className="feature-icon-circle">
-                <Clock size={28} color="#b31522" />
+
+
+      {/* 6. Zomato-style Footer */}
+      <footer className="zomato-footer" id="help">
+        <div className="zomato-footer-container">
+          {/* Top Row: Logo */}
+          <div className="zomato-footer-top-row">
+            <div className="brand-logo" style={{ cursor: 'default' }}>
+              <div className="logo-icon icon-white" style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 'none' }}>
+                <Flame size={20} color="#ffffff" />
               </div>
-              <h4 className="feature-item-title">Super Fast Delivery</h4>
-              <p className="feature-item-desc">Get your hot food in less than 20 minutes right to your doorstep.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon-circle">
-                <Heart size={28} color="#b31522" />
-              </div>
-              <h4 className="feature-item-title">Quality Canteens</h4>
-              <p className="feature-item-desc">Only certified, clean, and top-rated campus canteens and partners.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon-circle">
-                <Award size={28} color="#b31522" />
-              </div>
-              <h4 className="feature-item-title">Exclusive Deals</h4>
-              <p className="feature-item-desc">Pocket-friendly student combos, flat discounts, and midnight specials.</p>
+              <span className="brand-name" style={{ color: '#ffffff' }}>
+                CAMPUS<span className="brand-name-sub" style={{ color: '#ffc700' }}>IN</span>
+              </span>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* 6. Footer */}
-      <footer className="landing-footer" id="help">
-        <div className="footer-content-container">
-          <div className="footer-main-grid">
-            <div className="footer-brand-column">
-              <div className="footer-logo">
-                <div className="logo-icon icon-white">
-                  <Flame size={20} color="#ffffff" />
-                </div>
-                <span className="brand-name font-white">
-                  CAMPUS<span className="brand-name-sub">IN</span>
-                </span>
+          {/* Links Grid */}
+          <div className="zomato-footer-grid">
+            {/* Column 1: About CampusIn */}
+            <div className="zomato-footer-col">
+              <h6 className="zomato-footer-title">About CampusIn</h6>
+              <nav className="zomato-footer-links">
+                <Link to="/restaurants">Who We Are</Link>
+                <Link to="/restaurants">Blog</Link>
+                <Link to="/restaurants">Contact Us</Link>
+              </nav>
+            </div>
+
+            {/* Column 2: For Restaurants & Delivery Partners */}
+            <div className="zomato-footer-col">
+              <div className="zomato-footer-subcol">
+                <h6 className="zomato-footer-title">For Restaurants</h6>
+                <nav className="zomato-footer-links">
+                  <Link to="/register">Partner With Us</Link>
+                </nav>
               </div>
-              <p className="footer-brand-desc">
-                Simplifying on-campus food ordering and delivery. Made by students, for students.
-              </p>
-              <p className="footer-copyright">
-                &copy; {new Date().getFullYear()} CampusIn. All rights reserved.
-              </p>
+              <div className="zomato-footer-subcol" style={{ marginTop: '24px' }}>
+                <h6 className="zomato-footer-title">For Delivery Partners</h6>
+                <nav className="zomato-footer-links">
+                  <Link to="/register">Partner With Us</Link>
+                  <Link to="/delivery/login">Delivery Portal</Link>
+                </nav>
+              </div>
             </div>
 
-            <div className="footer-links-column">
-              <h5 className="footer-links-title">Company</h5>
-              <Link to="/restaurants" className="footer-link-item">About Us</Link>
-              <Link to="/restaurants" className="footer-link-item">Careers</Link>
-              <Link to="/restaurants" className="footer-link-item">Team</Link>
+            {/* Column 3: Learn More */}
+            <div className="zomato-footer-col">
+              <h6 className="zomato-footer-title">Learn More</h6>
+              <nav className="zomato-footer-links">
+                <Link to="/restaurants">Privacy</Link>
+                <Link to="/restaurants">Security</Link>
+                <Link to="/restaurants">Terms of Service</Link>
+              </nav>
             </div>
 
-            <div className="footer-links-column">
-              <h5 className="footer-links-title">Contact Us</h5>
-              <a href="#help" className="footer-link-item">Help & Support</a>
-              <Link to="/register" className="footer-link-item">Partner with us</Link>
-              <Link to="/restaurants" className="footer-link-item">Ride with us</Link>
-            </div>
-
-            <div className="footer-links-column">
-              <h5 className="footer-links-title">Available Near</h5>
-              <span className="footer-link-static">Main Campus Hostel Block</span>
-              <span className="footer-link-static">Engineering Canteens</span>
-              <span className="footer-link-static">Medical College Hostel</span>
-              <span className="footer-link-static">Post Graduate PG Wing</span>
+            {/* Column 4: Social Links */}
+            <div className="zomato-footer-col">
+              <h6 className="zomato-footer-title">Social Links</h6>
+              <div className="zomato-social-icons">
+                <a href="#linkedin" className="zomato-social-icon-btn" aria-label="LinkedIn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                  </svg>
+                </a>
+                <a href="#instagram" className="zomato-social-icon-btn" aria-label="Instagram">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </a>
+                <a href="#youtube" className="zomato-social-icon-btn" aria-label="YouTube">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                </a>
+                <a href="#facebook" className="zomato-social-icon-btn" aria-label="Facebook">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </a>
+                <a href="#twitter" className="zomato-social-icon-btn" aria-label="Twitter">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
+
+          <div className="zomato-footer-divider"></div>
+
+          <p className="zomato-footer-copyright">
+            By continuing past this page, you agree to our Terms of Service, Cookie Policy, Privacy Policy and Content Policies. All trademarks are properties of their respective owners. &copy; {new Date().getFullYear()} CampusIn Ltd. All rights reserved.
+          </p>
         </div>
       </footer>
 
       {/* Local Styles for Landing Page Redesign */}
       <style>{`
         /* Colors & Styles Root */
+        html, body {
+          max-width: 100% !important;
+          overflow-x: clip !important;
+        }
+
         .landing-page-container {
           background-color: #ffffff;
           color: #1a1a1a;
@@ -645,7 +532,6 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           font-family: 'Outfit', sans-serif;
-          overflow-x: hidden;
         }
 
         /* 1. Header Styles */
@@ -699,24 +585,7 @@ export default function Home() {
           color: #ffc700;
         }
 
-        .header-nav {
-          display: flex;
-          align-items: center;
-          gap: 32px;
-        }
 
-        .nav-link-item {
-          color: rgba(255, 255, 255, 0.9);
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 0.95rem;
-          transition: color 0.2s ease;
-        }
-
-        .nav-link-item:hover {
-          color: #ffffff;
-          text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
 
         .header-actions {
           display: flex;
@@ -762,56 +631,23 @@ export default function Home() {
         /* 2. Hero Section */
         .hero-section {
           background: linear-gradient(135deg, #b31522 0%, #800e16 50%, #61070d 100%);
-          min-height: 80vh;
+          height: 80vh;
+          width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
-          position: relative;
+          position: sticky;
+          top: 0;
+          z-index: 1;
           padding: 140px 24px 80px 24px;
           overflow: visible;
+          box-sizing: border-box;
         }
 
-        /* Floating Food items */
-        .floating-food {
-          position: absolute;
-          z-index: 10;
-          pointer-events: none;
-        }
 
-        .food-left {
-          left: 5%;
-          top: 30%;
-        }
-
-        .food-right {
-          right: 5%;
-          bottom: 15%;
-        }
-
-        .floating-image {
-          width: 220px;
-          height: 220px;
-          object-fit: cover;
-          border-radius: 50%;
-          border: 6px solid rgba(255, 255, 255, 0.15);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .food-right .floating-image {
-          animation-delay: 2.5s;
-          width: 240px;
-          height: 240px;
-        }
-
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(3deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
-        }
 
         .hero-content-wrapper {
-          max-width: 800px;
+          max-width: 900px;
           text-align: center;
           z-index: 20;
         }
@@ -819,10 +655,10 @@ export default function Home() {
         .hero-title {
           font-size: 3.5rem;
           font-weight: 800;
-          line-height: 1.15;
+          line-height: 1.25;
           color: #ffffff;
-          margin-bottom: 20px;
-          letter-spacing: -1px;
+          margin-bottom: 28px;
+          letter-spacing: -0.5px;
         }
 
         .highlight-yellow {
@@ -832,11 +668,11 @@ export default function Home() {
         .hero-subtitle {
           font-size: 1.25rem;
           color: rgba(255, 255, 255, 0.95);
-          margin-bottom: 40px;
-          max-width: 600px;
+          margin-bottom: 48px;
+          max-width: 650px;
           margin-left: auto;
           margin-right: auto;
-          line-height: 1.6;
+          line-height: 1.65;
         }
 
         /* Search Widget Form */
@@ -853,148 +689,11 @@ export default function Home() {
           overflow: visible;
         }
 
-        .search-field-location {
-          position: relative;
-          display: flex;
-          align-items: center;
-          padding: 0;
-          flex: 1.1;
-          z-index: 500;
-        }
-
-        .location-dropdown-toggle-btn {
-          width: 100%;
-          border: none;
-          outline: none;
-          background: transparent;
-          font-family: inherit;
-          font-size: 0.95rem;
-          font-weight: 650;
-          color: #1a1a1a;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          padding: 10px 20px;
-          text-align: left;
-          position: relative;
-        }
-
-        .location-toggle-label-text {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 180px;
-          margin-right: 20px;
-        }
-
-        .dropdown-arrow-icon {
-          position: absolute;
-          right: 20px;
-          pointer-events: none;
-        }
-
-        .field-icon {
-          margin-right: 12px;
-          flex-shrink: 0;
-        }
-
-        /* Swiggy Location Dropdown Popover */
-        .swiggy-location-popover {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          margin-top: 12px;
-          background: #ffffff;
-          border-radius: 12px;
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-          border: 1px solid #f0f0f0;
-          width: 340px;
-          max-height: 400px;
-          overflow-y: auto;
-          z-index: 9999;
-          display: flex;
-          flex-direction: column;
-          padding: 16px 0;
-        }
-
-        .swiggy-location-popover-item {
-          width: 100%;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          display: flex;
-          align-items: flex-start;
-          padding: 12px 20px;
-          text-align: left;
-          font-family: inherit;
-          transition: background 0.2s ease;
-          gap: 12px;
-        }
-
-        .swiggy-location-popover-item:hover {
-          background: #f7fafc;
-        }
-
-        .popover-item-icon {
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .popover-item-details {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .current-loc-item {
-          padding-top: 4px;
-          padding-bottom: 12px;
-        }
-
-        .current-loc-title {
-          font-size: 0.95rem;
-          font-weight: 750;
-          color: #b31522;
-        }
-
-        .swiggy-popover-divider {
-          height: 1px;
-          background: #e2e8f0;
-          margin: 8px 20px 14px 20px;
-        }
-
-        .swiggy-popover-header {
-          font-size: 0.75rem;
-          font-weight: 800;
-          color: #93959f;
-          padding: 0 20px 8px 20px;
-          letter-spacing: 0.5px;
-        }
-
-        .address-name {
-          font-size: 0.95rem;
-          font-weight: 750;
-          color: #282c3f;
-        }
-
-        .address-desc {
-          font-size: 0.8rem;
-          color: #7e808c;
-          line-height: 1.4;
-          font-weight: 550;
-        }
-
-        .search-field-divider {
-          width: 1.5px;
-          height: 30px;
-          background-color: #e2e8f0;
-        }
-
         .search-field-query {
           display: flex;
           align-items: center;
           padding: 0 20px;
-          flex: 1.8;
+          flex: 1;
         }
 
         .query-text-input {
@@ -1162,424 +861,646 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
 
-        /* 3. Promo Cards Section */
-        .services-section {
-          padding: 80px 24px;
-          background-color: #ffffff;
-        }
-
-        .section-container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .services-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 30px;
-        }
-
-        .service-card {
-          background: #ffffff;
-          border-radius: 24px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-          border: 1px solid #f0f0f0;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
+        /* 3. Zomato-style Promo Section */
+        .zomato-promo-section {
+          padding: 100px 24px 60px 24px;
+          background: radial-gradient(circle at 50% 50%, #fff 60%, #fffcfc 100%);
           position: relative;
-          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .service-card:hover {
-          border-color: rgba(179, 21, 34, 0.15);
-          box-shadow: 0 20px 40px rgba(179, 21, 34, 0.08);
-        }
-
-        .service-card-image-wrapper {
-          height: 200px;
-          overflow: hidden;
-          position: relative;
-        }
-
-        .service-card-image {
+          z-index: 10;
+          border-top-left-radius: 40px;
+          border-top-right-radius: 40px;
+          border-top: 4px solid #ffffff;
+          margin-top: -40px;
+          box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.03);
           width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.5s ease;
-        }
-
-        .service-card:hover .service-card-image {
-          transform: scale(1.06);
-        }
-
-        .service-card-info {
-          padding: 28px 24px 76px 24px;
-          flex: 1;
+          box-sizing: border-box;
           display: flex;
           flex-direction: column;
+          align-items: center;
+          text-align: center;
+          overflow: clip;
+        }
+
+        .promo-content-wrapper {
           position: relative;
+          z-index: 5;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          max-width: 600px !important;
         }
 
-        .promo-badge {
-          display: inline-block;
-          align-self: flex-start;
-          font-size: 0.75rem;
+        .promo-heading {
+          font-size: 2.2rem;
           font-weight: 800;
-          padding: 5px 12px;
-          border-radius: 50px;
-          margin-bottom: 14px;
-          letter-spacing: 0.5px;
-        }
-
-        .badge-red {
-          background: #fff5f5;
           color: #b31522;
+          margin-bottom: 16px;
+          letter-spacing: -0.5px;
+          line-height: 1.25;
         }
 
-        .badge-yellow {
-          background: #fffdf0;
-          color: #b37400;
+        .promo-subtext {
+          font-size: 1.05rem;
+          color: #4a5568;
+          max-width: 480px;
+          line-height: 1.6;
+          margin-bottom: 40px;
         }
 
-        .badge-green {
-          background: #f0fdf4;
-          color: #15803d;
+        /* Staggered stats cards styling */
+        .promo-cards-container {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          width: 100%;
+          max-width: 340px;
+          margin-top: 10px;
         }
 
-        .service-card-title {
+        .promo-stat-card {
+          background: #ffffff;
+          border-radius: 20px;
+          padding: 18px 24px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border: 1px solid #f0f0f0;
+          width: 90%;
+          transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+        }
+
+        .promo-stat-card:hover {
+          box-shadow: 0 15px 35px rgba(179, 21, 34, 0.08);
+          border-color: rgba(179, 21, 34, 0.1);
+        }
+
+        /* Staggered offsets matching Zomato's mobile page style */
+        .promo-stat-card.card-left {
+          align-self: flex-start;
+          transform: translateX(-15px);
+        }
+
+        .promo-stat-card.card-right {
+          align-self: flex-end;
+          transform: translateX(15px);
+        }
+
+        .promo-stat-card.card-left-2 {
+          align-self: flex-start;
+          transform: translateX(-5px);
+        }
+
+        .stat-info {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
+        }
+
+        .stat-number {
           font-size: 1.4rem;
           font-weight: 800;
-          color: #111111;
-          margin-bottom: 8px;
+          color: #1f2937;
+          line-height: 1.2;
         }
 
-        .service-card-desc {
-          font-size: 0.95rem;
-          color: #718096;
-          line-height: 1.5;
+        .stat-label {
+          font-size: 0.9rem;
+          color: #6b7280;
+          font-weight: 500;
         }
 
-        .service-card-arrow-btn {
-          position: absolute;
-          bottom: 24px;
-          left: 24px;
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          background: #b31522;
+        .stat-icon-wrapper {
+          background: #fff5f5;
+          border-radius: 14px;
+          padding: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 10px rgba(179, 21, 34, 0.3);
-          transition: all 0.25s ease;
         }
 
-        .service-card:hover .service-card-arrow-btn {
-          background: #111111;
-          transform: translateX(4px);
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        /* Floating Scroll-Triggered Food Assets */
+        .floating-asset {
+          position: absolute;
+          z-index: 2;
+          pointer-events: none;
+          transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.8s;
+          opacity: 0;
+          visibility: hidden;
+          filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
         }
 
-        /* 4. Restaurants Section */
-        .restaurants-explore-section {
-          padding: 60px 24px 80px 24px;
-          background: #ffffff;
-          border-top: 1px solid #f3f3f3;
+        /* Burger: left side */
+        .floating-burger {
+          left: 5%;
+          top: 30%;
+          width: 150px;
+          height: 150px;
+          object-fit: contain;
+          transform: translate(-200px, 50px) rotate(-45deg);
         }
 
-        .explore-section-title {
-          font-size: 1.65rem;
-          font-weight: 800;
-          color: #282c3f;
-          margin-bottom: 24px;
-          letter-spacing: -0.5px;
+        /* Momo: top right */
+        .floating-momo {
+          right: 6%;
+          top: 12%;
+          width: 160px;
+          height: 160px;
+          object-fit: contain;
+          transform: translate(200px, -100px) rotate(45deg);
         }
 
-        /* Filter Chips styling */
-        .filter-chips-row {
-          display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin-bottom: 32px;
+        /* Pizza: bottom right */
+        .floating-pizza {
+          right: 5%;
+          bottom: 15%;
+          width: 170px;
+          height: 170px;
+          object-fit: contain;
+          transform: translate(250px, 150px) rotate(30deg);
         }
 
-        .filter-chip {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          padding: 8px 16px;
-          border-radius: 50px;
-          font-size: 0.9rem;
-          font-weight: 550;
-          color: #4a5568;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.2s ease;
-          font-family: inherit;
+        /* Active sliding in states */
+        .zomato-promo-section.active .floating-asset {
+          visibility: visible;
+          transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.2s;
         }
 
-        .filter-chip:hover {
-          border-color: #cbd5e0;
-          background: #f7fafc;
+        .zomato-promo-section.active .floating-burger {
+          opacity: 1;
+          transform: translate(0, 0) rotate(-5deg);
         }
 
-        .chip-icon-right {
-          margin-left: 2px;
-          color: #718096;
+        .zomato-promo-section.active .floating-momo {
+          opacity: 1;
+          transform: translate(0, 0) rotate(5deg);
         }
 
-        .new-badge-tag {
-          font-size: 0.65rem;
-          font-weight: 800;
-          background: #ff5200;
-          color: #ffffff;
-          padding: 2px 6px;
-          border-radius: 4px;
-          margin-left: 4px;
-          letter-spacing: 0.5px;
+        .zomato-promo-section.active .floating-pizza {
+          opacity: 1;
+          transform: translate(0, 0) rotate(-10deg);
         }
 
-        /* Swiggy Restaurants Grid */
-        .swiggy-restaurants-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 32px 24px;
+        .deco-item {
+          position: absolute;
+          font-size: 1.5rem;
+          pointer-events: none;
+          transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.8s ease, visibility 1.8s;
+          opacity: 0;
+          visibility: hidden;
+          z-index: 1;
         }
 
-        .swiggy-restaurant-card {
+        .deco-leaf {
+          left: 28%;
+          top: 15%;
+          transform: scale(0.5) translateY(-50px);
+        }
+
+        .deco-tomato {
+          right: 32%;
+          top: 45%;
+          transform: scale(0.5) translateY(50px);
+        }
+
+        .deco-leaf-2 {
+          left: 20%;
+          bottom: 20%;
+          transform: scale(0.5) rotate(-30deg) translateY(50px);
+        }
+
+        .zomato-promo-section.active .deco-item {
+          opacity: 0.7;
+          visibility: visible;
+          transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1), opacity 1s ease, visibility 1s;
+        }
+
+        .zomato-promo-section.active .deco-leaf {
+          transform: scale(1) translateY(0);
+        }
+
+        .zomato-promo-section.active .deco-tomato {
+          transform: scale(1) translateY(0);
+        }
+
+        .zomato-promo-section.active .deco-leaf-2 {
+          transform: scale(1) rotate(0deg) translateY(0);
+        }
+
+        /* 4. App Features Section */
+        .app-features-section {
+          padding: 80px 24px;
+          background: linear-gradient(180deg, #fff5f6 0%, #ffffff 100%);
+          position: relative;
+          z-index: 12;
+          border-top-left-radius: 40px;
+          border-top-right-radius: 40px;
+          border-top: 4px solid #ffffff;
+          margin-top: -40px;
+          box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.03);
           display: flex;
           flex-direction: column;
-          text-decoration: none;
-          color: inherit;
-          background: #ffffff;
-          overflow: hidden;
-          transition: transform 0.2s ease;
-          cursor: pointer;
+          align-items: center;
+          text-align: center;
         }
 
-        .swiggy-card-img-wrapper {
-          position: relative;
-          height: 170px;
-          width: 100%;
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-        }
-
-        .swiggy-card-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.4s ease;
-        }
-
-        .swiggy-restaurant-card:hover .swiggy-card-img {
-          transform: scale(1.04);
-        }
-
-        .swiggy-card-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 40%, rgba(0, 0, 0, 0) 100%);
+        .app-features-wrapper {
           display: flex;
-          align-items: flex-end;
-          padding: 12px 16px;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          max-width: 480px !important;
         }
 
-        .swiggy-promo-text {
-          color: #ffffff;
-          font-size: 1.15rem;
-          font-weight: 900;
-          letter-spacing: -0.5px;
-          text-transform: uppercase;
-        }
-
-        .swiggy-card-info {
-          padding: 12px 4px 4px 4px;
-        }
-
-        .swiggy-card-name {
-          font-size: 1.1rem;
+        .features-heading {
+          font-size: 2.2rem;
           font-weight: 800;
-          color: #282c3f;
-          margin: 0 0 4px 0;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          color: #b31522;
+          margin-bottom: 16px;
+          line-height: 1.25;
+          letter-spacing: -0.5px;
+          padding: 0 20px;
         }
 
-        .swiggy-card-rating-row {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 0.9rem;
-          font-weight: 700;
-          color: #282c3f;
-          margin-bottom: 6px;
+        .features-subtext {
+          font-size: 1.05rem;
+          color: #4a5568;
+          line-height: 1.5;
+          margin-bottom: 40px;
+          padding: 0 30px;
         }
 
-        .swiggy-rating-star-circle {
-          background: #198754;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .swiggy-bullet-dot {
-          color: #686b78;
-        }
-
-        .swiggy-card-cuisines {
-          font-size: 0.85rem;
-          color: #686b78;
-          margin: 0 0 2px 0;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-weight: 500;
-        }
-
-        .swiggy-card-location {
-          font-size: 0.85rem;
-          color: #686b78;
-          margin: 0;
-          font-weight: 500;
-        }
-
-        /* 5. Features Section */
-        .features-section {
-          padding: 60px 24px;
-          background-color: #fcfcfc;
-          border-top: 1px solid #f0f0f0;
-          border-bottom: 1px solid #f0f0f0;
-        }
-
-        .features-grid {
+        /* 3x3 Feature Icons Grid */
+        .features-icon-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 40px;
-        }
-
-        .feature-item {
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 10px;
-        }
-
-        .feature-icon-circle {
-          width: 70px;
-          height: 70px;
-          background: #fff5f5;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-          box-shadow: 0 4px 12px rgba(179, 21, 34, 0.05);
-        }
-
-        .feature-item-title {
-          font-size: 1.15rem;
-          font-weight: 700;
-          color: #111111;
-          margin-bottom: 8px;
-        }
-
-        .feature-item-desc {
-          font-size: 0.9rem;
-          color: #718096;
-          line-height: 1.5;
-          max-width: 280px;
-        }
-
-        /* 6. Footer Styles */
-        .landing-footer {
-          background-color: #111111;
-          color: #a0aec0;
-          padding: 80px 24px 60px 24px;
-        }
-
-        .footer-content-container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .footer-main-grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1.2fr;
-          gap: 50px;
-        }
-
-        .footer-brand-column {
-          display: flex;
-          flex-direction: column;
           gap: 16px;
+          width: 100%;
+          padding: 0 10px;
+          box-sizing: border-box;
+          margin-bottom: 30px;
         }
 
-        .footer-logo {
+        .feature-icon-card {
           display: flex;
+          flex-direction: column;
           align-items: center;
           gap: 10px;
         }
 
-        .icon-white {
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+        .card-icon-container {
+          width: 95px;
+          height: 95px;
+          background: #ffffff;
+          border-radius: 24px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+          border: 1px solid #f0f0f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          position: relative;
+          overflow: hidden;
         }
 
-        .font-white {
-          color: #ffffff;
+        .feature-icon-card:hover .card-icon-container {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 30px rgba(179, 21, 34, 0.08);
+          border-color: rgba(179, 21, 34, 0.1);
         }
 
-        .footer-brand-desc {
+        .card-label {
           font-size: 0.9rem;
-          line-height: 1.6;
-          max-width: 280px;
+          font-weight: 650;
+          color: #2d3748;
+          line-height: 1.25;
+          text-align: center;
         }
 
-        .footer-copyright {
-          font-size: 0.8rem;
-          color: #718096;
-          margin-top: 12px;
+        /* Custom Toggle Switch for Veg Mode */
+        .veg-toggle-active {
+          width: 48px;
+          height: 26px;
+          background-color: #38a169;
+          border-radius: 100px;
+          position: relative;
+          padding: 3px;
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
         }
 
-        .footer-links-column {
+        .toggle-slider {
+          width: 20px;
+          height: 20px;
+          background-color: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Colorful lucide icons classes */
+        .feature-icon-svg {
+          transition: transform 0.3s ease;
+        }
+
+        .feature-icon-card:hover .feature-icon-svg {
+          transform: scale(1.08);
+        }
+
+        .orange-tint { color: #dd6b20; }
+        .blue-tint { color: #3182ce; }
+        .green-tint-2 { color: #48bb78; }
+        .yellow-tint { color: #d69e2e; }
+        .red-tint { color: #e53e3e; }
+        .purple-tint { color: #805ad5; }
+        .blue-tint-2 { color: #2b6cb0; }
+        .pink-tint { color: #d53f8c; }
+
+        .and-more-text {
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #1f2937;
+          margin-top: 10px;
+          margin-bottom: 40px;
+          letter-spacing: -0.3px;
+        }
+
+        /* Premium App Promo Banner */
+        .app-promo-banner-container {
+          background-color: #0c0f12;
+          width: 100%;
+          border-radius: 20px;
+          padding: 16px 20px;
+          box-sizing: border-box;
           display: flex;
           flex-direction: column;
+          align-items: center;
           gap: 12px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
-        .footer-links-title {
-          font-size: 1rem;
+        .app-promo-logo-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .promo-logo-icon {
+          background-color: #b31522;
+          border-radius: 8px;
+          padding: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .promo-logo-text {
+          font-size: 0.95rem;
+          font-weight: 900;
+          color: #ffffff;
+          letter-spacing: 0.5px;
+        }
+
+        .promo-banner-message {
+          font-size: 0.95rem;
+          color: #ffffff;
+          font-weight: 500;
+          text-align: center;
+          line-height: 1.4;
+        }
+
+        .promo-banner-btn {
+          width: 100%;
+          background-color: #ffffff;
+          color: #0c0f12;
+          border: none;
+          outline: none;
+          padding: 12px;
+          border-radius: 12px;
+          font-size: 0.95rem;
+          font-weight: 750;
+          cursor: pointer;
+          transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .promo-banner-btn:hover {
+          background-color: #f7fafc;
+          transform: scale(1.02);
+        }
+
+        /* Desktop Layout Overrides for App Features Section */
+        @media (min-width: 769px) {
+          .app-features-wrapper {
+            max-width: 850px !important;
+          }
+
+          .features-heading {
+            font-size: 2.5rem;
+          }
+
+          .features-icon-grid {
+            grid-template-columns: repeat(9, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+          }
+
+          .card-icon-container {
+            width: 80px;
+            height: 80px;
+          }
+
+          .app-promo-banner-container {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+          }
+
+          .promo-banner-message {
+            text-align: left;
+          }
+
+          .promo-banner-btn {
+            width: auto;
+            padding: 12px 28px;
+          }
+        }
+
+
+
+        /* Zomato-style Footer Styles */
+        .zomato-footer {
+          background-color: #0c0f12;
+          color: #8f939e;
+          padding: 60px 24px 40px 24px;
+          font-family: inherit;
+          position: relative;
+          z-index: 10;
+          border-top: 1px solid #1c1f25;
+        }
+
+        .zomato-footer-container {
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+
+        .zomato-footer-top-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 40px;
+        }
+
+
+        .zomato-footer-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 40px;
+          margin-bottom: 40px;
+        }
+
+        .zomato-footer-col {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .zomato-footer-subcol {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .zomato-footer-title {
+          font-size: 0.9rem;
           font-weight: 750;
           color: #ffffff;
-          margin-bottom: 8px;
-          letter-spacing: 0.2px;
+          margin-bottom: 14px;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
         }
 
-        .footer-link-item {
-          color: #a0aec0;
+        .zomato-footer-links {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .zomato-footer-links a {
+          color: #8f939e;
           text-decoration: none;
           font-size: 0.9rem;
           font-weight: 500;
-          transition: color 0.2s ease;
+          transition: color 0.15s ease;
         }
 
-        .footer-link-item:hover {
+        .zomato-footer-links a:hover {
           color: #ffffff;
         }
 
-        .footer-link-static {
-          font-size: 0.9rem;
+        .zomato-social-icons {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 25px;
+          align-items: center;
+        }
+
+        .zomato-social-icon-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          background-color: #ffffff;
+          border-radius: 50%;
+          text-decoration: none;
+          transition: transform 0.2s ease;
+        }
+
+        .zomato-social-icon-btn:hover {
+          transform: scale(1.1);
+        }
+
+        .zomato-store-badges {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          max-width: 145px;
+        }
+
+        .zomato-store-badge {
+          background-color: #0f1216;
+          border: 1.5px solid #2d3748;
+          border-radius: 8px;
+          padding: 6px 12px;
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          color: #ffffff;
+          transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .zomato-store-badge:hover {
+          border-color: #4a5568;
+          transform: translateY(-1px);
+        }
+
+        .store-badge-text {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.2;
+        }
+
+        .store-badge-sub {
+          font-size: 0.5rem;
+          color: #a0aec0;
           font-weight: 500;
-          color: #718096;
+          text-transform: uppercase;
+        }
+
+        .store-badge-main {
+          font-size: 0.8rem;
+          font-weight: 750;
+        }
+
+        .zomato-footer-divider {
+          height: 1px;
+          background-color: #242a35;
+          margin-bottom: 25px;
+        }
+
+        .zomato-footer-copyright {
+          font-size: 0.78rem;
+          color: #5c6270;
+          line-height: 1.6;
+          font-weight: 500;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+          .zomato-footer-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+          }
+
+          .zomato-store-badges {
+            flex-direction: row;
+            max-width: 100%;
+            gap: 12px;
+          }
+
+          .zomato-store-badge {
+            flex: 1;
+            justify-content: center;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .zomato-footer-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         /* Responsive Breakpoints */
@@ -1616,52 +1537,127 @@ export default function Home() {
           }
 
           .hero-section {
-            padding: 120px 20px 60px 20px;
-            min-height: auto;
+            padding: 160px 24px 80px 24px;
+            height: 85vh;
+          }
+
+          .hero-spacer {
+            height: 85vh;
           }
 
           .hero-title {
-            font-size: 2.25rem;
+            font-size: 38px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
           }
 
           .hero-subtitle {
-            font-size: 1.05rem;
-            margin-bottom: 30px;
+            font-size: 17px;
+            line-height: 1.5;
+            margin-bottom: 36px;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
           }
 
           /* Search Widget Form Mobile Styling */
           .hero-search-form {
             flex-direction: column;
-            border-radius: 20px;
-            padding: 16px;
-            gap: 14px;
+            border-radius: 24px;
+            padding: 12px;
+            gap: 12px;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            box-sizing: border-box;
           }
 
-          .search-field-location,
           .search-field-query {
-            padding: 0;
+            padding: 10px 14px;
             width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #edf2f7;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
           }
 
-          .search-field-divider {
-            width: 100%;
-            height: 1px;
-            background-color: #e2e8f0;
+          .query-text-input {
+            font-size: 0.85rem;
           }
 
           .search-submit-btn {
             width: 100%;
-            padding: 14px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
           }
 
-          .services-section {
-            padding: 50px 20px;
+          .zomato-promo-section {
+            padding: 70px 20px;
           }
 
-          .services-grid {
-            grid-template-columns: 1fr;
-            gap: 24px;
+          .promo-heading {
+            font-size: 1.8rem;
+            padding: 0 60px;
+            box-sizing: border-box;
+          }
+
+          .promo-subtext {
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            padding: 0 65px;
+            box-sizing: border-box;
+          }
+
+          /* Floating food assets in mobile version */
+          .floating-burger {
+            left: -15px;
+            top: 18%;
+            width: 95px;
+            height: 95px;
+          }
+
+          .floating-momo {
+            right: -10px;
+            top: 6%;
+            width: 105px;
+            height: 105px;
+          }
+
+          .floating-pizza {
+            right: -15px;
+            bottom: 22%;
+            width: 115px;
+            height: 115px;
+          }
+          
+          .deco-leaf {
+            left: 15%;
+            top: 4%;
+            font-size: 0.95rem;
+          }
+          
+          .deco-tomato {
+            right: 20%;
+            top: 38%;
+            font-size: 0.95rem;
+          }
+          
+          .deco-leaf-2 {
+            display: none;
+          }
+
+          .promo-cards-container {
+            max-width: 300px;
+          }
+
+          .promo-stat-card {
+            padding: 14px 18px;
+            border-radius: 16px;
           }
 
           .swiggy-restaurants-grid {
@@ -1669,19 +1665,9 @@ export default function Home() {
             gap: 20px;
           }
 
-          .features-section {
-            padding: 40px 20px;
-          }
 
-          .features-grid {
-            grid-template-columns: 1fr;
-            gap: 30px;
-          }
 
-          .footer-main-grid {
-            grid-template-columns: 1fr;
-            gap: 40px;
-          }
+
         }
 
         @media (max-width: 480px) {
