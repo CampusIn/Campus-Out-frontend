@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
+import { MarketCartProvider } from './context/MarketCartContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -44,6 +45,8 @@ const AdminAbandonedCarts = lazy(() => import('./pages/admin/AdminAbandonedCarts
 const AdminMarketplace = lazy(() => import('./pages/admin/AdminMarketplace'));
 const Marketplace = lazy(() => import('./pages/user/Marketplace'));
 const MarketplaceProductDetail = lazy(() => import('./pages/user/MarketplaceProductDetail'));
+const MarketplaceCart = lazy(() => import('./pages/user/MarketplaceCart'));
+const MarketplaceOrderDetail = lazy(() => import('./pages/user/MarketplaceOrderDetail'));
 
 export default function App() {
   return (
@@ -52,7 +55,8 @@ export default function App() {
         <ConfirmProvider>
           <AuthProvider>
             <CartProvider>
-              <div className="app-layout">
+              <MarketCartProvider>
+                <div className="app-layout">
                 <Navbar />
                 <div className="app-content">
                   <Routes>
@@ -67,6 +71,21 @@ export default function App() {
                     <Route path="/cart" element={<ProtectedRoute allowedRoles={['user']}><Cart /></ProtectedRoute>} />
                     <Route path="/orders" element={<ProtectedRoute allowedRoles={['user']}><Orders /></ProtectedRoute>} />
                     <Route path="/orders/:orderId" element={<ProtectedRoute allowedRoles={['user']}><OrderDetail /></ProtectedRoute>} />
+                    <Route 
+                      path="/marketplace/orders/:orderId" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Order Details...</p>
+                            </div>
+                          }>
+                            <MarketplaceOrderDetail />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
                     <Route 
                       path="/marketplace" 
@@ -82,6 +101,10 @@ export default function App() {
                           </Suspense>
                         </ProtectedRoute>
                       } 
+                    />
+                    <Route 
+                      path="/marketplace/cart" 
+                      element={<Navigate to="/cart?tab=marketplace" replace />} 
                     />
                     <Route 
                       path="/marketplace/product/:productId" 
@@ -140,7 +163,8 @@ export default function App() {
                     <Route path="/delivery/dashboard" element={<ProtectedRoute allowedRoles={['delivery_partner']}><DeliveryDashboard /></ProtectedRoute>} />
                   </Routes>
                 </div>
-              </div>
+                </div>
+              </MarketCartProvider>
             </CartProvider>
           </AuthProvider>
         </ConfirmProvider>

@@ -195,7 +195,7 @@ export default function Home() {
           <h1 className="hero-title animate-slide-up">
             Cravings called. <br></br>We answered.<br />
             Craving It?
-            <span className="highlight-yellow">CampusIn</span> It!
+            <span className="highlight-yellow"> CampusIn</span> It!
           </h1>
           <p className="hero-subtitle animate-slide-up delay-1">
             Your campus favourites, delivered hot and fresh to your hostel.          </p>

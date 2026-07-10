@@ -1,11 +1,21 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useMarketCart } from '../context/MarketCartContext';
 import { Home, ClipboardList, ShoppingCart, User, ShoppingBag } from 'lucide-react';
 
 export default function BottomNav({ activeTab = 'home' }) {
   const { user } = useAuth();
   const { cartTotalQty } = useCart();
+  const { cartTotalQty: marketCartTotalQty } = useMarketCart();
+  const location = useLocation();
+
+  // Show marketplace cart count when on any marketplace-related page
+  const searchParams = new URLSearchParams(location.search);
+  const isMarketplaceContext = 
+    location.pathname.startsWith('/marketplace') || 
+    (location.pathname === '/cart' && searchParams.get('tab') === 'marketplace');
+  const displayCartQty = isMarketplaceContext ? marketCartTotalQty : cartTotalQty;
 
   return (
     <div className="bottom-nav" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
@@ -41,13 +51,13 @@ export default function BottomNav({ activeTab = 'home' }) {
 
       {/* Cart Tab */}
       <Link 
-        to="/cart" 
+        to={isMarketplaceContext ? '/cart?tab=marketplace' : '/cart'} 
         className={`bottom-nav-item ${activeTab === 'cart' ? 'active' : ''}`}
         style={{ color: activeTab === 'cart' ? '#b31522' : '#718096' }}
       >
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <ShoppingCart size={22} style={{ strokeWidth: activeTab === 'cart' ? 2.5 : 2 }} />
-          {cartTotalQty > 0 && (
+          {displayCartQty > 0 && (
             <span style={{
               position: 'absolute',
               top: '-8px',
@@ -67,7 +77,7 @@ export default function BottomNav({ activeTab = 'home' }) {
               boxSizing: 'border-box',
               lineHeight: 1
             }}>
-              {cartTotalQty}
+              {displayCartQty}
             </span>
           )}
         </div>

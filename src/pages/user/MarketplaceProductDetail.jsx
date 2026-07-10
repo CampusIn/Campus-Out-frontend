@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
+import { useMarketCart } from '../../context/MarketCartContext';
 import { getUserProductById } from '../../api/marketplace.api';
 import BottomNav from '../../components/BottomNav';
 import {
@@ -14,16 +16,23 @@ import {
   ShoppingBag,
   Share2,
   Heart,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Minus,
+  Loader
 } from 'lucide-react';
 
 export default function MarketplaceProductDetail() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
+  const { cartTotalQty, addToCartOptimistic, clearCartOptimistic } = useMarketCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [selectedQty, setSelectedQty] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const scrollContainerRef = useRef(null);
@@ -70,6 +79,35 @@ export default function MarketplaceProductDetail() {
     };
     fetchProduct();
   }, [productId, navigate, toast]);
+
+  const handleAddToCart = async () => {
+    if (!product || product.stock <= 0) return;
+    setAddingToCart(true);
+    try {
+      await addToCartOptimistic(product, selectedQty);
+      toast.success(`Added ${selectedQty} item(s) to marketplace cart!`);
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || '';
+      if (err.response?.status === 409 && errorMsg.toLowerCase().includes('different categor')) {
+        const isConfirmed = await confirm(
+          'Your marketplace cart already contains items from a different category. Would you like to clear the cart and add this item instead?'
+        );
+        if (isConfirmed) {
+          try {
+            await clearCartOptimistic();
+            await addToCartOptimistic(product, selectedQty);
+            toast.success(`Cart cleared and added ${selectedQty} item(s) to marketplace cart!`);
+          } catch (clearErr) {
+            toast.error(clearErr.response?.data?.message || 'Failed to update cart');
+          }
+        }
+      } else {
+        toast.error(errorMsg || 'Failed to add item to cart');
+      }
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -187,6 +225,49 @@ export default function MarketplaceProductDetail() {
             >
               <ArrowLeft size={18} />
             </button>
+
+            <Link 
+              to="/cart?tab=marketplace"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#475569',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                pointerEvents: 'auto',
+                transition: 'transform 0.15s',
+                position: 'relative'
+              }}
+              className="hover-scale"
+            >
+              <ShoppingBag size={18} />
+              {cartTotalQty > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-5px',
+                  right: '-5px',
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  borderRadius: '50%',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  width: '18px',
+                  height: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #ffffff'
+                }}>
+                  {cartTotalQty}
+                </span>
+              )}
+            </Link>
           </div>
 
           {/* Left Column: Image Gallery & Slider */}
@@ -300,15 +381,65 @@ export default function MarketplaceProductDetail() {
 
             {/* Stock / Quantity Options */}
             <div>
-              <h4 className="marketplace-option-label">Quantity / Stock:</h4>
-              <div className="marketplace-options-grid">
-                <div className="marketplace-option-card active" style={{ cursor: 'default' }}>
-                  <span>{product.stock > 0 ? `${product.stock} Units` : 'Out of Stock'}</span>
-                  <span className="marketplace-option-subtext" style={{ color: product.stock > 0 ? '#16a34a' : '#dc2626' }}>
-                    {product.stock > 0 ? 'In Stock' : 'Unavailable'}
+              <h4 className="marketplace-option-label">Select Quantity:</h4>
+              {product.stock > 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', borderRadius: '12px', padding: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedQty(q => Math.max(1, q - 1))}
+                      disabled={selectedQty <= 1}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#ffffff',
+                        color: selectedQty <= 1 ? '#cbd5e0' : '#475569',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: selectedQty <= 1 ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        outline: 'none'
+                      }}
+                    >
+                      <Minus size={16} />
+                    </button>
+                    
+                    <span style={{ minWidth: '40px', textAlign: 'center', fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+                      {selectedQty}
+                    </span>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setSelectedQty(q => Math.min(product.stock, q + 1))}
+                      disabled={selectedQty >= product.stock}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#ffffff',
+                        color: selectedQty >= product.stock ? '#cbd5e0' : '#475569',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: selectedQty >= product.stock ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        outline: 'none'
+                      }}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 650 }}>
+                    {product.stock} units available
                   </span>
                 </div>
-              </div>
+              ) : (
+                <span style={{ color: '#dc2626', fontWeight: 750, fontSize: '0.9rem' }}>Out of Stock</span>
+              )}
             </div>
 
             {/* Description */}
@@ -328,48 +459,128 @@ export default function MarketplaceProductDetail() {
                 {product.description}
               </p>
             </div>
+            {/* Contact Seller Section */}
+            <div>
+              <h4 className="marketplace-option-label">Contact Seller:</h4>
+              {product.sellerPhoneNumber ? (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1.5px solid #edf2f7',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>
+                    This is a peer-to-peer listing. Contact the seller directly to negotiate and complete your purchase.
+                  </p>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="marketplace-footer-btn marketplace-footer-btn-secondary hover-scale"
+                      style={{ 
+                        height: '44px', 
+                        flex: 1, 
+                        minWidth: '140px',
+                        borderRadius: '12px',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      <MessageCircle size={16} fill="#ffffff" />
+                      <span>WhatsApp</span>
+                    </a>
+
+                    <a
+                      href={`tel:${product.sellerPhoneNumber.trim()}`}
+                      className="marketplace-footer-btn marketplace-footer-btn-primary hover-scale"
+                      style={{ 
+                        height: '44px', 
+                        flex: 1, 
+                        minWidth: '140px',
+                        borderRadius: '12px',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      <Phone size={16} fill="#ffffff" />
+                      <span>Call Seller</span>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1.5px dashed #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  textAlign: 'center',
+                  color: '#94a3b8',
+                  fontSize: '0.88rem',
+                  fontWeight: 650
+                }}>
+                  No contact details available for this seller.
+                </div>
+              )}
+            </div>
 
           </div>
         </div>
 
       </div>
 
-      {/* Sticky Bottom Footer Bar */}
+      {/* Sticky Bottom Footer Bar — Clean: Price + Add to Cart */}
       <div className="marketplace-sticky-footer">
         <div>
-          <div className="marketplace-footer-price-label">Price</div>
-          <div className="marketplace-footer-price">₹{product.price}</div>
+          <div className="marketplace-footer-price-label">PRICE</div>
+          <div className="marketplace-footer-price">₹{product.price * selectedQty}</div>
         </div>
         
-        <div className="marketplace-footer-actions">
-          {product.sellerPhoneNumber ? (
-            <>
-              {/* WhatsApp Button */}
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="marketplace-footer-btn marketplace-footer-btn-secondary"
-              >
-                <MessageCircle size={18} fill="#ffffff" />
-                <span>WhatsApp</span>
-              </a>
-
-              {/* Call Seller Button */}
-              <a
-                href={`tel:${product.sellerPhoneNumber.trim()}`}
-                className="marketplace-footer-btn marketplace-footer-btn-primary"
-              >
-                <Phone size={16} fill="#ffffff" />
-                <span>Call Seller</span>
-              </a>
-            </>
-          ) : (
-            <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 700 }}>
-              No contact details available
-            </div>
-          )}
-        </div>
+        {product.stock > 0 && (
+          <button
+            onClick={handleAddToCart}
+            disabled={addingToCart}
+            className="marketplace-footer-btn hover-scale"
+            style={{
+              background: '#b31522',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '0 28px',
+              height: '48px',
+              borderRadius: '12px',
+              fontWeight: 750,
+              fontSize: '0.9rem',
+              minWidth: '150px',
+              transition: 'opacity 0.15s',
+              marginLeft: 'auto'
+            }}
+          >
+            {addingToCart ? (
+              <Loader className="animate-spin" size={16} />
+            ) : (
+              <ShoppingBag size={16} />
+            )}
+            <span>Add to Cart</span>
+          </button>
+        )}
       </div>
 
       <BottomNav activeTab="marketplace" />

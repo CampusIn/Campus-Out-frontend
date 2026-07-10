@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getCart, clearCart } from '../../api/cart.api';
 import { createOrder, getCoupons, applyCoupon, getPlatformSettings } from '../../api/order.api';
 import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
 import { useConfirm } from '../../context/ConfirmContext';
+import MarketplaceCart from './MarketplaceCart';
 import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent, Phone, AlertTriangle } from 'lucide-react';
 
 export default function Cart() {
@@ -13,6 +14,14 @@ export default function Cart() {
   const toast = useToast();
   const confirm = useConfirm();
   const { cart, setCart, fetchCart, loading, updateCartItemQtyOptimistic, deleteCartItemOptimistic, error: cartError } = useCart();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const activeTab = searchParams.get('tab') === 'marketplace' ? 'marketplace' : 'food';
+
+  const setActiveTab = (tab) => {
+    setSearchParams({ tab });
+  };
+
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
   const [deliveryAddress, setDeliveryAddress] = useState('Hostel Block 3, Room 204');
   const [paymentMethod, setPaymentMethod] = useState('COD');
@@ -344,28 +353,126 @@ export default function Cart() {
     );
   };
 
-  if (loading && !cart) {
-    return (
-      <div className="home-dashboard page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <p className="loading-text" style={{ color: '#718096' }}>Loading your cart...</p>
+
+
+  return (
+    <div className="home-dashboard page animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc' }}>
+      
+      {/* Header Nav */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }} className="animate-slide-up">
+        <button 
+          className="circle-icon-btn hover-scale" 
+          onClick={() => {
+            if (activeTab === 'food' && checkoutStep === 'address') {
+              setCheckoutStep('cart');
+            } else {
+              navigate(-1);
+            }
+          }}
+          style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#718096' }}>
+          {(activeTab === 'food' && checkoutStep === 'address') ? 'Back to Cart' : 'Back'}
+        </span>
       </div>
-    );
-  }
 
-  if (cartError) {
-    return (
-      <div className="home-dashboard page animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <button 
-            className="circle-icon-btn hover-scale" 
-            onClick={() => navigate(-1)}
-            style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
+      <div className="section-header-row animate-slide-up delay-1" style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 850, color: '#111111', margin: 0 }}>
+          {activeTab === 'food' && checkoutStep === 'address' ? 'Select Delivery Address' : 'Your Cart'}
+        </h1>
+      </div>
+
+      {/* Slidable Toggle Switcher */}
+      {!(activeTab === 'food' && checkoutStep === 'address') && (
+        <div style={{ 
+          display: 'flex', 
+          background: '#f1f5f9', 
+          borderRadius: '50px', 
+          padding: '4px', 
+          position: 'relative', 
+          width: '100%', 
+          maxWidth: '400px', 
+          margin: '0 auto 24px auto',
+          border: '1.5px solid #edf2f7',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+        }}>
+          {/* Sliding indicator */}
+          <div style={{
+            position: 'absolute',
+            top: '4px',
+            bottom: '4px',
+            left: activeTab === 'food' ? '4px' : '50%',
+            width: 'calc(50% - 4px)',
+            background: '#ffffff',
+            borderRadius: '50px',
+            boxShadow: '0 2px 8px rgba(179, 21, 34, 0.08)',
+            transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            zIndex: 1
+          }}></div>
+
+          {/* Food Cart Tab Button */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('food')}
+            style={{
+              flex: 1,
+              background: 'none',
+              border: 'none',
+              padding: '12px 0',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              color: activeTab === 'food' ? '#b31522' : '#64748b',
+              cursor: 'pointer',
+              zIndex: 2,
+              transition: 'color 0.2s',
+              outline: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
           >
-            <ArrowLeft size={18} />
+            <Coffee size={16} />
+            <span>Food Cart</span>
           </button>
-          <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#718096' }}>Back</span>
-        </div>
 
+          {/* Marketplace Cart Tab Button */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('marketplace')}
+            style={{
+              flex: 1,
+              background: 'none',
+              border: 'none',
+              padding: '12px 0',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              color: activeTab === 'marketplace' ? '#b31522' : '#64748b',
+              cursor: 'pointer',
+              zIndex: 2,
+              transition: 'color 0.2s',
+              outline: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <ShoppingBag size={16} />
+            <span>Market Cart</span>
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'marketplace' ? (
+        <MarketplaceCart isEmbedded={true} />
+      ) : loading && !cart ? (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+          <p style={{ fontWeight: 650, color: '#718096' }}>Loading your cart...</p>
+        </div>
+      ) : cartError ? (
         <div className="card animate-scale-in" style={{ background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px', textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
           <div style={{ background: '#fee2e2', color: '#dc2626', borderRadius: '50%', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <AlertTriangle size={36} />
@@ -385,35 +492,7 @@ export default function Cart() {
             Clear Cart & Start Over
           </button>
         </div>
-        <BottomNav activeTab="cart" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="home-dashboard page animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc' }}>
-      
-      {/* Header Nav */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }} className="animate-slide-up">
-        <button 
-          className="circle-icon-btn hover-scale" 
-          onClick={() => checkoutStep === 'address' ? setCheckoutStep('cart') : navigate(-1)}
-          style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#718096' }}>
-          {checkoutStep === 'address' ? 'Back to Cart' : 'Back'}
-        </span>
-      </div>
-
-      <div className="section-header-row animate-slide-up delay-1" style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 850, color: '#111111', margin: 0 }}>
-          {checkoutStep === 'address' ? 'Select Delivery Address' : 'Your Cart'}
-        </h1>
-      </div>
-
-      {!cart || cart.items?.length === 0 ? (
+      ) : !cart || cart.items?.length === 0 ? (
         <div className="card animate-scale-in delay-2" style={{ background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px', textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
           <div style={{ background: '#fff5f5', color: '#b31522', borderRadius: '50%', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="animate-pulse-soft">
             <ShoppingCart size={36} />

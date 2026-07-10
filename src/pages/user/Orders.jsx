@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { getMyOrders } from '../../api/order.api';
+import { getMyMarketplaceOrders } from '../../api/marketplace.api';
 import BottomNav from '../../components/BottomNav';
 import { ArrowLeft, MoreVertical, Calendar, DollarSign, Clock, Store, ChevronRight, Bike, ChefHat, CheckCircle2, ShoppingBag, XCircle } from 'lucide-react';
 
@@ -103,6 +104,11 @@ const getStatusDetails = (status) => {
 
 export default function Orders() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') === 'marketplace' ? 'marketplace' : 'restaurant';
+
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [dbOrders, setDbOrders] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -111,12 +117,19 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders();
-  }, [page]);
+  }, [page, activeTab]);
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data } = await getMyOrders({ page, limit: 10 });
+      let data;
+      if (activeTab === 'restaurant') {
+        const res = await getMyOrders({ page, limit: 10 });
+        data = res.data;
+      } else {
+        const res = await getMyMarketplaceOrders({ page, limit: 10 });
+        data = res.data;
+      }
       setDbOrders(data.data.orders || []);
       setTotalPages(data.data.pagination?.totalPages || 1);
     } catch {
@@ -136,16 +149,54 @@ export default function Orders() {
     <div className="orders-screen page home-dashboard animate-fade-in" style={{ paddingBottom: '96px', background: '#fcfcfc', minHeight: '100vh' }}>
       
       {/* Header */}
-      <div className="orders-header animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #edf2f7' }}>
+      <div className="orders-header animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #edf2f7' }}>
         <button 
           className="circle-icon-btn hover-scale" 
-          onClick={() => navigate('/restaurants')}
+          onClick={() => navigate(-1)}
           style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111111' }}
         >
           <ArrowLeft size={18} />
         </button>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 850, color: '#111111', margin: 0 }}>Orders</h1>
         <div style={{ width: '40px' }} />
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }} className="animate-slide-up">
+        <button
+          onClick={() => { setActiveTab('restaurant'); setPage(1); }}
+          className="hover-scale"
+          style={{
+            padding: '10px 20px',
+            borderRadius: '20px',
+            border: activeTab === 'restaurant' ? '2px solid #b31522' : '1px solid #edf2f7',
+            background: activeTab === 'restaurant' ? '#fff5f5' : '#ffffff',
+            color: activeTab === 'restaurant' ? '#b31522' : '#4a5568',
+            fontWeight: 800,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Restaurant
+        </button>
+        <button
+          onClick={() => { setActiveTab('marketplace'); setPage(1); }}
+          className="hover-scale"
+          style={{
+            padding: '10px 20px',
+            borderRadius: '20px',
+            border: activeTab === 'marketplace' ? '2px solid #b31522' : '1px solid #edf2f7',
+            background: activeTab === 'marketplace' ? '#fff5f5' : '#ffffff',
+            color: activeTab === 'marketplace' ? '#b31522' : '#4a5568',
+            fontWeight: 800,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Marketplace
+        </button>
       </div>
 
       {actionMsg && (
@@ -228,7 +279,7 @@ export default function Orders() {
                   <div 
                     key={o._id} 
                     className={`active-order-card ${colorClass} hover-lift`}
-                    onClick={() => navigate(`/orders/${o._id}`)}
+                    onClick={() => navigate(activeTab === 'marketplace' ? `/marketplace/orders/${o._id}` : `/orders/${o._id}`)}
                     style={{
                       cursor: 'pointer',
                       background: '#ffffff',
@@ -251,10 +302,10 @@ export default function Orders() {
                       </div>
                       <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                         <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {o.restaurantName}
+                          {o.restaurantName || o.categoryName}
                         </div>
                         <div style={{ fontWeight: 850, fontSize: '0.85rem', color: '#b31522', marginTop: '2px' }}>
-                          ₹{o.totalAmount}
+                          ₹{o.pricing?.finalAmount || o.totalAmount}
                         </div>
                       </div>
                     </div>
@@ -429,7 +480,7 @@ export default function Orders() {
             <div className="order-list responsive-grid-2 animate-slide-up delay-2">
               {completedOrders.map((o) => (
                 <Link 
-                  to={`/orders/${o._id}`} 
+                  to={activeTab === 'marketplace' ? `/marketplace/orders/${o._id}` : `/orders/${o._id}`} 
                   key={o._id} 
                   className="card hover-lift"
                   style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: '20px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '16px' }}
@@ -458,11 +509,11 @@ export default function Orders() {
                     })()}
                   </div>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111111', margin: '0 0 8px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{o.restaurantName}</span>
+                    <span>{o.restaurantName || o.categoryName}</span>
                     <ChevronRight size={16} color="#a0aec0" />
                   </h4>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#718096', fontWeight: 600 }}>
-                    <span style={{ color: '#b31522', fontWeight: 800 }}>&#8377;{o.totalAmount}</span>
+                    <span style={{ color: '#b31522', fontWeight: 800 }}>&#8377;{o.pricing?.finalAmount || o.totalAmount}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Calendar size={12} />
                       <span>{new Date(o.createdAt).toLocaleDateString('en-IN')}</span>

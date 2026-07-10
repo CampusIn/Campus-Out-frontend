@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { useMarketCart } from '../../context/MarketCartContext';
 import { getUserCategories, getUserProducts } from '../../api/marketplace.api';
 import BottomNav from '../../components/BottomNav';
 import {
@@ -17,13 +18,15 @@ import {
   ChevronDown,
   User,
   Bookmark,
-  MapPin
+  MapPin,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function Marketplace() {
   const toast = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { cartTotalQty } = useMarketCart();
 
   // Loading state
   const [loading, setLoading] = useState(true);
@@ -147,27 +150,68 @@ export default function Marketplace() {
             <ChevronDown size={18} color="#718096" />
           </div>
           
-          <Link 
-            to="/profile" 
-            className="profile-avatar-btn hover-scale" 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              width: '40px', 
-              height: '40px', 
-              background: '#fff5f5', 
-              borderRadius: '50%', 
-              color: '#b31522',
-              border: '1px solid #ffe4e6'
-            }}
-          >
-            {user && user.profilePicture ? (
-              <img src={user.profilePicture} alt="Profile" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-            ) : (
-              <User size={20} />
-            )}
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Link 
+              to="/cart?tab=marketplace"
+              className="hover-scale"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px',
+                background: '#fff5f5',
+                borderRadius: '50%',
+                color: '#b31522',
+                border: '1px solid #ffe4e6',
+                position: 'relative'
+              }}
+            >
+              <ShoppingBag size={18} />
+              {cartTotalQty > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  borderRadius: '50%',
+                  fontSize: '0.62rem',
+                  fontWeight: 800,
+                  width: '18px',
+                  height: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2.5px solid #ffffff'
+                }}>
+                  {cartTotalQty}
+                </span>
+              )}
+            </Link>
+
+            <Link 
+              to="/profile" 
+              className="profile-avatar-btn hover-scale" 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                width: '40px', 
+                height: '40px', 
+                background: '#fff5f5', 
+                borderRadius: '50%', 
+                color: '#b31522',
+                border: '1px solid #ffe4e6'
+              }}
+            >
+              {user && user.profilePicture ? (
+                <img src={user.profilePicture} alt="Profile" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <User size={20} />
+              )}
+            </Link>
+          </div>
         </div>
 
         {/* 2. Search Section */}

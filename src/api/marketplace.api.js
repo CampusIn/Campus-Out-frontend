@@ -5,6 +5,19 @@ export const getUserCategories = (params) => api.get('/marketplace/categories', 
 export const getUserProducts = (params) => api.get('/marketplace/products', { params });
 export const getUserProductById = (productId) => api.get(`/marketplace/products/${productId}`);
 
+// User Marketplace Cart APIs
+export const getMarketCart = () => api.get('/marketplace/cart');
+export const addToMarketCart = (productId, quantity) => api.post('/marketplace/cart', { productId, quantity });
+export const updateMarketCartItemQty = (productId, quantity) => api.patch(`/marketplace/cart/items/${productId}`, { quantity });
+export const deleteMarketCartItem = (productId) => api.delete(`/marketplace/cart/items/${productId}`);
+export const clearMarketCart = () => api.delete('/marketplace/cart');
+
+// User Marketplace Order APIs
+export const createMarketplaceOrder = (data) => api.post('/marketplace/orders', data);
+export const getMyMarketplaceOrders = (params) => api.get('/marketplace/orders/my', { params });
+export const getMarketplaceOrderById = (orderId) => api.get(`/marketplace/orders/${orderId}`);
+export const cancelMarketplaceOrder = (orderId) => api.patch(`/marketplace/orders/${orderId}/cancel`);
+
 // Admin Marketplace APIs
 export const getAdminCategories = (params) => api.get('/admin/marketplace/categories', { params });
 export const getAdminCategoryById = (categoryId) => api.get(`/admin/marketplace/categories/${categoryId}`);
