@@ -29,4 +29,10 @@ export const getAdminProducts = (params) => api.get('/admin/marketplace/products
 export const getAdminProductById = (productId) => api.get(`/admin/marketplace/products/${productId}`);
 export const createAdminProduct = (data) => api.post('/admin/marketplace/products', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updateAdminProduct = (productId, data) => api.patch(`/admin/marketplace/products/${productId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const updateAdminProductStatus = (productId) => api.post(`/admin/marketplace/products/${productId}/status`);
+export const updateAdminProductStatus = (productId) => api.patch(`/admin/marketplace/products/${productId}/status`);
+
+// Admin Marketplace Orders
+export const getAdminMarketplaceOrders = (params) => api.get('/admin/marketplace/orders', { params });
+export const getAdminMarketplaceOrderById = (orderId) => api.get(`/admin/marketplace/orders/${orderId}`);
+export const updateAdminMarketplaceOrderStatus = (orderId, data) => api.patch(`/admin/marketplace/orders/${orderId}/status`, data);
+export const assignAdminMarketplaceDeliveryPartner = (orderId, data) => api.patch(`/admin/marketplace/orders/${orderId}/assign-delivery`, data);

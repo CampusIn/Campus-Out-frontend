@@ -23,3 +23,8 @@ export const pickUpOrder = (orderId) =>
 // Mark an order as delivered (out for delivery -> delivered)
 export const deliverOrder = (orderId) =>
   api.patch(`/delivery/orders/${orderId}/deliver`);
+
+// Delivery Partner Marketplace APIs
+export const getDeliveryMarketplaceOrders = () => api.get('/delivery/marketplace/orders');
+export const getDeliveryMarketplaceOrderById = (orderId) => api.get(`/delivery/marketplace/orders/${orderId}`);
+export const updateDeliveryMarketplaceOrderStatus = (orderId) => api.patch(`/delivery/marketplace/orders/${orderId}/status`);

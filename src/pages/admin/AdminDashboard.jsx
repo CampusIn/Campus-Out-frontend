@@ -26,7 +26,15 @@ import {
   Copy,
   MessageSquare,
   MessageCircle,
+  UserPlus,
+  X,
 } from 'lucide-react';
+import {
+  getAdminMarketplaceOrders,
+  getAdminMarketplaceOrderById,
+  updateAdminMarketplaceOrderStatus,
+  assignAdminMarketplaceDeliveryPartner,
+} from '../../api/marketplace.api';
 import './AdminPortal.css';
 
 const getWhatsAppLink = (phone) => {
@@ -51,6 +59,7 @@ export default function AdminDashboard() {
   const [ordersTotalPages, setOrdersTotalPages] = useState(1);
   const [ordersStatus, setOrdersStatus] = useState(''); // '' | 'PENDING' | 'ACCEPTED' | 'PREPARING' | 'READY' | 'DELIVERED' | 'CANCELLED'
   const [tabLoading, setTabLoading] = useState(false);
+  const [dashboardServiceType, setDashboardServiceType] = useState('food'); // 'food' | 'marketplace'
 
   // Selected Order for Modal
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -58,6 +67,14 @@ export default function AdminDashboard() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [downloadingInvoiceMap, setDownloadingInvoiceMap] = useState({});
+
+  // Marketplace order status management & DP assignment
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [rejectionMsgInput, setRejectionMsgInput] = useState('');
+  const [isRejectingMarketplace, setIsRejectingMarketplace] = useState(false);
+  const [partnerIdInput, setPartnerIdInput] = useState('');
+  const [assignDeliveryOpen, setAssignDeliveryOpen] = useState(false);
+  const [assigningPartner, setAssigningPartner] = useState(false);
 
   // Top restaurants states
   const [topRestaurantsList, setTopRestaurantsList] = useState([]);
@@ -110,11 +127,17 @@ export default function AdminDashboard() {
   const fetchOrders = useCallback(async () => {
     setTabLoading(true);
     try {
-      const { data } = await getAdminOrders({
-        status: ordersStatus || undefined,
-        page: ordersPage,
-        limit: 8,
-      });
+      const { data } = await (dashboardServiceType === 'food'
+        ? getAdminOrders({
+            status: ordersStatus || undefined,
+            page: ordersPage,
+            limit: 8,
+          })
+        : getAdminMarketplaceOrders({
+            status: ordersStatus || undefined,
+            page: ordersPage,
+            limit: 8,
+          }));
       if (data.success) {
         setOrdersList(data.data.orders || []);
         setOrdersTotalPages(data.data.pagination?.totalPages || 1);
@@ -124,7 +147,7 @@ export default function AdminDashboard() {
     } finally {
       setTabLoading(false);
     }
-  }, [ordersStatus, ordersPage, toast]);
+  }, [ordersStatus, ordersPage, dashboardServiceType, toast]);
 
   useEffect(() => {
     fetchOrders();
@@ -134,15 +157,82 @@ export default function AdminDashboard() {
   const handleViewOrderDetails = async (orderId) => {
     setOrderDetailLoading(true);
     try {
-      const { data } = await getAdminOrderById(orderId);
+      const { data } = await (dashboardServiceType === 'food'
+        ? getAdminOrderById(orderId)
+        : getAdminMarketplaceOrderById(orderId));
       if (data.success) {
         setSelectedOrder(data.data.order);
+        setRejectionMsgInput(data.data.order.rejectionMsg || '');
+        setIsRejectingMarketplace(false);
+        setPartnerIdInput('');
+        setAssignDeliveryOpen(false);
         setShowOrderModal(true);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error fetching order details');
     } finally {
       setOrderDetailLoading(false);
+    }
+  };
+
+  const handleUpdateMarketplaceOrderStatus = async (orderId, newStatus) => {
+    if (newStatus === 'REJECTED' && !rejectionMsgInput.trim()) {
+      toast.error('Please specify a rejection reason');
+      return;
+    }
+
+    setStatusUpdating(true);
+    try {
+      const payload = { orderStatus: newStatus };
+      if (newStatus === 'REJECTED') {
+        payload.rejectionMsg = rejectionMsgInput;
+      }
+      const { data } = await updateAdminMarketplaceOrderStatus(orderId, payload);
+      if (data.success) {
+        toast.success(`Marketplace order marked as ${newStatus} successfully!`);
+        setIsRejectingMarketplace(false);
+        setRejectionMsgInput('');
+        // Refresh modal data
+        const updated = await getAdminMarketplaceOrderById(orderId);
+        if (updated.data.success) {
+          setSelectedOrder(updated.data.order);
+        }
+        fetchOrders();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update order status');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleAssignMarketplaceDeliveryPartner = async (e) => {
+    e.preventDefault();
+    if (!partnerIdInput.trim()) {
+      toast.error('Please paste a valid Delivery Partner Document ID');
+      return;
+    }
+
+    setAssigningPartner(true);
+    try {
+      const { data } = await assignAdminMarketplaceDeliveryPartner(selectedOrder._id, {
+        deliveryPartnerId: partnerIdInput.trim()
+      });
+      if (data.success) {
+        toast.success('Delivery partner assigned successfully!');
+        setAssignDeliveryOpen(false);
+        setPartnerIdInput('');
+        // Refresh modal data
+        const updated = await getAdminMarketplaceOrderById(selectedOrder._id);
+        if (updated.data.success) {
+          setSelectedOrder(updated.data.order);
+        }
+        fetchOrders();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign delivery partner');
+    } finally {
+      setAssigningPartner(false);
     }
   };
 
@@ -408,6 +498,70 @@ export default function AdminDashboard() {
 
           {/* Orders Management Directory */}
           <div className="data-table-tab card animate-fade-in" style={{ width: '100%' }}>
+            {/* Sliding Toggle Control for Service Type */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 20px 0 20px' }}>
+              <div style={{ 
+                background: '#f1f5f9', 
+                padding: '4px', 
+                borderRadius: '30px', 
+                display: 'inline-flex',
+                border: '1.5px solid #e2e8f0',
+                cursor: 'pointer',
+                userSelect: 'none',
+                gap: '4px'
+              }}>
+                <button
+                  onClick={() => {
+                    setDashboardServiceType('food');
+                    setOrdersPage(1);
+                  }}
+                  style={{
+                    border: 'none',
+                    background: dashboardServiceType === 'food' ? 'var(--primary)' : 'transparent',
+                    color: dashboardServiceType === 'food' ? '#ffffff' : '#64748b',
+                    padding: '10px 20px',
+                    borderRadius: '26px',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Store size={16} />
+                  Food Orders
+                </button>
+
+                <button
+                  onClick={() => {
+                    setDashboardServiceType('marketplace');
+                    setOrdersPage(1);
+                  }}
+                  style={{
+                    border: 'none',
+                    background: dashboardServiceType === 'marketplace' ? 'var(--primary)' : 'transparent',
+                    color: dashboardServiceType === 'marketplace' ? '#ffffff' : '#64748b',
+                    padding: '10px 20px',
+                    borderRadius: '26px',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <ShoppingBag size={16} />
+                  Marketplace Orders
+                </button>
+              </div>
+            </div>
+
             <div className="table-actions-header">
               <h2>Recent Orders Ledger</h2>
 
@@ -534,127 +688,137 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ordersList.map((ord) => (
-                        <tr key={ord._id}>
-                          <td className="font-bold">#{ord.orderNumber}</td>
-                          <td>{ord.user?.username || 'Guest Customer'}</td>
-                          <td className="text-muted text-sm">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <Calendar size={14} />
-                              {new Date(ord.createdAt).toLocaleString('en-IN', {
-                                dateStyle: 'short',
-                                timeStyle: 'short'
-                              })}
-                            </div>
-                          </td>
-                          <td className="font-bold">₹{ord.totalAmount}</td>
-                          <td>
-                            <span className={`status-badge order-status-badge ${ord.orderStatus}`}>
-                              {ord.orderStatus}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <button
-                                className="btn btn-sm btn-outline"
-                                onClick={() => handleViewOrderDetails(ord._id)}
-                                style={{ width: 'auto', padding: '4px 10px', height: '30px', fontSize: '0.75rem' }}
-                              >
-                                View Details
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline"
-                                onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
-                                disabled={downloadingInvoiceMap[ord._id]}
-                                title="Download Invoice PDF"
-                                style={{ 
-                                  width: '30px', 
-                                  height: '30px', 
-                                  padding: 0, 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  justifyContent: 'center',
-                                  borderRadius: '8px'
-                                }}
-                              >
-                                {downloadingInvoiceMap[ord._id] ? (
-                                  <Loader2 size={14} className="spin-anim" />
-                                ) : (
-                                  <FileDown size={14} />
+                      {ordersList.map((ord) => {
+                        const total = dashboardServiceType === 'food' ? ord.totalAmount : (ord.pricing?.finalAmount || ord.totalAmount);
+                        return (
+                          <tr key={ord._id}>
+                            <td className="font-bold">#{ord.orderNumber}</td>
+                            <td>{ord.user?.username || 'Guest Customer'}</td>
+                            <td className="text-muted text-sm">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Calendar size={14} />
+                                {new Date(ord.createdAt).toLocaleString('en-IN', {
+                                  dateStyle: 'short',
+                                  timeStyle: 'short'
+                                })}
+                              </div>
+                            </td>
+                            <td className="font-bold">₹{total}</td>
+                            <td>
+                              <span className={`status-badge order-status-badge ${ord.orderStatus}`}>
+                                {ord.orderStatus}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                  className="btn btn-sm btn-outline"
+                                  onClick={() => handleViewOrderDetails(ord._id)}
+                                  style={{ width: 'auto', padding: '4px 10px', height: '30px', fontSize: '0.75rem' }}
+                                >
+                                  View Details
+                                </button>
+                                {dashboardServiceType === 'food' && (
+                                  <button
+                                    className="btn btn-sm btn-outline"
+                                    onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
+                                    disabled={downloadingInvoiceMap[ord._id]}
+                                    title="Download Invoice PDF"
+                                    style={{ 
+                                      width: '30px', 
+                                      height: '30px', 
+                                      padding: 0, 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center',
+                                      borderRadius: '8px'
+                                    }}
+                                  >
+                                    {downloadingInvoiceMap[ord._id] ? (
+                                      <Loader2 size={14} className="spin-anim" />
+                                    ) : (
+                                      <FileDown size={14} />
+                                    )}
+                                  </button>
                                 )}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
 
                 <div className="show-mobile admin-mobile-cards-list">
-                  {ordersList.map((ord) => (
-                    <div className="admin-mobile-card" key={ord._id}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.95rem' }}>
-                          #{ord.orderNumber}
-                        </span>
-                        <span className={`status-badge order-status-badge ${ord.orderStatus}`}>
-                          {ord.orderStatus}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#64748b' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Customer:</span>
-                          <span style={{ fontWeight: 650, color: '#1e293b' }}>{ord.user?.username || 'Guest Customer'}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Date:</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Calendar size={12} />
-                            {new Date(ord.createdAt).toLocaleString('en-IN', {
-                              dateStyle: 'short',
-                              timeStyle: 'short'
-                            })}
+                  {ordersList.map((ord) => {
+                    const total = dashboardServiceType === 'food' ? ord.totalAmount : (ord.pricing?.finalAmount || ord.totalAmount);
+                    return (
+                      <div className="admin-mobile-card" key={ord._id}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.95rem' }}>
+                            #{ord.orderNumber}
+                          </span>
+                          <span className={`status-badge order-status-badge ${ord.orderStatus}`}>
+                            {ord.orderStatus}
                           </span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #f1f5f9' }}>
-                          <span style={{ fontWeight: 700, color: '#1e293b' }}>Total:</span>
-                          <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>₹{ord.totalAmount}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#64748b' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Customer:</span>
+                            <span style={{ fontWeight: 650, color: '#1e293b' }}>{ord.user?.username || 'Guest Customer'}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Date:</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Calendar size={12} />
+                              {new Date(ord.createdAt).toLocaleString('en-IN', {
+                                dateStyle: 'short',
+                                timeStyle: 'short'
+                              })}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #f1f5f9' }}>
+                            <span style={{ fontWeight: 700, color: '#1e293b' }}>Total:</span>
+                            <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>₹{total}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() => handleViewOrderDetails(ord._id)}
+                            style={{ flex: 1, height: '36px', borderRadius: '10px', fontSize: '0.8rem' }}
+                          >
+                            View Details
+                          </button>
+                          {dashboardServiceType === 'food' && (
+                            <button
+                              className="btn btn-sm btn-outline"
+                              onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
+                              disabled={downloadingInvoiceMap[ord._id]}
+                              style={{ 
+                                width: '36px', 
+                                height: '36px', 
+                                padding: 0, 
+                                borderRadius: '10px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}
+                              title="Download Invoice PDF"
+                            >
+                              {downloadingInvoiceMap[ord._id] ? (
+                                <Loader2 size={16} className="spin-anim" />
+                              ) : (
+                                <FileDown size={16} />
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          className="btn btn-sm btn-outline"
-                          onClick={() => handleViewOrderDetails(ord._id)}
-                          style={{ flex: 1, height: '36px', borderRadius: '10px', fontSize: '0.8rem' }}
-                        >
-                          View Details
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline"
-                          onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
-                          disabled={downloadingInvoiceMap[ord._id]}
-                          style={{ 
-                            width: '36px', 
-                            height: '36px', 
-                            padding: 0, 
-                            borderRadius: '10px', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}
-                          title="Download Invoice PDF"
-                        >
-                          {downloadingInvoiceMap[ord._id] ? (
-                            <Loader2 size={16} className="spin-anim" />
-                          ) : (
-                            <FileDown size={16} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Pagination Footer */}
@@ -819,7 +983,7 @@ export default function AdminDashboard() {
                 <div style={{ marginTop: '8px', borderTop: '1px solid #edf2f7', paddingTop: '8px' }}>
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Deliver To</span>
                   <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#1e293b', fontSize: '0.82rem' }}>
-                    {selectedOrder.address || selectedOrder.user?.address || 'Hostel Block 3, Room 204'}
+                    {selectedOrder.deliveryAddressSnapShot || selectedOrder.address || selectedOrder.user?.address || 'Hostel Block 3, Room 204'}
                   </p>
                 </div>
               </div>
@@ -830,13 +994,14 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
                   {selectedOrder.items && selectedOrder.items.map((item, idx) => {
                     const price = item.priceAtPurchase || item.price || 0;
-                    const name = item.menuItem?.name || item.itemName || 'Unknown Item';
+                    const name = dashboardServiceType === 'food' ? (item.menuItem?.name || item.itemName || 'Unknown Item') : item.productName;
+                    const image = dashboardServiceType === 'food' ? item.menuItem?.image : item.productImage;
                     return (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {item.menuItem?.image ? (
+                          {image ? (
                             <img 
-                              src={item.menuItem.image} 
+                              src={image} 
                               alt={name} 
                               style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} 
                             />
@@ -856,18 +1021,14 @@ export default function AdminDashboard() {
               </div>
 
               {/* Invoice Breakdown */}
-              {(() => {
+              {dashboardServiceType === 'food' ? (() => {
                 const subTotal = selectedOrder.items ? selectedOrder.items.reduce((total, item) => total + ((item.priceAtPurchase || item.price || 0) * item.quantity), 0) : selectedOrder.totalAmount;
                 const discount = selectedOrder.discountAmount || 0;
                 const subTotalAfterDiscount = subTotal - discount;
 
-                const gst = selectedOrder.gstAmount !== undefined && selectedOrder.gstAmount !== null && selectedOrder.gstAmount !== 0 ? selectedOrder.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
-                const packaging = selectedOrder.packagingCharge !== undefined && selectedOrder.packagingCharge !== null && selectedOrder.packagingCharge !== 0 ? selectedOrder.packagingCharge : platformSettings.packagingCharge;
-                const delivery = selectedOrder.deliveryCharge !== undefined && selectedOrder.deliveryCharge !== null && selectedOrder.deliveryCharge !== 0 ? selectedOrder.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge);
-
-                const hasBreakdown = gst > 0 || packaging > 0 || delivery > 0 || discount > 0;
-
-                if (!hasBreakdown) return null;
+                const gst = selectedOrder.gstAmount !== undefined && selectedOrder.gstAmount !== null ? selectedOrder.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
+                const packaging = selectedOrder.packagingCharge !== undefined && selectedOrder.packagingCharge !== null ? selectedOrder.packagingCharge : platformSettings.packagingCharge;
+                const delivery = selectedOrder.deliveryCharge !== undefined && selectedOrder.deliveryCharge !== null ? selectedOrder.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge);
 
                 return (
                   <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #edf2f7', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem', color: '#64748b' }}>
@@ -881,27 +1042,48 @@ export default function AdminDashboard() {
                         <span style={{ color: '#06c169', fontWeight: 700 }}>-₹{discount}</span>
                       </div>
                     )}
-                    {gst > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>GST ({selectedOrder.gstPercentage ?? platformSettings.gstPercentage}%)</span>
-                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{gst}</span>
-                      </div>
-                    )}
-                    {packaging > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Packaging Charge</span>
-                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{packaging}</span>
-                      </div>
-                    )}
-                    {delivery > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Delivery Charge</span>
-                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{delivery}</span>
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>GST ({selectedOrder.gstPercentage ?? platformSettings.gstPercentage}%)</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{gst}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Packaging Charge</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{packaging}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Delivery Charge</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{delivery}</span>
+                    </div>
                   </div>
                 );
-              })()}
+              })() : (
+                selectedOrder.pricing && (
+                  <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #edf2f7', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem', color: '#64748b' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Subtotal</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.subTotal}</span>
+                    </div>
+                    {selectedOrder.pricing.couponDiscount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Coupon Discount</span>
+                        <span style={{ color: '#06c169', fontWeight: 700 }}>-₹{selectedOrder.pricing.couponDiscount}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>GST ({selectedOrder.pricing.gstPercentage}%)</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.gstAmount}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Packaging Charge</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.packagingCharge}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Delivery Charge</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.deliveryCharge}</span>
+                    </div>
+                  </div>
+                )
+              )}
 
               {/* Order Transaction Grid */}
               <div className="modal-grid-cols-2" style={{ gap: '8px 16px', alignItems: 'center' }}>
@@ -911,7 +1093,9 @@ export default function AdminDashboard() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Total Paid</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 850, color: 'var(--primary)', fontSize: '1.1rem' }}>₹{selectedOrder.totalAmount}</p>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 850, color: 'var(--primary)', fontSize: '1.1rem' }}>
+                    ₹{dashboardServiceType === 'food' ? selectedOrder.totalAmount : (selectedOrder.pricing?.finalAmount || selectedOrder.totalAmount)}
+                  </p>
                 </div>
               </div>
 
@@ -927,37 +1111,285 @@ export default function AdminDashboard() {
                   </span>
                 </div>
               </div>
+
+              {/* Marketplace specific status update & delivery partner assignment */}
+              {dashboardServiceType === 'marketplace' && (
+                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  
+                  {/* Status header & actions */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #edf2f7' }}>
+                    <span style={{ color: '#94a3b8', fontSize: '0.7rem', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Update Status</span>
+                    
+                    {!['DELIVERED', 'CANCELLED', 'REJECTED'].includes(selectedOrder.orderStatus) ? (
+                      <div>
+                        {selectedOrder.orderStatus === 'PENDING' ? (
+                          !isRejectingMarketplace ? (
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                style={{
+                                  flex: '1 1 120px',
+                                  padding: '10px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  fontWeight: 700,
+                                  borderRadius: '12px',
+                                  fontSize: '0.82rem',
+                                  height: '42px',
+                                  background: 'var(--primary)',
+                                  borderColor: 'var(--primary)',
+                                  color: '#ffffff'
+                                }}
+                                onClick={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'CONFIRMED')}
+                                disabled={statusUpdating}
+                              >
+                                {statusUpdating ? 'Processing...' : 'Accept Order'}
+                                <ChevronRight size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline"
+                                style={{
+                                  flex: '1 1 120px',
+                                  borderColor: '#dc2626',
+                                  color: '#dc2626',
+                                  padding: '10px 16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  fontWeight: 700,
+                                  borderRadius: '12px',
+                                  fontSize: '0.82rem',
+                                  height: '42px',
+                                  background: 'transparent'
+                                }}
+                                onClick={() => setIsRejectingMarketplace(true)}
+                                disabled={statusUpdating}
+                              >
+                                Reject Order
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                              <textarea
+                                placeholder="Please enter a reason for rejecting this order..."
+                                value={rejectionMsgInput}
+                                onChange={(e) => setRejectionMsgInput(e.target.value)}
+                                style={{
+                                  width: '100%',
+                                  height: '80px',
+                                  borderRadius: '12px',
+                                  border: '1.5px solid #cbd5e1',
+                                  padding: '10px',
+                                  outline: 'none',
+                                  resize: 'none',
+                                  fontSize: '0.85rem'
+                                }}
+                              />
+                              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{
+                                    padding: '6px 16px',
+                                    borderRadius: '10px',
+                                    height: '34px',
+                                    fontSize: '0.78rem',
+                                    width: 'auto'
+                                  }}
+                                  onClick={() => {
+                                    setIsRejectingMarketplace(false);
+                                    setRejectionMsgInput('');
+                                  }}
+                                  disabled={statusUpdating}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  style={{
+                                    padding: '6px 16px',
+                                    borderRadius: '10px',
+                                    height: '34px',
+                                    background: '#dc2626',
+                                    borderColor: '#dc2626',
+                                    color: '#ffffff',
+                                    fontSize: '0.78rem',
+                                    width: 'auto'
+                                  }}
+                                  onClick={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')}
+                                  disabled={statusUpdating || !rejectionMsgInput.trim()}
+                                >
+                                  {statusUpdating ? 'Rejecting...' : 'Confirm Reject'}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        ) : (
+                          (() => {
+                            const transitionMap = {
+                              'CONFIRMED': { next: 'PREPARING', label: 'Prepare Order' },
+                              'PREPARING': { next: 'READY', label: 'Mark Ready' },
+                              'READY': { next: 'OUT_FOR_DELIVERY', label: 'Out For Delivery' },
+                              'OUT_FOR_DELIVERY': { next: 'DELIVERED', label: 'Mark Delivered' }
+                            };
+                            const transition = transitionMap[selectedOrder.orderStatus];
+                            if (!transition) return null;
+                            return (
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                style={{
+                                  width: '100%',
+                                  padding: '12px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  fontWeight: 700,
+                                  borderRadius: '12px',
+                                  fontSize: '0.85rem',
+                                  height: '42px',
+                                  background: 'var(--primary)',
+                                  borderColor: 'var(--primary)',
+                                  color: '#ffffff'
+                                }}
+                                onClick={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, transition.next)}
+                                disabled={statusUpdating}
+                              >
+                                {statusUpdating ? 'Updating...' : transition.label}
+                                <ChevronRight size={16} />
+                              </button>
+                            );
+                          })()
+                        )}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748b', display: 'block' }}>
+                        This order has been {selectedOrder.orderStatus.toLowerCase()}. No further actions can be taken.
+                      </span>
+                    )}
+
+                    {selectedOrder.orderStatus === 'REJECTED' && selectedOrder.rejectionMsg && (
+                      <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#dc2626', fontSize: '0.82rem' }}>
+                        <strong style={{ display: 'block', marginBottom: '2px', textTransform: 'uppercase', fontSize: '0.7rem', color: '#b91c1c' }}>Rejection Reason:</strong>
+                        {selectedOrder.rejectionMsg}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Delivery Partner Details & Assignment */}
+                  <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #edf2f7' }}>
+                    <span style={{ color: '#94a3b8', fontSize: '0.7rem', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>
+                      Delivery Partner Assignment
+                    </span>
+                    {selectedOrder.deliveryPartner ? (
+                      <div style={{ fontSize: '0.8rem' }}>
+                        <span style={{ fontWeight: 700, color: '#1e293b', display: 'block' }}>
+                          Partner: {selectedOrder.deliveryPartner.user?.username || 'Assigned'}
+                        </span>
+                        <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>
+                          Vehicle: {selectedOrder.deliveryPartner.vehicleNumber} &bull; Phone: {selectedOrder.deliveryPartner.phoneNumber}
+                        </span>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.8rem' }}>Unassigned</span>
+                          {['CONFIRMED', 'PREPARING', 'READY'].includes(selectedOrder.orderStatus) && !assignDeliveryOpen && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline"
+                              onClick={() => setAssignDeliveryOpen(true)}
+                              style={{ padding: '4px 8px', height: '26px', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <UserPlus size={12} />
+                              <span>Assign Partner</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {assignDeliveryOpen && (
+                          <form onSubmit={handleAssignMarketplaceDeliveryPartner} style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                            <input
+                              type="text"
+                              placeholder="Paste Partner ID..."
+                              value={partnerIdInput}
+                              onChange={(e) => setPartnerIdInput(e.target.value)}
+                              style={{
+                                flex: 1,
+                                padding: '6px 10px',
+                                fontSize: '0.78rem',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '8px',
+                                height: '30px'
+                              }}
+                            />
+                            <button
+                              type="submit"
+                              className="btn btn-primary"
+                              style={{ width: 'auto', padding: '0 10px', height: '30px', borderRadius: '8px', fontSize: '0.75rem' }}
+                              disabled={assigningPartner}
+                            >
+                              {assigningPartner ? '...' : 'Assign'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline"
+                              onClick={() => {
+                                setAssignDeliveryOpen(false);
+                                setPartnerIdInput('');
+                              }}
+                              style={{ width: 'auto', padding: '0 8px', height: '30px', borderRadius: '8px', fontSize: '0.75rem' }}
+                            >
+                              Cancel
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
             </div>
 
             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button 
-                className="btn btn-primary" 
-                style={{ 
-                  width: 'auto', 
-                  padding: '8px 20px', 
-                  borderRadius: '10px', 
-                  fontWeight: 700, 
-                  height: '36px', 
-                  fontSize: '0.8rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }} 
-                onClick={() => handleDownloadInvoice(selectedOrder._id, selectedOrder.orderNumber)}
-                disabled={downloadingInvoiceMap[selectedOrder._id]}
-              >
-                {downloadingInvoiceMap[selectedOrder._id] ? (
-                  <>
-                    <Loader2 size={14} className="spin-anim" />
-                    <span>Downloading...</span>
-                  </>
-                ) : (
-                  <>
-                    <FileDown size={14} />
-                    <span>Download Invoice</span>
-                  </>
-                )}
-              </button>
+              {dashboardServiceType === 'food' && (
+                <button 
+                  className="btn btn-primary" 
+                  style={{ 
+                    width: 'auto', 
+                    padding: '8px 20px', 
+                    borderRadius: '10px', 
+                    fontWeight: 700, 
+                    height: '36px', 
+                    fontSize: '0.8rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }} 
+                  onClick={() => handleDownloadInvoice(selectedOrder._id, selectedOrder.orderNumber)}
+                  disabled={downloadingInvoiceMap[selectedOrder._id]}
+                >
+                  {downloadingInvoiceMap[selectedOrder._id] ? (
+                    <>
+                      <Loader2 size={14} className="spin-anim" />
+                      <span>Downloading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileDown size={14} />
+                      <span>Download Invoice</span>
+                    </>
+                  )}
+                </button>
+              )}
               <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 20px', borderRadius: '10px', fontWeight: 700, height: '36px', fontSize: '0.8rem' }} onClick={() => setShowOrderModal(false)}>
                 Close Window
               </button>

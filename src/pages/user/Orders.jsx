@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { getMyOrders } from '../../api/order.api';
 import { getMyMarketplaceOrders } from '../../api/marketplace.api';
 import BottomNav from '../../components/BottomNav';
-import { ArrowLeft, MoreVertical, Calendar, DollarSign, Clock, Store, ChevronRight, Bike, ChefHat, CheckCircle2, ShoppingBag, XCircle } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Calendar, DollarSign, Clock, Store, ChevronRight, Bike, ChefHat, CheckCircle2, ShoppingBag, XCircle, Package } from 'lucide-react';
 
 const statusColors = {
   PENDING: 'status-pending',
@@ -90,8 +90,84 @@ const statusDetails = {
   }
 };
 
-const getStatusDetails = (status) => {
-  return statusDetails[status] || {
+const marketplaceStatusDetails = {
+  PENDING: {
+    icon: Clock,
+    color: '#dd6b20', // orange
+    bgColor: '#fffaf0',
+    borderColor: '#feebc8',
+    animation: 'pulseGlow 2s infinite ease-in-out',
+    title: 'Order Placed',
+    desc: 'Waiting for store partner confirmation'
+  },
+  CONFIRMED: {
+    icon: CheckCircle2,
+    color: '#2b6cb0', // blue
+    bgColor: '#ebf8ff',
+    borderColor: '#bee3f8',
+    animation: 'checkBounce 1s ease-out',
+    title: 'Order Confirmed',
+    desc: 'Accepted by store partner'
+  },
+  PREPARING: {
+    icon: Package,
+    color: '#2f855a', // green
+    bgColor: '#f0fff4',
+    borderColor: '#c6f6d5',
+    animation: 'cookTilt 2.5s infinite ease-in-out',
+    title: 'Packing Items',
+    desc: 'Your items are being carefully packed'
+  },
+  READY: {
+    icon: ShoppingBag,
+    color: '#6b46c1', // purple
+    bgColor: '#faf5ff',
+    borderColor: '#e9d8fd',
+    animation: 'bagBounce 2s infinite ease-in-out',
+    title: 'Ready for Pickup',
+    desc: 'Order is ready for delivery partner pickup'
+  },
+  OUT_FOR_DELIVERY: {
+    icon: Bike,
+    color: '#c53030', // red
+    bgColor: '#fff5f5',
+    borderColor: '#fed7d7',
+    animation: 'pulseGlow 2s infinite',
+    title: 'Out for Delivery',
+    desc: 'Delivery executive is on the way'
+  },
+  DELIVERED: {
+    icon: CheckCircle2,
+    color: '#2f855a', // green
+    bgColor: '#f0fff4',
+    borderColor: '#c6f6d5',
+    animation: 'none',
+    title: 'Order Delivered',
+    desc: 'Your items have been delivered!'
+  },
+  CANCELLED: {
+    icon: XCircle,
+    color: '#e53e3e', // red
+    bgColor: '#fff5f5',
+    borderColor: '#fed7d7',
+    animation: 'none',
+    title: 'Order Cancelled',
+    desc: 'This order was cancelled'
+  },
+  REJECTED: {
+    icon: XCircle,
+    color: '#e53e3e', // red
+    bgColor: '#fff5f5',
+    borderColor: '#fed7d7',
+    animation: 'none',
+    title: 'Order Rejected',
+    desc: 'The store partner rejected this order'
+  }
+};
+
+const getStatusDetails = (status, isMarketplace = false) => {
+  const details = isMarketplace ? marketplaceStatusDetails : statusDetails;
+  return details[status] || {
     icon: Clock,
     color: '#4a5568',
     bgColor: '#f7fafc',
@@ -313,7 +389,7 @@ export default function Orders() {
                     {/* Status badge */}
                     <div style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginTop: '12px' }}>
                       {(() => {
-                        const info = getStatusDetails(o.orderStatus);
+                        const info = getStatusDetails(o.orderStatus, activeTab === 'marketplace');
                         return (
                           <div className={`order-status-badge ${o.orderStatus}`} style={{
                             fontSize: '0.72rem',
@@ -335,21 +411,26 @@ export default function Orders() {
                     <div style={{ display: 'flex', gap: '16px', width: '100%', marginTop: '16px', overflowX: 'auto', paddingBottom: '8px', flex: 1, alignItems: 'center', minHeight: '90px', borderTop: '1px solid #f7fafc', paddingTop: '12px' }}>
                       {o.items && o.items.length > 0 ? (
                         o.items.map((item, idx) => {
-                          let fallbackImg = '/onboarding_burger.png';
-                          if (item.itemName?.toLowerCase().includes('pizza')) {
-                            fallbackImg = '/pizza_margarita.png';
-                          } else if (item.itemName?.toLowerCase().includes('burger') || item.itemName?.toLowerCase().includes('sandwich') || item.itemName?.toLowerCase().includes('meal')) {
+                          const isMarketplace = activeTab === 'marketplace';
+                          const name = isMarketplace ? item.productName : item.itemName;
+                          const image = isMarketplace ? item.productImage : item.menuItem?.image;
+
+                          let fallbackImg = '/login_delivery.png';
+                          if (!isMarketplace) {
                             fallbackImg = '/onboarding_burger.png';
-                          } else {
-                            fallbackImg = '/login_delivery.png';
+                            if (name?.toLowerCase().includes('pizza')) {
+                              fallbackImg = '/pizza_margarita.png';
+                            } else if (name?.toLowerCase().includes('burger') || name?.toLowerCase().includes('sandwich') || name?.toLowerCase().includes('meal')) {
+                              fallbackImg = '/onboarding_burger.png';
+                            }
                           }
 
                           return (
                             <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', flexShrink: 0 }}>
                               <div style={{ position: 'relative', width: '56px', height: '56px' }}>
                                 <img 
-                                  src={item.menuItem?.image || fallbackImg} 
-                                  alt={item.itemName} 
+                                  src={image || fallbackImg} 
+                                  alt={name} 
                                   style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover', border: '1px solid #edf2f7' }} 
                                 />
                                 <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#b31522', color: '#ffffff', fontSize: '0.65rem', fontWeight: 800, borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #ffffff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -357,13 +438,13 @@ export default function Orders() {
                                 </span>
                               </div>
                               <span style={{ fontSize: '0.72rem', color: '#4a5568', fontWeight: 700, marginTop: '6px', maxWidth: '75px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {item.itemName}
+                                {name}
                               </span>
                             </div>
                           );
                         })
                       ) : (() => {
-                        const info = getStatusDetails(o.orderStatus);
+                        const info = getStatusDetails(o.orderStatus, activeTab === 'marketplace');
                         const StatusIcon = info.icon;
                         return (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', gap: '10px', padding: '16px 0', minHeight: '100px', textAlign: 'center' }}>
@@ -491,7 +572,7 @@ export default function Orders() {
                       <span>#{o.orderNumber}</span>
                     </span>
                     {(() => {
-                      const info = getStatusDetails(o.orderStatus);
+                      const info = getStatusDetails(o.orderStatus, activeTab === 'marketplace');
                       return (
                         <span className={`order-status-badge ${o.orderStatus}`} style={{
                           fontSize: '0.75rem',

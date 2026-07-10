@@ -12,7 +12,11 @@ import {
   getAdminProductById,
   createAdminProduct,
   updateAdminProduct,
-  updateAdminProductStatus
+  updateAdminProductStatus,
+  getAdminMarketplaceOrders,
+  getAdminMarketplaceOrderById,
+  updateAdminMarketplaceOrderStatus,
+  assignAdminMarketplaceDeliveryPartner
 } from '../../api/marketplace.api';
 import {
   Search,
@@ -29,7 +33,13 @@ import {
   Trash,
   Package,
   Layers,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Clock,
+  Check,
+  Truck,
+  UserPlus,
+  FileText,
+  CreditCard
 } from 'lucide-react';
 import './AdminPortal.css';
 
@@ -37,7 +47,7 @@ export default function AdminMarketplace() {
   const toast = useToast();
   const confirm = useConfirm();
 
-  // Tab State: 'categories' | 'products'
+  // Tab State: 'categories' | 'products' | 'orders'
   const [innerTab, setInnerTab] = useState('categories');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -48,10 +58,15 @@ export default function AdminMarketplace() {
   // Pagination & List States
   const [categoriesList, setCategoriesList] = useState([]);
   const [productsList, setProductsList] = useState([]);
+  const [ordersList, setOrdersList] = useState([]);
+  
   const [catPage, setCatPage] = useState(1);
   const [prodPage, setProdPage] = useState(1);
+  const [ordPage, setOrdPage] = useState(1);
+  
   const [catTotalPages, setCatTotalPages] = useState(1);
   const [prodTotalPages, setProdTotalPages] = useState(1);
+  const [ordTotalPages, setOrdTotalPages] = useState(1);
 
   // Filters State
   const [catSearch, setCatSearch] = useState('');
@@ -62,6 +77,9 @@ export default function AdminMarketplace() {
   const [prodCategoryFilter, setProdCategoryFilter] = useState('');
   const [prodConditionFilter, setProdConditionFilter] = useState('');
 
+  const [ordSearch, setOrdSearch] = useState('');
+  const [ordStatusFilter, setOrdStatusFilter] = useState('');
+
   // Active Categories list for product dropdown selectors
   const [activeCategories, setActiveCategories] = useState([]);
 
@@ -70,6 +88,15 @@ export default function AdminMarketplace() {
   const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
   const [selectedItem, setSelectedItem] = useState(null);
   const [viewDetailOpen, setViewDetailOpen] = useState(false);
+  
+  // Order specific modal/input states
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [viewOrderDetailOpen, setViewOrderDetailOpen] = useState(false);
+  const [assignDeliveryOpen, setAssignDeliveryOpen] = useState(false);
+  const [partnerIdInput, setPartnerIdInput] = useState('');
+  const [assigningPartner, setAssigningPartner] = useState(false);
+  const [rejectionMsgInput, setRejectionMsgInput] = useState('');
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   // Category Form State
   const [catForm, setCatForm] = useState({
@@ -158,13 +185,37 @@ export default function AdminMarketplace() {
     }
   }, [prodSearch, prodActiveFilter, prodCategoryFilter, prodConditionFilter, prodPage, innerTab, toast]);
 
+  // Fetch orders
+  const fetchOrders = useCallback(async () => {
+    if (innerTab !== 'orders') return;
+    setLoading(true);
+    try {
+      const { data } = await getAdminMarketplaceOrders({
+        search: ordSearch || undefined,
+        status: ordStatusFilter || undefined,
+        page: ordPage,
+        limit: 8
+      });
+      if (data.success) {
+        setOrdersList(data.data.orders || []);
+        setOrdTotalPages(data.data.pagination?.totalPages || 1);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error fetching marketplace orders');
+    } finally {
+      setLoading(false);
+    }
+  }, [ordSearch, ordStatusFilter, ordPage, innerTab, toast]);
+
   useEffect(() => {
     if (innerTab === 'categories') {
       fetchCategories();
-    } else {
+    } else if (innerTab === 'products') {
       fetchProducts();
+    } else if (innerTab === 'orders') {
+      fetchOrders();
     }
-  }, [innerTab, fetchCategories, fetchProducts]);
+  }, [innerTab, fetchCategories, fetchProducts, fetchOrders]);
 
   useEffect(() => {
     fetchActiveCategories();
@@ -508,6 +559,82 @@ export default function AdminMarketplace() {
     setProdImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ---------------- ORDER ACTIONS ----------------
+  const handleOrdSearchChange = (e) => {
+    setOrdSearch(e.target.value);
+    setOrdPage(1);
+  };
+
+  const handleViewOrderDetails = async (id) => {
+    try {
+      const { data } = await getAdminMarketplaceOrderById(id);
+      if (data.success) {
+        setSelectedOrder(data.data.order);
+        setRejectionMsgInput(data.data.order.rejectionMsg || '');
+        setViewOrderDetailOpen(true);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to load order details');
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    if (newStatus === 'REJECTED' && !rejectionMsgInput.trim()) {
+      toast.error('Rejection message is required');
+      return;
+    }
+    
+    setStatusUpdating(true);
+    try {
+      const { data } = await updateAdminMarketplaceOrderStatus(orderId, {
+        orderStatus: newStatus,
+        rejectionMsg: newStatus === 'REJECTED' ? rejectionMsgInput.trim() : undefined
+      });
+      if (data.success) {
+        toast.success('Order status updated successfully!');
+        // Refresh details
+        const detailsRes = await getAdminMarketplaceOrderById(orderId);
+        if (detailsRes.data.success) {
+          setSelectedOrder(detailsRes.data.order);
+        }
+        fetchOrders();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update order status');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleAssignDeliveryPartner = async (e) => {
+    e.preventDefault();
+    if (!partnerIdInput.trim()) {
+      toast.error('Delivery Partner ID is required');
+      return;
+    }
+    setAssigningPartner(true);
+    try {
+      const { data } = await assignAdminMarketplaceDeliveryPartner(selectedOrder._id, {
+        deliveryPartnerId: partnerIdInput.trim()
+      });
+      if (data.success) {
+        toast.success('Delivery partner assigned successfully!');
+        setAssignDeliveryOpen(false);
+        setPartnerIdInput('');
+        // Refresh details
+        const detailsRes = await getAdminMarketplaceOrderById(selectedOrder._id);
+        if (detailsRes.data.success) {
+          setSelectedOrder(detailsRes.data.order);
+        }
+        fetchOrders();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign delivery partner');
+    } finally {
+      setAssigningPartner(false);
+    }
+  };
+
   // ---------------- UI RENDER ----------------
   const isCategories = innerTab === 'categories';
 
@@ -531,11 +658,11 @@ export default function AdminMarketplace() {
           {/* Sub-Tabs Switcher */}
           <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
             <button
-              className={`status-filter-btn ${isCategories ? 'active' : ''}`}
+              className={`status-filter-btn ${innerTab === 'categories' ? 'active' : ''}`}
               onClick={() => handleTabSwitch('categories')}
               style={{
-                background: isCategories ? 'var(--primary-light)' : 'transparent',
-                color: isCategories ? 'var(--primary)' : '#64748b',
+                background: innerTab === 'categories' ? 'var(--primary-light)' : 'transparent',
+                color: innerTab === 'categories' ? 'var(--primary)' : '#64748b',
                 fontWeight: 750,
                 border: 'none',
                 padding: '8px 16px',
@@ -547,11 +674,11 @@ export default function AdminMarketplace() {
               CATEGORIES
             </button>
             <button
-              className={`status-filter-btn ${!isCategories ? 'active' : ''}`}
+              className={`status-filter-btn ${innerTab === 'products' ? 'active' : ''}`}
               onClick={() => handleTabSwitch('products')}
               style={{
-                background: !isCategories ? 'var(--primary-light)' : 'transparent',
-                color: !isCategories ? 'var(--primary)' : '#64748b',
+                background: innerTab === 'products' ? 'var(--primary-light)' : 'transparent',
+                color: innerTab === 'products' ? 'var(--primary)' : '#64748b',
                 fontWeight: 750,
                 border: 'none',
                 padding: '8px 16px',
@@ -572,9 +699,9 @@ export default function AdminMarketplace() {
               <input
                 type="text"
                 className="input-pill search-input-field"
-                placeholder={isCategories ? "Search categories..." : "Search products..."}
-                value={isCategories ? catSearch : prodSearch}
-                onChange={isCategories ? handleCatSearchChange : handleProdSearchChange}
+                placeholder={innerTab === 'categories' ? "Search categories..." : "Search products..."}
+                value={innerTab === 'categories' ? catSearch : prodSearch}
+                onChange={innerTab === 'categories' ? handleCatSearchChange : handleProdSearchChange}
               />
             </div>
 
@@ -584,9 +711,9 @@ export default function AdminMarketplace() {
               <div className="marketplace-filter-select-wrapper">
                 <span className="marketplace-filter-label">Status:</span>
                 <select
-                  value={isCategories ? catActiveFilter : prodActiveFilter}
+                  value={innerTab === 'categories' ? catActiveFilter : prodActiveFilter}
                   onChange={(e) => {
-                    if (isCategories) {
+                    if (innerTab === 'categories') {
                       setCatActiveFilter(e.target.value);
                       setCatPage(1);
                     } else {
@@ -611,7 +738,7 @@ export default function AdminMarketplace() {
               </div>
 
               {/* Product-specific filters */}
-              {!isCategories && (
+              {innerTab === 'products' && (
                 <>
                   {/* Category Filter */}
                   <div className="marketplace-filter-select-wrapper">
@@ -680,7 +807,7 @@ export default function AdminMarketplace() {
             Fetching marketplace data...
           </p>
         </div>
-      ) : isCategories ? (
+      ) : innerTab === 'categories' ? (
         // ---------------- CATEGORY TABLE ----------------
         categoriesList.length === 0 ? (
           <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center' }}>
@@ -1326,7 +1453,6 @@ export default function AdminMarketplace() {
         </div>,
         document.body
       )}
-
       {/* SUBMITTING UPLOAD LOADER */}
       {submitting && createPortal(
         <div className="modal-overlay" style={{ zIndex: 12000, background: 'rgba(15, 23, 42, 0.6)' }}>

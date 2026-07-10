@@ -6,7 +6,9 @@ import {
   createDeliveryProfile, 
   getDeliveryOrders, 
   pickUpOrder, 
-  deliverOrder 
+  deliverOrder,
+  getDeliveryMarketplaceOrders,
+  updateDeliveryMarketplaceOrderStatus
 } from '../../api/delivery.api';
 import { 
   User, 
@@ -185,6 +187,8 @@ export default function DeliveryDashboard() {
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
+  const [marketplaceOrders, setMarketplaceOrders] = useState([]);
+  const [serviceType, setServiceType] = useState('food'); // 'food' | 'marketplace'
   const [loading, setLoading] = useState(true);
   const [needProfileSetup, setNeedProfileSetup] = useState(false);
   
@@ -210,6 +214,14 @@ export default function DeliveryDashboard() {
       const { data } = await getDeliveryOrders();
       setOrders(data.data || []);
       setNeedProfileSetup(false);
+
+      // Fetch marketplace orders
+      try {
+        const mRes = await getDeliveryMarketplaceOrders();
+        setMarketplaceOrders(mRes.data.data || []);
+      } catch (mErr) {
+        console.error('Error fetching marketplace orders:', mErr);
+      }
     } catch (err) {
       if (err.response?.status === 404 && err.response?.data?.message?.includes('not found')) {
         setNeedProfileSetup(true);
@@ -267,6 +279,19 @@ export default function DeliveryDashboard() {
     }
   };
 
+  const handleMarketplaceDeliver = async (orderId) => {
+    setActionLoading(orderId);
+    try {
+      await updateDeliveryMarketplaceOrderStatus(orderId);
+      toast.success('Marketplace order marked as DELIVERED successfully!');
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Marketplace delivery confirmation failed');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/delivery/login');
@@ -278,8 +303,14 @@ export default function DeliveryDashboard() {
   };
 
   // Filter orders
-  const activeOrders = orders.filter(o => o.orderStatus === 'READY' || o.orderStatus === 'OUT_FOR_DELIVERY');
-  const pastOrders = orders.filter(o => o.orderStatus === 'DELIVERED');
+  const activeFoodOrders = orders.filter(o => o.orderStatus === 'READY' || o.orderStatus === 'OUT_FOR_DELIVERY');
+  const pastFoodOrders = orders.filter(o => o.orderStatus === 'DELIVERED');
+
+  const activeMarketplaceOrders = marketplaceOrders.filter(o => ['CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(o.orderStatus));
+  const pastMarketplaceOrders = marketplaceOrders.filter(o => o.orderStatus === 'DELIVERED');
+
+  const activeOrders = serviceType === 'food' ? activeFoodOrders : activeMarketplaceOrders;
+  const pastOrders = serviceType === 'food' ? pastFoodOrders : pastMarketplaceOrders;
 
   // Loading state render
   if (loading) {
@@ -541,7 +572,7 @@ export default function DeliveryDashboard() {
             </div>
             <div>
               <span className="stat-label">Vehicle Registration</span>
-              <h4 className="stat-value">{orders[0]?.deliveryPartner?.vehicleNumber || 'Registered Partner'}</h4>
+              <h4 className="stat-value">{orders[0]?.deliveryPartner?.vehicleNumber || marketplaceOrders[0]?.deliveryPartner?.vehicleNumber || 'Registered Partner'}</h4>
             </div>
           </div>
           <div className="stat-box">
@@ -551,7 +582,7 @@ export default function DeliveryDashboard() {
             <div>
               <span className="stat-label">Duty Status</span>
               <h4 className="stat-value">
-                {activeOrders.length > 0 ? (
+                {(activeFoodOrders.length > 0 || activeMarketplaceOrders.length > 0) ? (
                   <span className="badge-state busy">Active Delivery</span>
                 ) : (
                   <span className="badge-state active">Available</span>
@@ -565,10 +596,58 @@ export default function DeliveryDashboard() {
             </div>
             <div>
               <span className="stat-label">Completed Deliveries</span>
-              <h4 className="stat-value">{pastOrders.length} Completed</h4>
+              <h4 className="stat-value">{pastFoodOrders.length + pastMarketplaceOrders.length} Completed</h4>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Service Type Toggle (Food vs Marketplace) */}
+      <div style={{ display: 'flex', gap: '12px', padding: '0 20px', marginBottom: '16px', marginTop: '20px' }}>
+        <button
+          onClick={() => setServiceType('food')}
+          style={{
+            flex: 1,
+            padding: '12px',
+            borderRadius: '12px',
+            border: serviceType === 'food' ? '2.5px solid #06c169' : '1px solid #e2e8f0',
+            background: serviceType === 'food' ? '#e6f9f0' : '#ffffff',
+            color: serviceType === 'food' ? '#059654' : '#475569',
+            fontWeight: 800,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 0.2s'
+          }}
+        >
+          <Store size={18} />
+          <span>Food Delivery ({activeFoodOrders.length})</span>
+        </button>
+        <button
+          onClick={() => setServiceType('marketplace')}
+          style={{
+            flex: 1,
+            padding: '12px',
+            borderRadius: '12px',
+            border: serviceType === 'marketplace' ? '2.5px solid #06c169' : '1px solid #e2e8f0',
+            background: serviceType === 'marketplace' ? '#e6f9f0' : '#ffffff',
+            color: serviceType === 'marketplace' ? '#059654' : '#475569',
+            fontWeight: 800,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 0.2s'
+          }}
+        >
+          <Package size={18} />
+          <span>Marketplace ({activeMarketplaceOrders.length})</span>
+        </button>
       </div>
 
       {/* Tabs Segment Control Wrapper */}
@@ -602,147 +681,175 @@ export default function DeliveryDashboard() {
             </div>
           ) : (
             <div className="active-tasks-list">
-              {activeOrders.map((o) => (
-                <div key={o._id} className="active-order-card card">
-                  
-                  {/* Card Header */}
-                  <div className="order-card-header">
-                    {/* Row 1: order number + desktop badge */}
-                    <div className="order-card-title-row">
-                      <span className="card-order-number">Order #{o.orderNumber}</span>
-                      <span className={`status-badge-ui desktop-badge ${o.orderStatus}`}>
-                        {o.orderStatus.replace(/_/g, ' ')}
+              {activeOrders.map((o) => {
+                const isFood = serviceType === 'food';
+                const displayName = isFood ? o.restaurantName : `${o.categoryName} Store`;
+                const amount = isFood ? o.totalAmount : (o.pricing?.finalAmount || o.totalAmount);
+                
+                return (
+                  <div key={o._id} className="active-order-card card">
+                    
+                    {/* Card Header */}
+                    <div className="order-card-header">
+                      {/* Row 1: order number + desktop badge */}
+                      <div className="order-card-title-row">
+                        <span className="card-order-number">Order #{o.orderNumber}</span>
+                        <span className={`status-badge-ui desktop-badge ${o.orderStatus}`}>
+                          {o.orderStatus.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      {/* Row 2: date */}
+                      <span className="card-order-date">
+                        <Calendar size={13} style={{ marginRight: '6px' }} />
+                        {new Date(o.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
+                      {/* Row 3: mobile badge – right-aligned, hidden on desktop */}
+                      <div className="order-card-mobile-badge-row">
+                        <span className={`status-badge-ui mobile-badge ${o.orderStatus}`}>
+                          {o.orderStatus.replace(/_/g, ' ')}
+                        </span>
+                      </div>
                     </div>
-                    {/* Row 2: date */}
-                    <span className="card-order-date">
-                      <Calendar size={13} style={{ marginRight: '6px' }} />
-                      {new Date(o.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                    {/* Row 3: mobile badge – right-aligned, hidden on desktop */}
-                    <div className="order-card-mobile-badge-row">
-                      <span className={`status-badge-ui mobile-badge ${o.orderStatus}`}>
-                        {o.orderStatus.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Delivery Route — single card with vertical divider */}
-                  <div className="route-timeline">
-                    <div className="timeline-step">
-                      <div className="timeline-node restaurant-node">
-                        <Store size={18} />
+                    {/* Delivery Route — single card with vertical divider */}
+                    <div className="route-timeline">
+                      <div className="timeline-step">
+                        <div className="timeline-node restaurant-node">
+                          <Store size={18} />
+                        </div>
+                        <div className="timeline-content">
+                          <span className="timeline-label">PICKUP FROM</span>
+                          <h4 className="timeline-value">{displayName}</h4>
+                        </div>
                       </div>
-                      <div className="timeline-content">
-                        <span className="timeline-label">PICKUP FROM</span>
-                        <h4 className="timeline-value">{o.restaurantName}</h4>
-                      </div>
-                    </div>
-                    <div className="timeline-vertical-divider"></div>
-                    <div className="timeline-divider-mobile"></div>
-                    <div className="timeline-step">
-                      <div className="timeline-node customer-node">
-                        <User size={18} />
-                      </div>
-                      <div className="timeline-content">
-                        <span className="timeline-label">DELIVER TO</span>
-                        <h4 className="timeline-value">{o.user?.username || 'Anonymous Customer'}</h4>
-                        
-                        {(o.customerPhone || o.phone || o.user?.phone) && (
-                          <div className="customer-contact-link">
-                            <Phone size={13} />
-                            <a href={`tel:${o.customerPhone || o.phone || o.user?.phone}`}>
-                              {o.customerPhone || o.phone || o.user?.phone}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Address Section */}
-                  {(o.deliveryAddress || o.address) && (
-                    <div className="address-block">
-                      <div className="address-icon-wrapper">
-                        <MapPin size={20} />
-                      </div>
-                      <div className="address-text-content">
-                        <span className="block-label">DELIVERY ADDRESS</span>
-                        <p className="block-value">
-                          {o.deliveryAddress || o.address}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Items list with interactive checklist */}
-                  <div className="order-items-preview">
-                    <span className="block-label">ITEMS CHECKLIST</span>
-                    <p className="checklist-subtext">
-                      Check items off as you pick them up from the restaurant:
-                    </p>
-                    <ul className="items-list">
-                      {o.items?.map((item, idx) => {
-                        const isChecked = !!checkedItems[`${o._id}-${idx}`];
-                        return (
-                          <li 
-                            key={idx} 
-                            onClick={() => toggleCheckItem(o._id, idx)} 
-                            className={`checklist-item ${isChecked ? 'checked' : ''}`}
-                          >
-                            <div className="custom-checkbox">
-                              {isChecked && <Check size={12} strokeWidth={3} />}
+                      <div className="timeline-vertical-divider"></div>
+                      <div className="timeline-divider-mobile"></div>
+                      <div className="timeline-step">
+                        <div className="timeline-node customer-node">
+                          <User size={18} />
+                        </div>
+                        <div className="timeline-content">
+                          <span className="timeline-label">DELIVER TO</span>
+                          <h4 className="timeline-value">{o.user?.username || 'Anonymous Customer'}</h4>
+                          
+                          {(o.customerPhone || o.phone || o.user?.phone) && (
+                            <div className="customer-contact-link">
+                              <Phone size={13} />
+                              <a href={`tel:${o.customerPhone || o.phone || o.user?.phone}`}>
+                                {o.customerPhone || o.phone || o.user?.phone}
+                              </a>
                             </div>
-                            <span className="item-text">
-                              {item.itemName} <strong className="item-qty">x{item.quantity}</strong>
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-
-                  {/* Pricing and Payment */}
-                  <div className={`card-pricing-row ${o.paymentMethod}`}>
-                    <div className="payment-type-info">
-                      <span className="block-label">PAYMENT METHOD</span>
-                      <h4 className="value-payment">
-                        {o.paymentMethod === 'COD' ? 'Cash on Delivery (COD)' : 'Prepaid (Pay on Pickup)'}
-                      </h4>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="cash-collect-info">
-                      <span className="block-label">{o.paymentMethod === 'COD' ? 'CASH TO COLLECT' : 'PAID VALUE'}</span>
-                      <h4 className="value-price">₹{o.totalAmount}</h4>
-                    </div>
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="order-action-footer" style={{ width: '100%' }}>
-                    {o.orderStatus === 'READY' ? (
-                      (() => {
-                        const allChecked = o.items?.every((_, idx) => !!checkedItems[`${o._id}-${idx}`]);
-                        return (
+                    {/* Address Section */}
+                    {(o.deliveryAddress || o.address || o.deliveryAddressSnapShot) && (
+                      <div className="address-block">
+                        <div className="address-icon-wrapper">
+                          <MapPin size={20} />
+                        </div>
+                        <div className="address-text-content">
+                          <span className="block-label">DELIVERY ADDRESS</span>
+                          <p className="block-value">
+                            {o.deliveryAddress || o.address || o.deliveryAddressSnapShot}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Items list with interactive checklist */}
+                    <div className="order-items-preview">
+                      <span className="block-label">ITEMS CHECKLIST</span>
+                      <p className="checklist-subtext">
+                        {isFood ? "Check items off as you pick them up from the restaurant:" : "Check items off as you pick them up from the store:"}
+                      </p>
+                      <ul className="items-list">
+                        {o.items?.map((item, idx) => {
+                          const isChecked = !!checkedItems[`${o._id}-${idx}`];
+                          const itemName = isFood ? item.itemName : item.productName;
+                          return (
+                            <li 
+                              key={idx} 
+                              onClick={() => toggleCheckItem(o._id, idx)} 
+                              className={`checklist-item ${isChecked ? 'checked' : ''}`}
+                            >
+                              <div className="custom-checkbox">
+                                {isChecked && <Check size={12} strokeWidth={3} />}
+                              </div>
+                              <span className="item-text">
+                                {itemName} <strong className="item-qty">x{item.quantity}</strong>
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+
+                    {/* Pricing and Payment */}
+                    <div className={`card-pricing-row ${o.paymentMethod}`}>
+                      <div className="payment-type-info">
+                        <span className="block-label">PAYMENT METHOD</span>
+                        <h4 className="value-payment">
+                          {o.paymentMethod === 'COD' ? 'Cash on Delivery (COD)' : 'Prepaid (Pay on Pickup)'}
+                        </h4>
+                      </div>
+                      <div className="cash-collect-info">
+                        <span className="block-label">{o.paymentMethod === 'COD' ? 'CASH TO COLLECT' : 'PAID VALUE'}</span>
+                        <h4 className="value-price">₹{amount}</h4>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="order-action-footer" style={{ width: '100%' }}>
+                      {isFood ? (
+                        o.orderStatus === 'READY' ? (
+                          (() => {
+                            const allChecked = o.items?.every((_, idx) => !!checkedItems[`${o._id}-${idx}`]);
+                            return (
+                              <SwipeButton
+                                text={allChecked ? "SLIDE TO CONFIRM PICKUP" : "CHECK ALL ITEMS TO PICKUP"}
+                                onSuccess={() => handlePickup(o._id)}
+                                color="#3b82f6"
+                                disabled={!allChecked}
+                                loading={actionLoading === o._id}
+                              />
+                            );
+                          })()
+                        ) : o.orderStatus === 'OUT_FOR_DELIVERY' ? (
                           <SwipeButton
-                            text={allChecked ? "SLIDE TO CONFIRM PICKUP" : "CHECK ALL ITEMS TO PICKUP"}
-                            onSuccess={() => handlePickup(o._id)}
-                            color="#3b82f6"
-                            disabled={!allChecked}
+                            text="SLIDE TO CONFIRM DELIVERY"
+                            onSuccess={() => handleDeliver(o._id)}
+                            color="#b91c1c"
+                            disabled={false}
                             loading={actionLoading === o._id}
                           />
-                        );
-                      })()
-                    ) : o.orderStatus === 'OUT_FOR_DELIVERY' ? (
-                      <SwipeButton
-                        text="SLIDE TO CONFIRM DELIVERY"
-                        onSuccess={() => handleDeliver(o._id)}
-                        color="#b91c1c"
-                        disabled={false}
-                        loading={actionLoading === o._id}
-                      />
-                    ) : null}
+                        ) : null
+                      ) : (
+                        o.orderStatus === 'OUT_FOR_DELIVERY' ? (
+                          (() => {
+                            const allChecked = o.items?.every((_, idx) => !!checkedItems[`${o._id}-${idx}`]);
+                            return (
+                              <SwipeButton
+                                text={allChecked ? "SLIDE TO CONFIRM DELIVERY" : "CHECK ALL ITEMS TO DELIVER"}
+                                onSuccess={() => handleMarketplaceDeliver(o._id)}
+                                color="#b91c1c"
+                                disabled={!allChecked}
+                                loading={actionLoading === o._id}
+                              />
+                            );
+                          })()
+                        ) : (
+                          <div style={{ textAlign: 'center', background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #edf2f7', color: '#64748b', fontSize: '0.85rem', fontWeight: 700 }}>
+                            Awaiting Store Pickup / Dispatch Confirmation
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -764,29 +871,35 @@ export default function DeliveryDashboard() {
                   <thead>
                     <tr>
                       <th>Order #</th>
-                      <th>Restaurant</th>
+                      <th>{serviceType === 'food' ? 'Restaurant' : 'Category'}</th>
                       <th>Date</th>
                       <th>Total</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pastOrders.map((o) => (
-                      <tr key={o._id}>
-                        <td style={{ fontWeight: 800, color: '#1e293b' }}>#{o.orderNumber}</td>
-                        <td style={{ fontWeight: 600 }}>{o.restaurantName}</td>
-                        <td className="text-muted">
-                          {new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </td>
-                        <td style={{ fontWeight: 700, color: '#1e293b' }}>₹{o.totalAmount}</td>
-                        <td>
-                          <span className="history-status-badge">
-                            <CheckCircle size={12} />
-                            <span>Delivered</span>
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {pastOrders.map((o) => {
+                      const isFood = serviceType === 'food';
+                      const displayName = isFood ? o.restaurantName : o.categoryName;
+                      const amount = isFood ? o.totalAmount : (o.pricing?.finalAmount || o.totalAmount);
+                      
+                      return (
+                        <tr key={o._id}>
+                          <td style={{ fontWeight: 800, color: '#1e293b' }}>#{o.orderNumber}</td>
+                          <td style={{ fontWeight: 600 }}>{displayName}</td>
+                          <td className="text-muted">
+                            {new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td style={{ fontWeight: 700, color: '#1e293b' }}>₹{amount}</td>
+                          <td>
+                            <span className="history-status-badge">
+                              <CheckCircle size={12} />
+                              <span>Delivered</span>
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
