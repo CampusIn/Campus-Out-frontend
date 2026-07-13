@@ -12,6 +12,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import AuthSuccess from './pages/auth/AuthSuccess';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetail from './pages/RestaurantDetail';
 import FoodDetail from './pages/FoodDetail';
@@ -65,6 +66,7 @@ export default function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/auth/success" element={<AuthSuccess />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/restaurants" element={<Restaurants />} />
                     <Route path="/restaurants/:id" element={<RestaurantDetail />} />
                     <Route path="/food/:id" element={<FoodDetail />} />

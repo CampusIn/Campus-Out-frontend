@@ -18,3 +18,9 @@ export const refreshToken = () =>
 export const getMe = () => api.get('/auth/me');
 
 export const updateMe = (data) => api.patch('/auth/me', data);
+
+export const forgotPassword = (data) => api.post('/auth/forgot-password', data);
+
+export const verifyResetOtp = (data) => api.post('/auth/verify-reset-otp', data);
+
+export const resetPassword = (data) => api.post('/auth/reset-password', data);

@@ -202,7 +202,7 @@ export default function Login() {
             </div>
           </div>
 
-          <Link to="#" className="swiggy-forgot-password hover-scale">
+          <Link to="/forgot-password" className="swiggy-forgot-password hover-scale">
             Forgot Password?
           </Link>
 
