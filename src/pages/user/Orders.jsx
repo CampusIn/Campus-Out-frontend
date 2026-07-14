@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { getMyOrders } from '../../api/order.api';
 import { getMyMarketplaceOrders } from '../../api/marketplace.api';
-import BottomNav from '../../components/BottomNav';
-import { ArrowLeft, MoreVertical, Calendar, DollarSign, Clock, Store, ChevronRight, Bike, ChefHat, CheckCircle2, ShoppingBag, XCircle, Package } from 'lucide-react';
+
+import { DollarSign, Store, Bike, ChefHat, Package, ArrowLeft, MoreVertical, Calendar, Clock, ChevronRight, CheckCircle, ShoppingBag, XCircle } from 'lucide-react';
 
 const statusColors = {
   PENDING: 'status-pending',
@@ -26,7 +26,7 @@ const statusDetails = {
     desc: 'Waiting for cafeteria confirmation'
   },
   CONFIRMED: {
-    icon: CheckCircle2,
+    icon: CheckCircle,
     color: '#2b6cb0', // blue
     bgColor: '#ebf8ff',
     borderColor: '#bee3f8',
@@ -62,7 +62,7 @@ const statusDetails = {
     desc: 'Delivery executive is on the way'
   },
   DELIVERED: {
-    icon: CheckCircle2,
+    icon: CheckCircle,
     color: '#2f855a', // green
     bgColor: '#f0fff4',
     borderColor: '#c6f6d5',
@@ -101,7 +101,7 @@ const marketplaceStatusDetails = {
     desc: 'Waiting for store partner confirmation'
   },
   CONFIRMED: {
-    icon: CheckCircle2,
+    icon: CheckCircle,
     color: '#2b6cb0', // blue
     bgColor: '#ebf8ff',
     borderColor: '#bee3f8',
@@ -137,7 +137,7 @@ const marketplaceStatusDetails = {
     desc: 'Delivery executive is on the way'
   },
   DELIVERED: {
-    icon: CheckCircle2,
+    icon: CheckCircle,
     color: '#2f855a', // green
     bgColor: '#f0fff4',
     borderColor: '#c6f6d5',
@@ -620,7 +620,6 @@ export default function Orders() {
         )}
       </div>
 
-      <BottomNav activeTab="orders" />
-    </div>
+          </div>
   );
 }

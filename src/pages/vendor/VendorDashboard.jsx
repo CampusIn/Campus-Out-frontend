@@ -17,15 +17,8 @@ import {
   CartesianGrid, 
   Tooltip 
 } from 'recharts';
-import { 
-  ShoppingBag, 
-  TrendingUp, 
-  DollarSign, 
-  ClipboardCheck, 
-  XCircle, 
-  Award,
-  AlertCircle
-} from 'lucide-react';
+
+import { TrendingUp, DollarSign, ShoppingBag, ClipboardList, XCircle, Badge, AlertCircle } from 'lucide-react';
 
 export default function VendorDashboard() {
   const { restaurant } = useOutletContext();
@@ -210,7 +203,7 @@ export default function VendorDashboard() {
           <div className="vendor-card-header">
             <span className="vendor-card-title">Delivered Orders</span>
             <div className="vendor-card-icon primary">
-              <ClipboardCheck size={20} />
+              <ClipboardList size={20} />
             </div>
           </div>
           <div className="vendor-card-value">{overview.deliveredOrders}</div>
@@ -317,7 +310,7 @@ export default function VendorDashboard() {
         {/* Top Selling Items */}
         <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--vendor-border)', borderRadius: '20px', padding: '24px', boxShadow: 'var(--vendor-card-shadow)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={18} color="var(--vendor-primary)" />
+            <Badge size={18} color="var(--vendor-primary)" />
             <h3 style={{ fontSize: '1.05rem', fontWeight: 800 }}>Top Selling Items</h3>
           </div>
 

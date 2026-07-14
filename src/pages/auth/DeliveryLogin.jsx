@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff, Bike, Lock } from 'lucide-react';
+
+import { Bike, X, Eye, EyeOff, Lock } from 'lucide-react';
 
 export default function DeliveryLogin() {
   const { login, logout, loading, user } = useAuth();

@@ -3,20 +3,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getAdminDashboard } from '../api/admin.api';
-import {
-  LayoutDashboard,
-  Users,
-  Store,
-  Settings,
-  Ticket,
-  Megaphone,
-  LogOut,
-  RefreshCw,
-  ChevronDown,
-  Image,
-  ShoppingBag,
-  Package
-} from 'lucide-react';
+
+import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag } from 'lucide-react';
 import '../pages/admin/AdminPortal.css';
 
 export default function AdminLayout() {

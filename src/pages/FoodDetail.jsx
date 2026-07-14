@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getMenuItemById } from '../api/menu.api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import BottomNav from '../components/BottomNav';
-import { ArrowLeft, Share2, Heart, Star, Clock, Flame as FireIcon, Plus, Minus } from 'lucide-react';
+
+import { Flame as FireIcon, ArrowLeft, Share2, Heart, Star, Clock, Plus, Minus } from 'lucide-react';
 
 export default function FoodDetail() {
   const { id } = useParams();
@@ -296,8 +296,7 @@ export default function FoodDetail() {
 
       </div>
 
-      <BottomNav activeTab="home" />
-
+      
       {/* Media query overrides to turn split layout on desktop */}
       <style>{`
         @media (min-width: 769px) {

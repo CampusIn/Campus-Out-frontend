@@ -4,11 +4,8 @@ import { getSingleVendorOrder, changeOrderStatus, getPlatformSettingsVendor } fr
 import { downloadVendorOrderInvoice } from '../../api/vendor.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
-import { 
-  ArrowLeft, Clock, User, Phone, MapPin, CreditCard, 
-  CheckCircle2, UserPlus, ChevronRight, Loader, Package, FileDown,
-  Copy, MessageSquare, MessageCircle
-} from 'lucide-react';
+
+import { Phone, CreditCard, UserPlus, Loader, Package, FileDown, ArrowLeft, Clock, User, MapPin, CheckCircle, ChevronRight, Copy, MessageSquare } from 'lucide-react';
 
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
 
@@ -478,7 +475,7 @@ export default function VendorOrderDetails() {
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = '#e6f4ea'; }}
                         title="WhatsApp Customer"
                       >
-                        <MessageCircle size={13} />
+                        <MessageSquare size={13} />
                       </a>
                     </div>
                   </div>
@@ -555,7 +552,7 @@ export default function VendorOrderDetails() {
               {order.deliveryPartner ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e6f9f0', color: '#06c169', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CheckCircle2 size={20} />
+                    <CheckCircle size={20} />
                   </div>
                   <div>
                     <strong style={{ display: 'block', fontSize: '0.9rem', color: '#1e293b' }}>Partner Assigned</strong>

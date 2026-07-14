@@ -4,7 +4,8 @@ import { getVendorOrders, changeOrderStatus, getPlatformSettingsVendor } from '.
 import { downloadVendorOrderInvoice } from '../../api/vendor.api';
 import { assignDeliveryPartner } from '../../api/delivery.api';
 import { useToast } from '../../context/ToastContext';
-import { ShoppingBag, User, Clock, CreditCard, UserPlus, CheckCircle2, ChevronRight, Loader, Phone, MapPin, FileDown } from 'lucide-react';
+
+import { CreditCard, UserPlus, Loader, Phone, FileDown, ShoppingBag, User, Clock, CheckCircle, ChevronRight, MapPin } from 'lucide-react';
 
 const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
 
@@ -372,7 +373,7 @@ export default function VendorOrders() {
                     <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px' }}>
                       {o.deliveryPartner ? (
                         <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <CheckCircle2 size={14} color="var(--vendor-primary)" />
+                          <CheckCircle size={14} color="var(--vendor-primary)" />
                           Assigned Partner: <strong>{o.deliveryPartner.username || o.deliveryPartner.name || o.deliveryPartner}</strong>
                         </span>
                       ) : (

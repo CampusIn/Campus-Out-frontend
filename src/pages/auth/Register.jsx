@@ -1,7 +1,8 @@
+import { X, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff } from 'lucide-react';
+
 
 export default function Register() {
   const { register, loading, user } = useAuth();

@@ -4,23 +4,8 @@ import { useToast } from '../../context/ToastContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useMarketCart } from '../../context/MarketCartContext';
 import { getUserProductById } from '../../api/marketplace.api';
-import BottomNav from '../../components/BottomNav';
-import {
-  ArrowLeft,
-  Phone,
-  MessageCircle,
-  Package,
-  Layers,
-  Calendar,
-  User,
-  ShoppingBag,
-  Share2,
-  Heart,
-  ChevronRight,
-  Plus,
-  Minus,
-  Loader
-} from 'lucide-react';
+
+import { Phone, Package, Loader, ArrowLeft, MessageSquare, Layers, Calendar, User, ShoppingBag, Share2, Heart, ChevronRight, Plus, Minus } from 'lucide-react';
 
 export default function MarketplaceProductDetail() {
   const { productId } = useParams();
@@ -159,8 +144,7 @@ export default function MarketplaceProductDetail() {
 
           </div>
         </div>
-        <BottomNav activeTab="marketplace" />
-      </div>
+              </div>
     );
   }
 
@@ -495,7 +479,7 @@ export default function MarketplaceProductDetail() {
                         fontSize: '0.88rem'
                       }}
                     >
-                      <MessageCircle size={16} fill="#ffffff" />
+                      <MessageSquare size={16} fill="#ffffff" />
                       <span>WhatsApp</span>
                     </a>
 
@@ -583,7 +567,6 @@ export default function MarketplaceProductDetail() {
         )}
       </div>
 
-      <BottomNav activeTab="marketplace" />
-    </div>
+          </div>
   );
 }

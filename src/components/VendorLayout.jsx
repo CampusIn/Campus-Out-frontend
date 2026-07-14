@@ -4,26 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getMyRestaurants, createRestaurant, toggleRestaurantStatus } from '../api/restaurant.api';
 import CustomSelect from './CustomSelect';
-import { 
-  LayoutDashboard, 
-  ShoppingBag, 
-  Package, 
-  UtensilsCrossed, 
-  BarChart3, 
-  Settings, 
-  User, 
-  LogOut, 
-  ChevronDown, 
-  Menu, 
-  X, 
-  Flame, 
-  Store,
-  MapPin,
-  Phone,
-  Clock,
-  DollarSign,
-  AlertTriangle
-} from 'lucide-react';
+
+import { Package, UtensilsCrossed, Flame, Store, Phone, DollarSign, LayoutDashboard, ShoppingBag, BarChart2, Settings, User, LogOut, ChevronDown, Menu, X, MapPin, Clock, AlertTriangle } from 'lucide-react';
 import '../pages/vendor/VendorPortal.css';
 
 const categories = ['Fast Food', 'Cafe', 'Bakery', 'South Indian', 'North Indian', 'Chinese', 'Other'];
@@ -284,7 +266,7 @@ export default function VendorLayout() {
     { name: 'Orders', path: '/vendor/orders', icon: <ShoppingBag size={20} /> },
     { name: 'Inventory', path: '/vendor/inventory', icon: <Package size={20} /> },
     { name: 'Menu Management', path: '/vendor/menu', icon: <UtensilsCrossed size={20} /> },
-    { name: 'Analytics', path: '/vendor/analytics', icon: <BarChart3 size={20} /> },
+    { name: 'Analytics', path: '/vendor/analytics', icon: <BarChart2 size={20} /> },
     { name: 'Settings', path: '/vendor/settings', icon: <Settings size={20} /> }
   ];
 

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMarketplaceOrderById, cancelMarketplaceOrder } from '../../api/marketplace.api';
-import { ArrowLeft, CreditCard, Clock, Store, Check, AlertCircle } from 'lucide-react';
-import BottomNav from '../../components/BottomNav';
+
+import { CreditCard, Store, ArrowLeft, Clock, Check, AlertCircle } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -129,8 +129,7 @@ export default function MarketplaceOrderDetail() {
           </div>
         </div>
 
-        <BottomNav activeTab="orders" />
-      </div>
+              </div>
     );
   }
 
@@ -262,7 +261,6 @@ export default function MarketplaceOrderDetail() {
         </div>
       </div>
 
-      <BottomNav activeTab="orders" />
-    </div>
+          </div>
   );
 }

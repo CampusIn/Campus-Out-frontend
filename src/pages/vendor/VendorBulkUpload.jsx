@@ -3,17 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import { bulkUploadMenu } from '../../api/vendor.api';
 import CustomSelect from '../../components/CustomSelect';
-import { 
-  Upload, 
-  Trash2, 
-  ArrowLeft, 
-  CheckCircle, 
-  Loader, 
-  Sparkles,
-  AlertTriangle,
-  FileImage,
-  Utensils
-} from 'lucide-react';
+
+import { Loader, FileImage, Utensils, Upload, Trash2, ArrowLeft, CheckCircle, Wand2, AlertTriangle } from 'lucide-react';
 
 const categories = ['Fast Food', 'Cafe', 'Bakery', 'South Indian', 'North Indian', 'Chinese', 'Other'];
 

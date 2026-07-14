@@ -3,7 +3,8 @@ import { useOutletContext } from 'react-router-dom';
 import { updateRestaurant } from '../../api/restaurant.api';
 import CustomSelect from '../../components/CustomSelect';
 import { useToast } from '../../context/ToastContext';
-import { Store, Save, Edit, Phone, MapPin, Mail, AlertTriangle, Loader } from 'lucide-react';
+
+import { Store, Save, Phone, Loader, Edit, MapPin, Mail, AlertTriangle } from 'lucide-react';
 
 const categories = ['Fast Food', 'Cafe', 'Bakery', 'South Indian', 'North Indian', 'Chinese', 'Other'];
 

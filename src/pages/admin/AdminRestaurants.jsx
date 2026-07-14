@@ -5,18 +5,8 @@ import {
   suspendRestaurant,
   activateRestaurant
 } from '../../api/admin.api';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  Sliders,
-  Calendar,
-  Store,
-  MapPin,
-  Clock,
-  ChevronDown
-} from 'lucide-react';
+
+import { Store, Search, ChevronLeft, ChevronRight, FilterIcon, Sliders, Calendar, MapPin, Clock, ChevronDown } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminRestaurants() {
@@ -123,7 +113,7 @@ export default function AdminRestaurants() {
         {/* Filters Row */}
         <div className="filters-bar-row">
           <div className="filter-group">
-            <Filter size={16} className="filter-icon" />
+            <FilterIcon size={16} className="filter-icon" />
             <span className="filter-title">Cuisine Category:</span>
             <select
               className="filter-select"

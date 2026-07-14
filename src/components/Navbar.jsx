@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, ClipboardList, User, LogOut, Flame, Store, Shield, Bike, ChevronDown, Navigation, Search } from 'lucide-react';
+
+import { ShoppingCart, Flame, Store, Shield, Bike, Navigation, ClipboardList, User, LogOut, ChevronDown, Search } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
 
 const savedAddresses = [

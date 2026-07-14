@@ -8,33 +8,15 @@ import {
   getPlatformSettingsAdmin,
   downloadOrderInvoice,
 } from '../../api/admin.api';
-import {
-  DollarSign,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  ShoppingBag,
-  Users,
-  Store,
-  Calendar,
-  ClipboardList,
-  ChevronDown,
-  FileDown,
-  Loader2,
-  Phone,
-  Copy,
-  MessageSquare,
-  MessageCircle,
-  UserPlus,
-  X,
-} from 'lucide-react';
+
+import { DollarSign, Store, FileDown, Loader2, Phone, UserPlus, Search, ChevronLeft, ChevronRight, RefreshCw, ShoppingBag, Users, Calendar, ClipboardList, ChevronDown, Copy, MessageSquare, X } from 'lucide-react';
 import {
   getAdminMarketplaceOrders,
   getAdminMarketplaceOrderById,
   updateAdminMarketplaceOrderStatus,
   assignAdminMarketplaceDeliveryPartner,
 } from '../../api/marketplace.api';
+import { HoldConfirmButton } from '../../components/HoldConfirmButton';
 import './AdminPortal.css';
 
 const getWhatsAppLink = (phone) => {
@@ -974,7 +956,7 @@ export default function AdminDashboard() {
                           onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = '#e6f4ea'; }}
                           title="WhatsApp Customer"
                         >
-                          <MessageCircle size={12} />
+                          <MessageSquare size={12} />
                         </a>
                       )}
                     </div>
@@ -1125,8 +1107,8 @@ export default function AdminDashboard() {
                         {selectedOrder.orderStatus === 'PENDING' ? (
                           !isRejectingMarketplace ? (
                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                              <button
-                                type="button"
+                              <HoldConfirmButton
+                                variant="default"
                                 className="btn btn-primary"
                                 style={{
                                   flex: '1 1 120px',
@@ -1140,15 +1122,18 @@ export default function AdminDashboard() {
                                   fontSize: '0.82rem',
                                   height: '42px',
                                   background: 'var(--primary)',
-                                  borderColor: 'var(--primary)',
-                                  color: '#ffffff'
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  opacity: statusUpdating ? 0.7 : 1
                                 }}
-                                onClick={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'CONFIRMED')}
+                                onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'CONFIRMED')}
                                 disabled={statusUpdating}
+                                holdingLabel="Accepting..."
+                                confirmedLabel="Accepted!"
                               >
-                                {statusUpdating ? 'Processing...' : 'Accept Order'}
-                                <ChevronRight size={16} />
-                              </button>
+                                Hold to Accept Order
+                                <ChevronRight size={16} style={{ marginLeft: '4px' }} />
+                              </HoldConfirmButton>
                               <button
                                 type="button"
                                 className="btn btn-outline"
@@ -1209,24 +1194,27 @@ export default function AdminDashboard() {
                                 >
                                   Cancel
                                 </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  style={{
-                                    padding: '6px 16px',
-                                    borderRadius: '10px',
-                                    height: '34px',
-                                    background: '#dc2626',
-                                    borderColor: '#dc2626',
-                                    color: '#ffffff',
-                                    fontSize: '0.78rem',
-                                    width: 'auto'
-                                  }}
-                                  onClick={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')}
-                                  disabled={statusUpdating || !rejectionMsgInput.trim()}
-                                >
-                                  {statusUpdating ? 'Rejecting...' : 'Confirm Reject'}
-                                </button>
+                                  <HoldConfirmButton
+                                    variant="destructive"
+                                    className="btn btn-primary"
+                                    style={{
+                                      padding: '6px 16px',
+                                      borderRadius: '10px',
+                                      height: '34px',
+                                      background: '#dc2626',
+                                      color: '#ffffff',
+                                      fontSize: '0.78rem',
+                                      border: 'none',
+                                      width: 'auto',
+                                      opacity: (statusUpdating || !rejectionMsgInput.trim()) ? 0.7 : 1
+                                    }}
+                                    onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')}
+                                    disabled={statusUpdating || !rejectionMsgInput.trim()}
+                                    holdingLabel="Rejecting..."
+                                    confirmedLabel="Rejected"
+                                  >
+                                    Hold to Confirm Reject
+                                  </HoldConfirmButton>
                               </div>
                             </div>
                           )
@@ -1241,8 +1229,8 @@ export default function AdminDashboard() {
                             const transition = transitionMap[selectedOrder.orderStatus];
                             if (!transition) return null;
                             return (
-                              <button
-                                type="button"
+                              <HoldConfirmButton
+                                variant="default"
                                 className="btn btn-primary"
                                 style={{
                                   width: '100%',
@@ -1256,15 +1244,18 @@ export default function AdminDashboard() {
                                   fontSize: '0.85rem',
                                   height: '42px',
                                   background: 'var(--primary)',
-                                  borderColor: 'var(--primary)',
-                                  color: '#ffffff'
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  opacity: statusUpdating ? 0.7 : 1
                                 }}
-                                onClick={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, transition.next)}
+                                onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, transition.next)}
                                 disabled={statusUpdating}
+                                holdingLabel="Updating..."
+                                confirmedLabel="Updated!"
                               >
-                                {statusUpdating ? 'Updating...' : transition.label}
-                                <ChevronRight size={16} />
-                              </button>
+                                Hold to {transition.label}
+                                <ChevronRight size={16} style={{ marginLeft: '4px' }} />
+                              </HoldConfirmButton>
                             );
                           })()
                         )}

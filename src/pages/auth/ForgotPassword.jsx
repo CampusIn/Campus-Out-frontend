@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff, Mail, KeyRound, ShieldCheck, CheckCircle2 } from 'lucide-react';
+
+import { KeyRound, ShieldCheck, ArrowLeft, Eye, EyeOff, Mail, CheckCircle } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { forgotPassword, verifyResetOtp, resetPassword } from '../../api/auth.api';
 
@@ -183,7 +184,7 @@ export default function ForgotPassword() {
                 <div key={s.key} className="fp-step-item">
                   <div className={`fp-step-dot ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}>
                     {isCompleted ? (
-                      <CheckCircle2 size={16} />
+                      <CheckCircle size={16} />
                     ) : (
                       <StepIcon size={14} />
                     )}
@@ -435,7 +436,7 @@ export default function ForgotPassword() {
         {step === STEPS.SUCCESS && (
           <div className="fp-success-container animate-scale-in">
             <div className="fp-success-icon-wrapper">
-              <CheckCircle2 className="fp-success-icon" size={48} />
+              <CheckCircle className="fp-success-icon" size={48} />
             </div>
             <h2 className="fp-success-title">Password Reset Successful!</h2>
             <p className="fp-success-text">

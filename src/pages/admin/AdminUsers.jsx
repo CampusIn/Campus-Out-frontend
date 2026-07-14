@@ -1,3 +1,4 @@
+import { Search, ChevronLeft, ChevronRight, Calendar, Lock, Unlock, Users, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -6,16 +7,7 @@ import {
   blockUser,
   unblockUser
 } from '../../api/admin.api';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Lock,
-  Unlock,
-  Users,
-  ChevronDown
-} from 'lucide-react';
+
 import './AdminPortal.css';
 
 export default function AdminUsers() {

@@ -18,29 +18,8 @@ import {
   updateAdminMarketplaceOrderStatus,
   assignAdminMarketplaceDeliveryPartner
 } from '../../api/marketplace.api';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Plus,
-  Edit,
-  Eye,
-  ToggleLeft,
-  ToggleRight,
-  X,
-  Upload,
-  Trash,
-  Package,
-  Layers,
-  Image as ImageIcon,
-  Clock,
-  Check,
-  Truck,
-  UserPlus,
-  FileText,
-  CreditCard
-} from 'lucide-react';
+
+import { ToggleLeft, ToggleRight, Package, Truck, UserPlus, CreditCard, Search, ChevronLeft, ChevronRight, ChevronDown, Plus, Edit, Eye, X, Upload, Trash2, Layers, Image, Clock, Check, FileText } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminMarketplace() {

@@ -238,6 +238,7 @@ export function AuthProvider({ children }) {
       const { data } = await loginUser({ email, password });
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('lastActive', Date.now().toString());
+      sessionStorage.removeItem('dismissedAnnouncements');
       const { data: meRes } = await getMe();
       setUser({ 
         id: meRes.data.id, 
@@ -273,6 +274,7 @@ export function AuthProvider({ children }) {
       const { data } = await verifyEmailOtp({ email, otp });
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('lastActive', Date.now().toString());
+      sessionStorage.removeItem('dismissedAnnouncements');
       const { data: meRes } = await getMe();
       setUser({ 
         id: meRes.data.id, 
@@ -309,6 +311,7 @@ export function AuthProvider({ children }) {
       // ignore
     }
     localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('dismissedAnnouncements');
     setUser(null);
   };
 
@@ -319,6 +322,7 @@ export function AuthProvider({ children }) {
       // ignore
     }
     localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('dismissedAnnouncements');
     setUser(null);
   };
 

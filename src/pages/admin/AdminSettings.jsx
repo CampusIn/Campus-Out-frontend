@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { getAdminSettings, updateAdminSettings } from '../../api/admin.api';
-import { Settings, Save, X, Loader } from 'lucide-react';
+
+import { Save, Loader, Settings, X } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminSettings() {

@@ -1,8 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
-import { Flame, Search, ChefHat, Percent, Gift, BookOpen, ShoppingBag, CreditCard, Sparkles, Home as HomeIcon } from 'lucide-react';
+
+import { Flame, ChefHat, Percent, Gift, CreditCard, Search, BookOpen, ShoppingBag, Wand2, Home as HomeIcon } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
+import BlueprintGrid from '../components/BlueprintGrid';
 
 export default function Home() {
   const { user } = useAuth();
@@ -188,8 +190,8 @@ export default function Home() {
       </header>
 
       {/* 2. Hero Section (Red Background with Floating Food and Search Box) */}
-      <section ref={heroSectionRef} className="hero-section">
-
+      <section ref={heroSectionRef} className="hero-section" style={{ position: 'relative', overflow: 'hidden' }}>
+        <BlueprintGrid />
 
         <div ref={heroContentRef} className="hero-content-wrapper">
           <h1 className="hero-title animate-slide-up">
@@ -368,7 +370,7 @@ export default function Home() {
             {/* Card 4: Smart Recommendations */}
             <div className="feature-icon-card">
               <div className="card-icon-container">
-                <Sparkles size={32} className="feature-icon-svg green-tint-2" />
+                <Wand2 size={32} className="feature-icon-svg green-tint-2" />
               </div>
               <span className="card-label">Smart Recommendations</span>
             </div>

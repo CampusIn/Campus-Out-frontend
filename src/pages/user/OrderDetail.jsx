@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getOrderById, cancelOrder } from '../../api/order.api';
 import { createReview, updateReview, deleteReview, getRestaurantReviews } from '../../api/review.api';
-import { ArrowLeft, Star, CreditCard, Clock, Store, Check, AlertCircle } from 'lucide-react';
-import BottomNav from '../../components/BottomNav';
+
+import { CreditCard, Store, ArrowLeft, Star, Clock, Check, AlertCircle } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -199,8 +199,7 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        <BottomNav activeTab="orders" />
-      </div>
+              </div>
     );
   }
 
@@ -431,7 +430,6 @@ export default function OrderDetail() {
 
       </div>
 
-      <BottomNav activeTab="orders" />
-    </div>
+          </div>
   );
 }

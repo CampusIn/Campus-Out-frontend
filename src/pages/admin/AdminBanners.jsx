@@ -8,21 +8,8 @@ import {
   updateBanner,
   updateBannerStatus
 } from '../../api/admin.api';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Plus,
-  Edit,
-  Eye,
-  ToggleLeft,
-  ToggleRight,
-  Loader,
-  X,
-  Upload,
-  Image as ImageIcon
-} from 'lucide-react';
+
+import { ToggleLeft, ToggleRight, Loader, Search, ChevronLeft, ChevronRight, ChevronDown, Plus, Edit, Eye, X, Upload, Image } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminBanners() {
@@ -440,7 +427,7 @@ export default function AdminBanners() {
         </div>
       ) : bannersList.length === 0 ? (
         <div className="empty-state">
-          <ImageIcon size={48} className="empty-icon" />
+          <Image size={48} className="empty-icon" />
           <p>No banners found.</p>
           <button
             className="btn btn-primary"

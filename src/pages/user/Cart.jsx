@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getCart, clearCart } from '../../api/cart.api';
 import { createOrder, getCoupons, applyCoupon, getPlatformSettings } from '../../api/order.api';
-import BottomNav from '../../components/BottomNav';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import MarketplaceCart from './MarketplaceCart';
-import { ArrowLeft, Store, Trash2, Plus, Minus, Gift, Tag, Receipt, ShoppingCart, MapPin, Building, BookOpen, Coffee, Compass, Edit, Wallet, ShoppingBag, Check, X, Loader, Percent, Phone, AlertTriangle } from 'lucide-react';
+
+import { Store, Gift, Tag, Receipt, ShoppingCart, Building, Coffee, Compass, Wallet, Loader, Percent, Phone, ArrowLeft, Trash2, Plus, Minus, MapPin, BookOpen, Edit, ShoppingBag, Check, X, AlertTriangle } from 'lucide-react';
+import { confetti } from '../../components/Confetti';
+import { HoldConfirmButton } from '../../components/HoldConfirmButton';
+import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -31,12 +34,22 @@ export default function Cart() {
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [pricingSummary, setPricingSummary] = useState(null);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [activeCouponIndex, setActiveCouponIndex] = useState(0);
   const [couponsList, setCouponsList] = useState([]);
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [shakePhone, setShakePhone] = useState(false);
   const [shakeAddress, setShakeAddress] = useState(false);
+
+  useEffect(() => {
+    if (isCouponModalOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => document.body.classList.remove('hide-bottom-nav');
+  }, [isCouponModalOpen]);
 
   // Resize listener for responsive modal/bottom-sheet toggle
   useEffect(() => {
@@ -167,13 +180,11 @@ export default function Cart() {
       hasError = true;
     }
 
-    if (hasError) return;
-
-    const isConfirmed = await confirm('Are you sure you want to place this order?');
-    if (!isConfirmed) return;
+    if (hasError) return false;
 
     try {
       const { data } = await createOrder(paymentMethod, selectedCoupon?.couponId, customerPhone.trim(), deliveryAddress.trim());
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       toast.success(`Order placed successfully! #${data.data?.order?.orderNumber || ''}`);
       setCart(null);
       setSelectedCoupon(null);
@@ -182,8 +193,10 @@ export default function Cart() {
       setTimeout(() => {
         navigate('/orders');
       }, 2500);
+      return true;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Order placement failed');
+      return false;
     }
   };
 
@@ -806,10 +819,9 @@ export default function Cart() {
                 </div>
 
                 {/* Confirm & Place Order trigger */}
-                <button 
-                  type="button"
+                <HoldConfirmButton 
                   className="btn btn-primary hover-lift hover-darken" 
-                  onClick={() => handleOrder(paymentMethod)}
+                  onConfirm={() => handleOrder(paymentMethod)}
                   disabled={false}
                   style={{ 
                     padding: '16px', 
@@ -820,11 +832,15 @@ export default function Cart() {
                     fontWeight: 700, 
                     fontSize: '0.95rem', 
                     cursor: 'pointer',
-                    opacity: 1
+                    opacity: 1,
+                    width: '100%',
+                    height: '54px'
                   }}
+                  holdingLabel={`Confirming... (₹${((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})`}
+                  confirmedLabel="Order Placed!"
                 >
-                  Confirm & Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
-                </button>
+                  Hold to Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
+                </HoldConfirmButton>
               </div>
             </div>
 
@@ -1165,8 +1181,7 @@ export default function Cart() {
         </div>
       )}
 
-      <BottomNav activeTab="cart" />
-
+      
       {/* Coupon Bottom Sheet / Modal Overlay */}
       {isCouponModalOpen && (
         <div 
@@ -1267,9 +1282,116 @@ export default function Cart() {
                   </div>
                 </div>
               ) : (
-                couponsList.map(coupon => (
-                  <CouponCard key={coupon._id} coupon={coupon} />
-                ))
+                <ProgressiveCardReveal
+                  activeIndex={activeCouponIndex}
+                  onActiveChange={setActiveCouponIndex}
+                  style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}
+                >
+                  {couponsList.map(coupon => {
+                    const isApplied = selectedCoupon?.couponId === coupon._id;
+                    const expiryStr = coupon.expiryDate 
+                      ? new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : '';
+                    return (
+                      <ProgressiveCardReveal.Card key={coupon._id}>
+                        <ProgressiveCardReveal.CardCollapsed>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <span style={{ fontWeight: 800, color: '#111111', fontSize: '0.9rem' }}>
+                              {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                            </span>
+                            <span style={{ background: '#fff5f5', color: '#b31522', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px dashed #b31522' }}>
+                              {coupon.code}
+                            </span>
+                          </div>
+                        </ProgressiveCardReveal.CardCollapsed>
+                        <ProgressiveCardReveal.CardExpanded>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <div style={{
+                                  display: 'inline-block',
+                                  background: '#fff5f5',
+                                  color: '#b31522',
+                                  fontWeight: 800,
+                                  fontSize: '0.85rem',
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  border: '1px dashed #b31522',
+                                  letterSpacing: '0.5px',
+                                  marginBottom: '6px'
+                                }}>
+                                  {coupon.code}
+                                </div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111111' }}>
+                                  {coupon.discountType === 'PERCENTAGE' 
+                                    ? `${coupon.discountValue}% OFF` 
+                                    : `₹${coupon.discountValue} OFF`}
+                                </div>
+                              </div>
+                              {isApplied && (
+                                <div style={{
+                                  background: '#e6f9f0',
+                                  color: '#06c169',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  padding: '4px 8px',
+                                  borderRadius: '20px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}>
+                                  <Check size={12} />
+                                  <span>Applied</span>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.8rem', color: '#718096' }}>
+                              <div>Min. Order Value: <strong>₹{coupon.minimumOrderValue}</strong></div>
+                              {coupon.discountType === 'PERCENTAGE' && coupon.maximumDiscount && (
+                                <div>Max Discount: <strong>₹{coupon.maximumDiscount}</strong></div>
+                              )}
+                              {expiryStr && <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '2px' }}>Valid till {expiryStr}</div>}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleApply(coupon._id); }}
+                              disabled={isApplyingCoupon || isApplied}
+                              style={{
+                                marginTop: '6px',
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: '10px',
+                                background: isApplied ? '#06c169' : '#b31522',
+                                color: '#ffffff',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                                border: 'none',
+                                cursor: (isApplyingCoupon || isApplied) ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                transition: 'all 0.2s',
+                                opacity: (isApplyingCoupon && !isApplied) ? 0.7 : 1
+                              }}
+                            >
+                              {isApplyingCoupon && !isApplied ? (
+                                <>
+                                  <Loader size={14} className="animate-spin" />
+                                  <span>Applying...</span>
+                                </>
+                              ) : isApplied ? (
+                                <span>Applied Successfully</span>
+                              ) : (
+                                <span>Apply Coupon</span>
+                              )}
+                            </button>
+                          </div>
+                        </ProgressiveCardReveal.CardExpanded>
+                      </ProgressiveCardReveal.Card>
+                    );
+                  })}
+                </ProgressiveCardReveal>
               )}
             </div>
           </div>

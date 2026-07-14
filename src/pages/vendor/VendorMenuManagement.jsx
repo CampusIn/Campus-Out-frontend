@@ -5,7 +5,8 @@ import CustomSelect from '../../components/CustomSelect';
 import { updateStock } from '../../api/vendor.api';
 import { useToast } from '../../context/ToastContext';
 import { useConfirm } from '../../context/ConfirmContext';
-import { Edit2, Trash2, Plus, ArrowUpRight, Upload, X, Check, Package, Sparkles, Loader } from 'lucide-react';
+
+import { Package, Loader, Edit2, Trash2, Plus, ArrowUpRight, Upload, X, Check, Wand2 } from 'lucide-react';
 
 const categories = ['Fast Food', 'Cafe', 'Bakery', 'South Indian', 'North Indian', 'Chinese', 'Other'];
 
@@ -208,7 +209,7 @@ export default function VendorMenuManagement() {
             className="btn btn-outline" 
             style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', border: '1px solid #06c169', color: '#06c169', fontWeight: 700 }}
           >
-            <Sparkles size={16} />
+            <Wand2 size={16} />
             Bulk Upload Menu
           </Link>
           <button 

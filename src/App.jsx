@@ -7,6 +7,7 @@ import { MarketCartProvider } from './context/MarketCartContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -165,6 +166,7 @@ export default function App() {
                     <Route path="/delivery/dashboard" element={<ProtectedRoute allowedRoles={['delivery_partner']}><DeliveryDashboard /></ProtectedRoute>} />
                   </Routes>
                 </div>
+                <BottomNav />
                 </div>
               </MarketCartProvider>
             </CartProvider>

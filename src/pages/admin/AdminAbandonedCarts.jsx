@@ -1,15 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { getAbandonedCarts, sendAbandonedCartReminder } from '../../api/admin.api';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Mail,
-  ShoppingBag,
-  Clock,
-  RefreshCw,
-  Loader2
-} from 'lucide-react';
+
+import { Loader2, ChevronLeft, ChevronRight, Mail, ShoppingBag, Clock, RefreshCw } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminAbandonedCarts() {

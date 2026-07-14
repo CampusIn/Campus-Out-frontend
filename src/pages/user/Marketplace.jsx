@@ -4,23 +4,8 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarketCart } from '../../context/MarketCartContext';
 import { getUserCategories, getUserProducts } from '../../api/marketplace.api';
-import BottomNav from '../../components/BottomNav';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  SlidersHorizontal,
-  Layers,
-  Tag,
-  Info,
-  DollarSign,
-  Package,
-  ChevronDown,
-  User,
-  Bookmark,
-  MapPin,
-  ShoppingBag
-} from 'lucide-react';
+
+import { Tag, DollarSign, Package, Search, ChevronLeft, ChevronRight, Sliders, Layers, Info, ChevronDown, User, Bookmark, MapPin, ShoppingBag } from 'lucide-react';
 
 export default function Marketplace() {
   const toast = useToast();
@@ -248,7 +233,7 @@ export default function Marketplace() {
               transition: 'all 0.15s'
             }}
           >
-            <SlidersHorizontal size={20} />
+            <Sliders size={20} />
           </button>
         </div>
 
@@ -534,7 +519,6 @@ export default function Marketplace() {
         )}
 
       </div>
-      <BottomNav activeTab="marketplace" />
-    </div>
+          </div>
   );
 }

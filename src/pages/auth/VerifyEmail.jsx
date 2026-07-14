@@ -1,7 +1,8 @@
+import { ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+
 
 export default function VerifyEmail() {
   const { verifyEmail, resendOtp, loading } = useAuth();

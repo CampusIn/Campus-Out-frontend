@@ -4,29 +4,13 @@ import { useMarketCart } from '../../context/MarketCartContext';
 import { useToast } from '../../context/ToastContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { getCoupons, getPlatformSettings } from '../../api/order.api';
-import BottomNav from '../../components/BottomNav';
-import { 
-  ArrowLeft, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  ShoppingBag, 
-  Layers, 
-  Tag, 
-  AlertTriangle, 
-  Loader,
-  Store,
-  Check,
-  Percent,
-  X,
-  MapPin,
-  Phone,
-  CreditCard,
-  Building2,
-  GraduationCap
-} from 'lucide-react';
+
+import { Tag, Loader, Store, Percent, Phone, CreditCard, Building2, GraduationCap, ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Layers, AlertTriangle, Check, X, MapPin } from 'lucide-react';
 
 import { createMarketplaceOrder } from '../../api/marketplace.api';
+import { HoldConfirmButton } from '../../components/HoldConfirmButton';
+import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
+import { confetti } from '../../components/Confetti';
 
 export default function MarketplaceCart({ isEmbedded = false }) {
   const navigate = useNavigate();
@@ -46,6 +30,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
   // Coupon states
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [activeCouponIndex, setActiveCouponIndex] = useState(0);
   const [couponsList, setCouponsList] = useState([]);
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
   
@@ -59,6 +44,15 @@ export default function MarketplaceCart({ isEmbedded = false }) {
   const [shakeAddress, setShakeAddress] = useState(false);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    if (isCouponModalOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => document.body.classList.remove('hide-bottom-nav');
+  }, [isCouponModalOpen]);
   const [platformSettings, setPlatformSettings] = useState({
     deliveryCharge: 20,
     freeDeliveryAbove: 80,
@@ -184,12 +178,14 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     if (!deliveryAddress.trim()) {
       setShakeAddress(true);
       setTimeout(() => setShakeAddress(false), 500);
-      return toast.error('Please enter a delivery address');
+      toast.error('Please enter a delivery address');
+      return false;
     }
     if (!customerPhone.trim() || customerPhone.trim().length < 10) {
       setShakePhone(true);
       setTimeout(() => setShakePhone(false), 500);
-      return toast.error('Please enter a valid 10-digit mobile number');
+      toast.error('Please enter a valid 10-digit mobile number');
+      return false;
     }
 
     setIsPlacingOrder(true);
@@ -203,12 +199,16 @@ export default function MarketplaceCart({ isEmbedded = false }) {
       
       const { data } = await createMarketplaceOrder(payload);
       if (data.success) {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
         toast.success('Marketplace order placed successfully!');
         await fetchCart(); // this will clear cart locally as backend deleted it
         navigate('/orders?tab=marketplace', { replace: true });
+        return true;
       }
+      return false;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to place order');
+      return false;
     } finally {
       setIsPlacingOrder(false);
     }
@@ -392,8 +392,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
           <Loader className="animate-spin" size={32} color="#b31522" style={{ margin: '0 auto 16px auto' }} />
           <p style={{ fontWeight: 650, color: '#64748b' }}>Loading your marketplace cart...</p>
         </div>
-        <BottomNav activeTab="marketplace" />
-      </div>
+              </div>
     );
   }
 
@@ -447,8 +446,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
             Clear Cart & Start Over
           </button>
         </div>
-        <BottomNav activeTab="marketplace" />
-      </div>
+              </div>
     );
   }
 
@@ -1126,10 +1124,9 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                 </div>
 
                 {/* Confirm & Place Order trigger */}
-                <button 
-                  type="button"
+                <HoldConfirmButton 
                   className="btn btn-primary hover-lift hover-darken" 
-                  onClick={handleCheckout}
+                  onConfirm={handleCheckout}
                   disabled={isPlacingOrder}
                   style={{ 
                     padding: '16px', 
@@ -1144,8 +1141,12 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                     justifyContent: 'center', 
                     alignItems: 'center', 
                     gap: '8px',
-                    opacity: isPlacingOrder ? 0.7 : 1
+                    opacity: isPlacingOrder ? 0.7 : 1,
+                    width: '100%',
+                    height: '54px'
                   }}
+                  holdingLabel={`Confirming... (₹${pricing.finalAmount.toFixed(2)})`}
+                  confirmedLabel="Order Placed!"
                 >
                   {isPlacingOrder ? (
                     <>
@@ -1153,9 +1154,9 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       <span>Placing Order...</span>
                     </>
                   ) : (
-                    <span>Confirm & Place Order (&#8377;{pricing.finalAmount.toFixed(2)})</span>
+                    <span>Hold to Place Order (&#8377;{pricing.finalAmount.toFixed(2)})</span>
                   )}
-                </button>
+                </HoldConfirmButton>
               </div>
             </div>
           )}
@@ -1319,9 +1320,111 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                 </div>
               </div>
             ) : (
-              couponsList.map(coupon => (
-                <CouponCard key={coupon._id} coupon={coupon} />
-              ))
+              <ProgressiveCardReveal
+                activeIndex={activeCouponIndex}
+                onActiveChange={setActiveCouponIndex}
+                style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}
+              >
+                {couponsList.map(coupon => {
+                  const isApplied = selectedCoupon?.couponId === coupon._id;
+                  const expiryStr = coupon.expiryDate 
+                    ? new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : '';
+                  return (
+                    <ProgressiveCardReveal.Card key={coupon._id}>
+                      <ProgressiveCardReveal.CardCollapsed>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <span style={{ fontWeight: 800, color: '#111111', fontSize: '0.9rem' }}>
+                            {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                          </span>
+                          <span style={{ background: '#fff5f5', color: '#b31522', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px dashed #b31522' }}>
+                            {coupon.code}
+                          </span>
+                        </div>
+                      </ProgressiveCardReveal.CardCollapsed>
+                      <ProgressiveCardReveal.CardExpanded>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <div style={{
+                                display: 'inline-block',
+                                background: '#fff5f5',
+                                color: '#b31522',
+                                fontWeight: 800,
+                                fontSize: '0.85rem',
+                                padding: '4px 10px',
+                                borderRadius: '8px',
+                                border: '1px dashed #b31522',
+                                letterSpacing: '0.5px',
+                                marginBottom: '6px'
+                              }}>
+                                {coupon.code}
+                              </div>
+                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111111' }}>
+                                {coupon.discountType === 'PERCENTAGE' 
+                                  ? `${coupon.discountValue}% OFF` 
+                                  : `₹${coupon.discountValue} OFF`}
+                              </div>
+                            </div>
+                            {isApplied && (
+                              <div style={{
+                                background: '#e6f9f0',
+                                color: '#06c169',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                padding: '4px 8px',
+                                borderRadius: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}>
+                                <Check size={12} />
+                                <span>Applied</span>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.8rem', color: '#718096' }}>
+                            <div>Min. Order Value: <strong>₹{coupon.minimumOrderValue}</strong></div>
+                            {coupon.discountType === 'PERCENTAGE' && coupon.maximumDiscount && (
+                              <div>Max Discount: <strong>₹{coupon.maximumDiscount}</strong></div>
+                            )}
+                            {expiryStr && <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '2px' }}>Valid till {expiryStr}</div>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleApplyCouponLocal(coupon); }}
+                            disabled={isApplied}
+                            style={{
+                              marginTop: '6px',
+                              width: '100%',
+                              padding: '10px',
+                              borderRadius: '10px',
+                              background: isApplied ? '#06c169' : '#b31522',
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '0.85rem',
+                              border: 'none',
+                              cursor: isApplied ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '8px',
+                              transition: 'all 0.2s',
+                              opacity: 1
+                            }}
+                          >
+                            {isApplied ? (
+                              <span>Applied Successfully</span>
+                            ) : (
+                              <span>Apply Coupon</span>
+                            )}
+                          </button>
+                        </div>
+                      </ProgressiveCardReveal.CardExpanded>
+                    </ProgressiveCardReveal.Card>
+                  );
+                })}
+              </ProgressiveCardReveal>
             )}
           </div>
         </div>
@@ -1400,8 +1503,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
           {renderInnerContent()}
         </div>
 
-        <BottomNav activeTab="marketplace" />
-      </div>
+              </div>
       {renderCouponModal()}
       <style>{maxStockTooltipCSS}</style>
     </>

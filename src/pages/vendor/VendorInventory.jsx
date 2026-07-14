@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import { getInventory, getLowStock, updateStock } from '../../api/vendor.api';
-import { Search, SlidersHorizontal, AlertTriangle, AlertCircle, ArrowUpDown, X, Loader } from 'lucide-react';
+
+import { ArrowUpDown, Loader, Search, Sliders, AlertTriangle, AlertCircle, X } from 'lucide-react';
 
 export default function VendorInventory() {
   const { restaurant } = useOutletContext();

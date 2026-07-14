@@ -8,22 +8,8 @@ import {
   updateCoupon,
   updateCouponStatus
 } from '../../api/admin.api';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Calendar,
-  Ticket,
-  Plus,
-  Edit,
-  Eye,
-  ToggleLeft,
-  ToggleRight,
-  Info,
-  Loader,
-  X
-} from 'lucide-react';
+
+import { Ticket, ToggleLeft, ToggleRight, Loader, Search, ChevronLeft, ChevronRight, ChevronDown, Calendar, Plus, Edit, Eye, Info, X } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminCoupons() {

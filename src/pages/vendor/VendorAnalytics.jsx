@@ -17,14 +17,8 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Award, 
-  PieChart,
-  Calendar,
-  AlertCircle
-} from 'lucide-react';
+
+import { TrendingUp, DollarSign, Badge, PieChart, Calendar, AlertCircle } from 'lucide-react';
 
 export default function VendorAnalytics() {
   const { restaurant } = useOutletContext();
@@ -222,7 +216,7 @@ export default function VendorAnalytics() {
         {/* Top selling list */}
         <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--vendor-border)', borderRadius: '20px', padding: '24px', boxShadow: 'var(--vendor-card-shadow)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-            <Award size={18} color="var(--vendor-primary)" />
+            <Badge size={18} color="var(--vendor-primary)" />
             <h3 style={{ fontSize: '1.05rem', fontWeight: 800 }}>Item Sales Distribution</h3>
           </div>
 

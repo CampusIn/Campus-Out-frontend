@@ -2,13 +2,27 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useMarketCart } from '../context/MarketCartContext';
-import { Home, ClipboardList, ShoppingCart, User, ShoppingBag } from 'lucide-react';
 
-export default function BottomNav({ activeTab = 'home' }) {
+import { ShoppingCart, Home, ClipboardList, User, ShoppingBag } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+
+export default function BottomNav() {
   const { user } = useAuth();
   const { cartTotalQty } = useCart();
   const { cartTotalQty: marketCartTotalQty } = useMarketCart();
   const location = useLocation();
+  const reduceMotion = useReducedMotion();
+
+  // Determine if we should show the nav
+  const showNavRoutes = ['/restaurants', '/marketplace', '/orders', '/cart', '/profile'];
+  const shouldShowNav = Boolean(user) && showNavRoutes.some(route => location.pathname.startsWith(route));
+
+  // Determine active tab
+  let activeTab = 'home';
+  if (location.pathname.startsWith('/marketplace')) activeTab = 'marketplace';
+  else if (location.pathname.startsWith('/orders')) activeTab = 'orders';
+  else if (location.pathname.startsWith('/cart')) activeTab = 'cart';
+  else if (location.pathname.startsWith('/profile')) activeTab = 'profile';
 
   // Show marketplace cart count when on any marketplace-related page
   const searchParams = new URLSearchParams(location.search);
@@ -17,82 +31,65 @@ export default function BottomNav({ activeTab = 'home' }) {
     (location.pathname === '/cart' && searchParams.get('tab') === 'marketplace');
   const displayCartQty = isMarketplaceContext ? marketCartTotalQty : cartTotalQty;
 
+  if (!shouldShowNav) return null;
+
+  const spring = reduceMotion
+    ? { duration: 0 }
+    : { type: "spring", stiffness: 520, damping: 32 };
+
+  const tabs = [
+    { value: 'home', label: 'Home', path: '/restaurants', icon: <Home size={20} /> },
+    { value: 'marketplace', label: 'Market', path: '/marketplace', icon: <ShoppingBag size={20} /> },
+    { value: 'orders', label: 'Orders', path: '/orders', icon: <ClipboardList size={20} /> },
+    { value: 'cart', label: 'Cart', path: isMarketplaceContext ? '/cart?tab=marketplace' : '/cart', icon: <ShoppingCart size={20} />, badge: displayCartQty > 0 ? displayCartQty : undefined },
+    { value: 'profile', label: 'Profile', path: user ? '/profile' : '/login', icon: <User size={20} /> },
+  ];
+
   return (
-    <div className="bottom-nav" style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-      {/* Home Tab */}
-      <Link 
-        to="/restaurants" 
-        className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-        style={{ color: activeTab === 'home' ? '#b31522' : '#718096' }}
-      >
-        <Home size={22} style={{ strokeWidth: activeTab === 'home' ? 2.5 : 2 }} />
-        <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'home' ? 800 : 600, marginTop: '4px' }}>Home</span>
-      </Link>
-
-      {/* Marketplace Tab */}
-      <Link 
-        to="/marketplace" 
-        className={`bottom-nav-item ${activeTab === 'marketplace' ? 'active' : ''}`}
-        style={{ color: activeTab === 'marketplace' ? '#b31522' : '#718096' }}
-      >
-        <ShoppingBag size={22} style={{ strokeWidth: activeTab === 'marketplace' ? 2.5 : 2 }} />
-        <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'marketplace' ? 800 : 600, marginTop: '4px' }}>Market</span>
-      </Link>
-
-      {/* Orders Tab */}
-      <Link 
-        to="/orders" 
-        className={`bottom-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-        style={{ color: activeTab === 'orders' ? '#b31522' : '#718096' }}
-      >
-        <ClipboardList size={22} style={{ strokeWidth: activeTab === 'orders' ? 2.5 : 2 }} />
-        <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'orders' ? 800 : 600, marginTop: '4px' }}>Orders</span>
-      </Link>
-
-      {/* Cart Tab */}
-      <Link 
-        to={isMarketplaceContext ? '/cart?tab=marketplace' : '/cart'} 
-        className={`bottom-nav-item ${activeTab === 'cart' ? 'active' : ''}`}
-        style={{ color: activeTab === 'cart' ? '#b31522' : '#718096' }}
-      >
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ShoppingCart size={22} style={{ strokeWidth: activeTab === 'cart' ? 2.5 : 2 }} />
-          {displayCartQty > 0 && (
-            <span style={{
-              position: 'absolute',
-              top: '-8px',
-              right: '-8px',
-              background: '#dc2626',
-              color: '#ffffff',
-              borderRadius: '10px',
-              fontSize: '0.65rem',
-              fontWeight: 800,
-              minWidth: '20px',
-              height: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 4px',
-              border: '2px solid #ffffff',
-              boxSizing: 'border-box',
-              lineHeight: 1
-            }}>
-              {displayCartQty}
-            </span>
-          )}
-        </div>
-        <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'cart' ? 800 : 600, marginTop: '4px' }}>Cart</span>
-      </Link>
-
-      {/* Profile Tab */}
-      <Link 
-        to={user ? "/profile" : "/login"} 
-        className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-        style={{ color: activeTab === 'profile' ? '#b31522' : '#718096' }}
-      >
-        <User size={22} style={{ strokeWidth: activeTab === 'profile' ? 2.5 : 2 }} />
-        <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'profile' ? 800 : 600, marginTop: '4px' }}>Profile</span>
-      </Link>
+    <div className="bottom-nav-container">
+      <nav className="godui-tab-bar">
+        {tabs.map((tab) => {
+          const active = tab.value === activeTab;
+          return (
+            <Link
+              key={tab.value}
+              to={tab.path}
+              className={`godui-tab-item ${active ? 'active' : ''}`}
+            >
+              {active && (
+                <motion.span
+                  layoutId="bottom-nav-blob"
+                  transition={spring}
+                  className="godui-tab-blob"
+                />
+              )}
+              <motion.span
+                className="godui-tab-icon-wrapper"
+                animate={reduceMotion || !active ? { scale: 1 } : { scale: [1, 1.18, 1] }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                {tab.icon}
+                {tab.badge !== undefined && (
+                  <span className="godui-tab-badge">
+                    {tab.badge}
+                  </span>
+                )}
+              </motion.span>
+              {active && (
+                <motion.span
+                  layout
+                  initial={!reduceMotion ? { opacity: 0, width: 0 } : false}
+                  animate={{ opacity: 1, width: "auto" }}
+                  transition={spring}
+                  className="godui-tab-label"
+                >
+                  {tab.label}
+                </motion.span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

@@ -8,23 +8,8 @@ import {
   updateAnnouncement,
   updateAnnouncementStatus
 } from '../../api/admin.api';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Megaphone,
-  Plus,
-  Edit,
-  Eye,
-  ToggleLeft,
-  ToggleRight,
-  Info,
-  Loader,
-  ArrowUpDown,
-  X,
-  ChevronDown
-} from 'lucide-react';
+
+import { Megaphone, ToggleLeft, ToggleRight, Loader, ArrowUpDown, Search, ChevronLeft, ChevronRight, Calendar, Plus, Edit, Eye, Info, X, ChevronDown } from 'lucide-react';
 import './AdminPortal.css';
 
 export default function AdminAnnouncements() {

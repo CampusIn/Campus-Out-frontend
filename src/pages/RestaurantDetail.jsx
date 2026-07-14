@@ -7,8 +7,8 @@ import { getCoupons } from '../api/order.api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import BottomNav from '../components/BottomNav';
-import { ArrowLeft, Heart, Share2, Star, Clock, Plus, Minus, MapPin, Info as InfoIcon, ShoppingBag, Search, Users, ChevronDown, ChevronUp, Flame } from 'lucide-react';
+
+import { Flame, ArrowLeft, Heart, Share2, Star, Clock, Plus, Minus, MapPin, Info, ShoppingBag, Search, Users, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function RestaurantDetail() {
   const { id } = useParams();
@@ -282,8 +282,7 @@ export default function RestaurantDetail() {
           ))}
         </div>
 
-        <BottomNav activeTab="restaurants" />
-      </div>
+              </div>
     );
   }
 
@@ -852,7 +851,7 @@ export default function RestaurantDetail() {
             <span><strong style={{ color: '#111111' }}>Delivery Time:</strong> {restaurant.deliveryTime || 30} minutes</span>
           </p>
           <p style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: 0 }}>
-            <InfoIcon size={18} color="#b31522" style={{ marginTop: '3px' }} />
+            <Info size={18} color="#b31522" style={{ marginTop: '3px' }} />
             <span><strong style={{ color: '#111111' }}>Description:</strong> {restaurant.description || 'No description available.'}</span>
           </p>
         </div>

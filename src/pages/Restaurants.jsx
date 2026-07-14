@@ -5,8 +5,11 @@ import { getRestaurantMenu, getMenuSuggestions } from '../api/menu.api';
 import { getActiveBanners, getActiveAnnouncements } from '../api/homepageCMS.api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import BottomNav from '../components/BottomNav';
-import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell } from 'lucide-react';
+
+import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar } from 'lucide-react';
+import { MorphingDialog, MorphingDialogTrigger, MorphingDialogContent, MorphingDialogClose } from '../components/MorphingDialog';
+import { DynamicIsland } from '../components/DynamicIsland';
+import { motion } from 'framer-motion';
 
 // Category icon mapping based on category names
 const categoryIcons = {
@@ -95,8 +98,15 @@ export default function Restaurants() {
   const [banners, setBanners] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loadingCMS, setLoadingCMS] = useState(true);
-  const [dismissedAnnouncementId, setDismissedAnnouncementId] = useState(null);
+  const [dismissedAnnouncementIds, setDismissedAnnouncementIds] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('dismissedAnnouncements');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
   const [isAnnouncementExpanded, setIsAnnouncementExpanded] = useState(false);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const announcementTimerRef = useRef(null);
 
   const fetchCMSData = async () => {
     setLoadingCMS(true);
@@ -122,6 +132,42 @@ export default function Restaurants() {
   useEffect(() => {
     fetchCMSData();
   }, []);
+
+  // Compute visible (undismissed) announcements for the ticker
+  const visibleAnnouncements = announcements.filter(a => !dismissedAnnouncementIds.has(a._id));
+
+  // Auto-cycle through announcements every 5 seconds
+  useEffect(() => {
+    if (announcementTimerRef.current) clearInterval(announcementTimerRef.current);
+    if (visibleAnnouncements.length > 1) {
+      announcementTimerRef.current = setInterval(() => {
+        setCurrentAnnouncementIndex(prev => (prev + 1) % visibleAnnouncements.length);
+        setIsAnnouncementExpanded(false);
+      }, 5000);
+    }
+    return () => {
+      if (announcementTimerRef.current) clearInterval(announcementTimerRef.current);
+    };
+  }, [visibleAnnouncements.length]);
+
+  // Reset index if it goes out of bounds
+  useEffect(() => {
+    if (currentAnnouncementIndex >= visibleAnnouncements.length) {
+      setCurrentAnnouncementIndex(0);
+    }
+  }, [visibleAnnouncements.length, currentAnnouncementIndex]);
+
+  const handleDismissAnnouncement = (announcementId, e) => {
+    if (e) e.stopPropagation();
+    const updated = new Set(dismissedAnnouncementIds);
+    updated.add(announcementId);
+    setDismissedAnnouncementIds(updated);
+    try {
+      sessionStorage.setItem('dismissedAnnouncements', JSON.stringify([...updated]));
+    } catch {}
+    setIsAnnouncementExpanded(false);
+  };
+
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -507,6 +553,7 @@ export default function Restaurants() {
             )}
           </div>
 
+
           <Link to="/profile" className="profile-avatar-btn hover-scale" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', background: '#fff5f5', borderRadius: '50%', color: '#b31522' }}>
             <User size={20} />
           </Link>
@@ -575,30 +622,63 @@ export default function Restaurants() {
           )}
         </form>
 
-        {/* Active Announcement Banner */}
-        {announcements.length > 0 && dismissedAnnouncementId !== announcements[0]._id && (
-          <div 
-            className={`announcement-ticker animate-fade-in ${isAnnouncementExpanded ? 'expanded' : ''}`}
-            onClick={() => setIsAnnouncementExpanded(!isAnnouncementExpanded)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="announcement-content">
-              <Volume2 size={16} color="#ffc700" className="speaker-icon" style={{ flexShrink: 0 }} />
-              <span className={`announcement-text-span ${isAnnouncementExpanded ? 'expanded' : ''}`}>
-                <strong>{announcements[0].title}:</strong> {announcements[0].description}
-              </span>
+        {/* Active Announcement Ticker — cycles through undismissed announcements */}
+        {visibleAnnouncements.length > 0 && (() => {
+          const currentAnn = visibleAnnouncements[currentAnnouncementIndex] || visibleAnnouncements[0];
+          if (!currentAnn) return null;
+          return (
+            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+              <DynamicIsland
+                size={isAnnouncementExpanded ? "tall" : "long"}
+                presenceKey={`${currentAnn._id}-${isAnnouncementExpanded ? 'expanded' : 'collapsed'}`}
+                onClick={() => setIsAnnouncementExpanded(!isAnnouncementExpanded)}
+                style={{ cursor: 'pointer', zIndex: 100 }}
+              >
+                {isAnnouncementExpanded ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', padding: '8px', justifyContent: 'center', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#b31522' }}>
+                      <Volume2 size={20} />
+                      <strong style={{ fontSize: '1.1rem' }}>{currentAnn.title}</strong>
+                    </div>
+                    <p style={{ fontSize: '0.95rem', opacity: 0.85, color: '#1a1a1a', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {currentAnn.description}
+                    </p>
+                    <div style={{ position: 'absolute', top: '10px', right: '0px' }}>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDismissAnnouncement(currentAnn._id, e);
+                        }}
+                        style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '50%', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', color: '#1a1a1a', opacity: 0.7, cursor: 'pointer', transition: 'background 0.2s' }}
+                      >✕</button>
+                    </div>
+                    {visibleAnnouncements.length > 1 && (
+                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', fontSize: '0.75rem', color: '#718096', fontWeight: 600 }}>
+                        {currentAnnouncementIndex + 1}/{visibleAnnouncements.length}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                      <Volume2 size={18} color="#b31522" style={{ flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.95rem', color: '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <strong style={{ color: '#b31522' }}>{currentAnn.title}</strong>: {currentAnn.description}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      {visibleAnnouncements.length > 1 && (
+                        <span style={{ fontSize: '0.75rem', color: '#718096', fontWeight: 600, background: 'rgba(0,0,0,0.05)', padding: '3px 8px', borderRadius: '12px' }}>
+                          {currentAnnouncementIndex + 1}/{visibleAnnouncements.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </DynamicIsland>
             </div>
-            <button 
-              className="announcement-dismiss-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDismissedAnnouncementId(announcements[0]._id);
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Promo / Main Banner */}
         {loadingCMS ? (
@@ -858,38 +938,90 @@ export default function Restaurants() {
               const foodImage = foodImages[idx % foodImages.length];
               const promoText = promoTexts[idx % promoTexts.length];
               return (
-                <Link to={`/restaurants/${r._id}`} key={r._id} className="swiggy-restaurant-card">
-                  {/* Image Banner with Overlay */}
-                  <div className="swiggy-card-img-wrapper">
-                    <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
-                    <div className="swiggy-card-overlay">
-                      <span className="swiggy-promo-text">{promoText}</span>
-                    </div>
-                  </div>
-                  {/* Restaurant Info */}
-                  <div className="swiggy-card-info">
-                    <h3 className="swiggy-card-name">{r.restaurantName}</h3>
-                    <div className="swiggy-card-rating-row">
-                      <div className="swiggy-rating-star-circle">
-                        <Star size={10} color="#ffffff" fill="#ffffff" />
+                <MorphingDialog key={r._id}>
+                  <MorphingDialogTrigger 
+                    className="swiggy-restaurant-card"
+                    style={{ borderRadius: '16px', backgroundColor: 'transparent', boxShadow: 'none' }}
+                  >
+                    {/* Image Banner with Overlay */}
+                    <div className="swiggy-card-img-wrapper">
+                      <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
+                      <div className="swiggy-card-overlay">
+                        <span className="swiggy-promo-text">{promoText}</span>
                       </div>
-                      <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
-                      <span className="swiggy-bullet-dot">&bull;</span>
-                      <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
                     </div>
-                    <p className="swiggy-card-cuisines">{r.category}</p>
-                    <p className="swiggy-card-location">{r.location}</p>
-                  </div>
-                </Link>
+                    {/* Restaurant Info */}
+                    <div className="swiggy-card-info">
+                      <h3 className="swiggy-card-name">{r.restaurantName}</h3>
+                      <div className="swiggy-card-rating-row">
+                        <div className="swiggy-rating-star-circle">
+                          <Star size={10} color="#ffffff" fill="#ffffff" />
+                        </div>
+                        <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
+                        <span className="swiggy-bullet-dot">&bull;</span>
+                        <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
+                      </div>
+                      <p className="swiggy-card-cuisines">{r.category}</p>
+                      <p className="swiggy-card-location">{r.location}</p>
+                    </div>
+                  </MorphingDialogTrigger>
+                  <MorphingDialogContent style={{ width: '90vw', maxWidth: '450px', padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
+                    <MorphingDialogClose />
+                    <motion.div
+                      initial={{ opacity: 0, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, filter: 'blur(4px)' }}
+                      transition={{ duration: 0.25, delay: 0.1 }}
+                      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                    >
+                      <div style={{ width: '100%', height: '220px', position: 'relative', flexShrink: 0 }}>
+                        <img src={foodImage} alt={r.restaurantName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%)', color: 'white' }}>
+                          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>{r.restaurantName}</h2>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ffc700', color: '#111', padding: '3px 8px', borderRadius: '8px', fontWeight: 750, fontSize: '0.8rem' }}>
+                              <Star size={12} fill="#111" /> {r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}
+                            </span>
+                            <span style={{ opacity: 0.8 }}>&bull;</span>
+                            <span style={{ fontWeight: 600, opacity: 0.9 }}>{r.deliveryTime} mins</span>
+                            <span style={{ opacity: 0.8 }}>&bull;</span>
+                            <span style={{ fontWeight: 600, opacity: 0.9 }}>{r.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ padding: '24px', flex: 1 }}>
+                        <div style={{ marginBottom: '24px' }}>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111', marginBottom: '8px' }}>About this place</h3>
+                          <p style={{ color: '#4a5568', fontSize: '0.95rem', lineHeight: 1.6, margin: 0 }}>
+                            Craving {r.category}? Look no further! Enjoy our freshly prepared dishes right from {r.restaurantName} delivered straight to your hostel in {r.deliveryTime} minutes. 
+                          </p>
+                        </div>
+                        
+                        <div style={{ padding: '16px', background: 'rgba(255, 199, 0, 0.1)', borderRadius: '12px', border: '1px dashed #ffc700', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <Megaphone size={20} color="#b45309" />
+                          <span style={{ fontSize: '0.9rem', color: '#b45309', fontWeight: 600 }}>{promoText} on selected items!</span>
+                        </div>
+
+                        <Link 
+                          to={`/restaurants/${r._id}`}
+                          className="hover-lift"
+                          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', width: '100%', padding: '16px', background: '#b31522', color: 'white', textAlign: 'center', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(179, 21, 34, 0.3)' }}
+                        >
+                          <Utensils size={18} /> View Menu & Order
+                        </Link>
+                      </div>
+                    </motion.div>
+                  </MorphingDialogContent>
+                </MorphingDialog>
               );
             })}
           </div>
         )}
       </ContentWrapper>
 
-      {/* Floating Bottom Nav (hidden on desktop via css) */}
-      <BottomNav activeTab="home" />
 
+      {/* Floating Bottom Nav (hidden on desktop via css) */}
+      
       {/* Local custom overrides for scroll sections */}
       <style>{`
         .home-dashboard {
@@ -1016,6 +1148,7 @@ export default function Restaurants() {
           padding: 10px 16px;
           margin-bottom: 20px;
           gap: 12px;
+          transition: all 0.3s ease;
         }
 
         .announcement-content {
@@ -1048,6 +1181,37 @@ export default function Restaurants() {
           word-break: break-word;
         }
 
+        .announcement-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+
+        .announcement-view-all-btn {
+          background: rgba(255, 199, 0, 0.2);
+          border: 1px solid rgba(255, 199, 0, 0.3);
+          color: #ffc700;
+          font-size: 0.72rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 3px 8px;
+          border-radius: 6px;
+          white-space: nowrap;
+          transition: all 0.2s;
+        }
+
+        .announcement-view-all-btn:hover {
+          background: rgba(255, 199, 0, 0.35);
+        }
+
+        .announcement-counter {
+          font-size: 0.72rem;
+          color: rgba(255, 199, 0, 0.7);
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
         .announcement-dismiss-btn {
           background: none;
           border: none;
@@ -1056,6 +1220,215 @@ export default function Restaurants() {
           font-weight: bold;
           cursor: pointer;
           padding: 2px 6px;
+        }
+
+        /* Bell Badge */
+        .bell-badge {
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          background: #b31522;
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 700;
+          min-width: 18px;
+          height: 18px;
+          border-radius: 9px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 4px;
+          line-height: 1;
+          border: 2px solid #fcfcfc;
+          animation: bellPop 0.3s ease;
+        }
+
+        @keyframes bellPop {
+          0% { transform: scale(0); }
+          60% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+
+        /* Announcements Panel */
+        .announcements-panel-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(4px);
+          z-index: 9998;
+          animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .announcements-panel {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 100%;
+          max-width: 420px;
+          height: 100dvh;
+          background: #ffffff;
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+          animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+
+        .announcements-panel-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 20px 20px 16px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .announcements-panel-title-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .announcements-panel-title {
+          font-size: 1.2rem;
+          font-weight: 750;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .announcements-panel-close {
+          background: #f1f5f9;
+          border: none;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 1rem;
+          color: #64748b;
+          transition: all 0.2s;
+        }
+
+        .announcements-panel-close:hover {
+          background: #e2e8f0;
+          color: #334155;
+        }
+
+        .announcements-panel-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px 20px 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .announcements-panel-empty {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          padding: 60px 20px;
+          color: #94a3b8;
+          font-size: 0.95rem;
+          font-weight: 500;
+        }
+
+        .announcements-panel-card {
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          border-radius: 14px;
+          padding: 16px;
+          transition: all 0.2s;
+          animation: cardSlideIn 0.3s ease;
+        }
+
+        .announcements-panel-card.dismissed {
+          opacity: 0.55;
+          background: #f8fafc;
+          border-color: #e2e8f0;
+        }
+
+        @keyframes cardSlideIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .announcements-panel-card-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .announcements-panel-card-icon {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
+          background: #fef3c7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #b45309;
+        }
+
+        .announcements-panel-card-time {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          font-weight: 500;
+        }
+
+        .announcements-panel-card-title {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0 0 6px;
+        }
+
+        .announcements-panel-card-desc {
+          font-size: 0.85rem;
+          color: #475569;
+          line-height: 1.5;
+          margin: 0 0 8px;
+        }
+
+        .announcements-panel-card-expiry {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.72rem;
+          color: #94a3b8;
+          font-weight: 500;
+        }
+
+        .announcements-panel-card-dismiss {
+          display: block;
+          margin-top: 10px;
+          background: none;
+          border: 1px solid #fde68a;
+          color: #b45309;
+          font-size: 0.78rem;
+          font-weight: 600;
+          padding: 5px 14px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .announcements-panel-card-dismiss:hover {
+          background: #fef3c7;
         }
 
         /* Service Selector Tabs */
@@ -1558,10 +1931,15 @@ export default function Restaurants() {
           flex-direction: column;
           text-decoration: none;
           color: inherit;
-          background: #ffffff;
+          background: transparent;
           overflow: hidden;
-          transition: transform 0.2s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
           cursor: pointer;
+          border-radius: 16px;
+        }
+
+        .swiggy-restaurant-card:hover {
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         .swiggy-card-img-wrapper {
@@ -1721,6 +2099,18 @@ export default function Restaurants() {
           }
           .announcement-dismiss-btn {
             color: #b45309 !important;
+          }
+          .announcement-view-all-btn {
+            background: rgba(180, 83, 9, 0.1) !important;
+            border-color: rgba(180, 83, 9, 0.2) !important;
+            color: #b45309 !important;
+          }
+          .announcement-view-all-btn:hover {
+            background: rgba(180, 83, 9, 0.2) !important;
+          }
+          .announcement-counter {
+            color: #b45309 !important;
+            opacity: 0.7;
           }
         }
         @media (max-width: 1024px) {

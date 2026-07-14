@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { getCoupons } from '../../api/order.api';
 import { updateMe } from '../../api/auth.api';
-import BottomNav from '../../components/BottomNav';
-import { ShieldAlert, Heart, HelpCircle, Tag, Bell, LogOut, ChevronRight, User, Copy, Check } from 'lucide-react';
+import { getActiveAnnouncements } from '../../api/homepageCMS.api';
+import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
+
+import { ShieldAlert, Tag, Megaphone, Heart, HelpCircle, Bell, LogOut, ChevronRight, User, Copy, Check, Volume2, Calendar } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout, logoutAll, setUser } = useAuth();
@@ -16,13 +18,29 @@ export default function Profile() {
 
   const [coupons, setCoupons] = useState([]);
   const [isPromotionsOpen, setIsPromotionsOpen] = useState(false);
+  const [activeCouponIndex, setActiveCouponIndex] = useState(0);
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
   const [copiedCode, setCopiedCode] = useState('');
+
+  // Announcements states
+  const [announcements, setAnnouncements] = useState([]);
+  const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false);
+  const [activeAnnouncementIndex, setActiveAnnouncementIndex] = useState(0);
+  const [isFetchingAnnouncements, setIsFetchingAnnouncements] = useState(false);
 
   // Edit profile states
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editUsername, setEditUsername] = useState(user?.username || '');
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isPromotionsOpen || isAnnouncementsOpen || isEditOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => document.body.classList.remove('hide-bottom-nav');
+  }, [isPromotionsOpen, isAnnouncementsOpen, isEditOpen]);
 
   const handleOpenEditProfile = () => {
     setEditUsername(user?.username || '');
@@ -76,12 +94,27 @@ export default function Profile() {
     setTimeout(() => setCopiedCode(''), 2000);
   };
 
+  const handleOpenAnnouncements = async () => {
+    setIsAnnouncementsOpen(true);
+    setIsFetchingAnnouncements(true);
+    try {
+      const { data } = await getActiveAnnouncements();
+      setAnnouncements(data.data || []);
+    } catch (e) {
+      console.error('Error fetching announcements:', e);
+      toast.error('Failed to load announcements');
+      setAnnouncements([]);
+    } finally {
+      setIsFetchingAnnouncements(false);
+    }
+  };
+
   if (!user) return null;
 
   const settingsItems = [
     { label: 'Help', icon: <HelpCircle size={20} />, color: '#319795' },
     { label: 'Promotions', icon: <Tag size={20} />, color: '#dd6b20', action: handleOpenPromotions },
-    { label: 'Notification', icon: <Bell size={20} />, color: '#d69e2e' },
+    { label: 'Notification', icon: <Bell size={20} />, color: '#d69e2e', action: handleOpenAnnouncements },
     { label: 'Logout', icon: <LogOut size={20} />, color: '#e53e3e', action: logout },
     { label: 'Logout from all devices', icon: <ShieldAlert size={20} />, color: '#e53e3e', action: handleLogoutAll },
   ];
@@ -212,75 +245,201 @@ export default function Profile() {
                 <p style={{ fontSize: '0.8rem', opacity: 0.8 }}>Check back later for exclusive student discounts!</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <ProgressiveCardReveal
+                activeIndex={activeCouponIndex}
+                onActiveChange={setActiveCouponIndex}
+                style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}
+              >
                 {coupons.map((c) => (
-                  <div 
-                    key={c._id}
-                    style={{ 
-                      border: '2px dashed #e2e8f0', 
-                      borderRadius: '16px', 
-                      padding: '16px', 
-                      background: '#fffbeb', 
-                      position: 'relative',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <span style={{ 
-                          background: '#fff1f2', 
-                          color: '#b31522', 
-                          border: '1px solid #ffe4e6',
-                          borderRadius: '8px', 
-                          padding: '4px 10px', 
-                          fontSize: '0.85rem', 
-                          fontWeight: 900,
-                          letterSpacing: '0.5px'
-                        }}>
+                  <ProgressiveCardReveal.Card key={c._id}>
+                    <ProgressiveCardReveal.CardCollapsed>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span style={{ fontWeight: 800, color: '#1a202c', fontSize: '0.9rem' }}>
+                          {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `Flat ₹${c.discountValue} OFF`}
+                        </span>
+                        <span style={{ background: '#fff1f2', color: '#b31522', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #ffe4e6' }}>
                           {c.code}
                         </span>
-                        <h4 style={{ margin: '8px 0 2px 0', fontSize: '0.95rem', fontWeight: 800, color: '#1a202c' }}>
-                          {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `Flat ₹${c.discountValue} OFF`}
-                        </h4>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#4a5568', fontWeight: 500 }}>
-                          {c.description || 'Valid on all campus orders'}
-                        </p>
                       </div>
-
-                      <button 
-                        onClick={() => handleCopyCode(c.code)}
-                        style={{ 
-                          background: copiedCode === c.code ? '#48bb78' : '#ffffff', 
-                          color: copiedCode === c.code ? '#ffffff' : '#b31522',
-                          border: copiedCode === c.code ? 'none' : '1px solid #ffe4e6',
-                          borderRadius: '10px',
-                          padding: '6px 12px',
-                          fontSize: '0.75rem',
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          transition: 'all 0.2s',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
-                        }}
-                      >
-                        {copiedCode === c.code ? <Check size={14} /> : <Copy size={14} />}
-                        {copiedCode === c.code ? 'COPIED' : 'COPY'}
-                      </button>
-                    </div>
-
-                    <div style={{ borderTop: '1px solid #edf2f7', paddingTop: '8px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#718096', fontWeight: 550 }}>
-                      <span>Min. Order: ₹{c.minimumPurchase}</span>
-                      {c.maximumDiscount && c.discountType === 'percentage' && (
-                        <span>Max. Disc: ₹{c.maximumDiscount}</span>
-                      )}
-                    </div>
-                  </div>
+                    </ProgressiveCardReveal.CardCollapsed>
+                    <ProgressiveCardReveal.CardExpanded>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <span style={{ 
+                              background: '#fff1f2', 
+                              color: '#b31522', 
+                              border: '1px solid #ffe4e6',
+                              borderRadius: '8px', 
+                              padding: '4px 10px', 
+                              fontSize: '0.85rem', 
+                              fontWeight: 900,
+                              letterSpacing: '0.5px'
+                            }}>
+                              {c.code}
+                            </span>
+                            <h4 style={{ margin: '8px 0 2px 0', fontSize: '0.95rem', fontWeight: 800, color: '#1a202c' }}>
+                              {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `Flat ₹${c.discountValue} OFF`}
+                            </h4>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#4a5568', fontWeight: 500 }}>
+                              {c.description || 'Valid on all campus orders'}
+                            </p>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyCode(c.code);
+                            }}
+                            style={{ 
+                              background: copiedCode === c.code ? '#48bb78' : '#ffffff', 
+                              color: copiedCode === c.code ? '#ffffff' : '#b31522',
+                              border: copiedCode === c.code ? 'none' : '1px solid #ffe4e6',
+                              borderRadius: '10px',
+                              padding: '6px 12px',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                            }}
+                          >
+                            {copiedCode === c.code ? <Check size={14} /> : <Copy size={14} />}
+                            {copiedCode === c.code ? 'COPIED' : 'COPY'}
+                          </button>
+                        </div>
+                        <div style={{ borderTop: '1px solid #edf2f7', paddingTop: '8px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#718096', fontWeight: 550 }}>
+                          <span>Min. Order: ₹{c.minimumPurchase}</span>
+                          {c.maximumDiscount && c.discountType === 'percentage' && (
+                            <span>Max. Disc: ₹{c.maximumDiscount}</span>
+                          )}
+                        </div>
+                      </div>
+                    </ProgressiveCardReveal.CardExpanded>
+                  </ProgressiveCardReveal.Card>
                 ))}
+              </ProgressiveCardReveal>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Announcements Modal */}
+      {isAnnouncementsOpen && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.45)', 
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setIsAnnouncementsOpen(false)}
+        >
+          <div 
+            className="animate-slide-up"
+            style={{ 
+              background: '#ffffff', 
+              borderRadius: '24px', 
+              width: '100%', 
+              maxWidth: '500px', 
+              maxHeight: '80vh', 
+              overflowY: 'auto', 
+              padding: '24px',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Megaphone size={22} color="#b31522" />
+                Announcements
+              </h3>
+              <button 
+                onClick={() => setIsAnnouncementsOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#718096', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {isFetchingAnnouncements ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '40px 0' }}>
+                <div className="spinner" style={{ borderTopColor: '#b31522' }}></div>
+                <p style={{ color: '#718096', fontSize: '0.9rem', fontWeight: 550 }}>Loading announcements...</p>
               </div>
+            ) : announcements.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#718096' }}>
+                <Bell size={40} style={{ color: '#cbd5e0', marginBottom: '12px' }} />
+                <p style={{ fontWeight: 650, fontSize: '0.95rem' }}>No announcements right now.</p>
+              </div>
+            ) : (
+              <ProgressiveCardReveal
+                activeIndex={activeAnnouncementIndex}
+                onActiveChange={setActiveAnnouncementIndex}
+                style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}
+              >
+                {announcements.map((ann) => {
+                  const timeAgo = (() => {
+                    const now = new Date();
+                    const created = new Date(ann.createdAt || ann.expiresAt); // fallback
+                    const diffMs = now - created;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    if (diffMins < 1) return 'Just now';
+                    if (diffMins < 60) return `${diffMins}m ago`;
+                    const diffHours = Math.floor(diffMins / 60);
+                    if (diffHours < 24) return `${diffHours}h ago`;
+                    const diffDays = Math.floor(diffHours / 24);
+                    return `${diffDays}d ago`;
+                  })();
+                  
+                  return (
+                    <ProgressiveCardReveal.Card key={ann._id}>
+                      <ProgressiveCardReveal.CardCollapsed>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <span style={{ fontWeight: 800, color: '#1a202c', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px' }}>
+                            {ann.title}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, flexShrink: 0 }}>{timeAgo}</span>
+                        </div>
+                      </ProgressiveCardReveal.CardCollapsed>
+                      <ProgressiveCardReveal.CardExpanded>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b45309', background: '#fef3c7', padding: '4px 8px', borderRadius: '8px' }}>
+                               <Volume2 size={14} />
+                               <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Announcement</span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{timeAgo}</span>
+                          </div>
+                          <h4 style={{ margin: '4px 0 2px 0', fontSize: '1rem', fontWeight: 800, color: '#1a202c' }}>
+                            {ann.title}
+                          </h4>
+                          <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>
+                            {ann.description}
+                          </p>
+                          {ann.expiresAt && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', fontWeight: 500 }}>
+                              <Calendar size={12} />
+                              Expires: {new Date(ann.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </div>
+                          )}
+                        </div>
+                      </ProgressiveCardReveal.CardExpanded>
+                    </ProgressiveCardReveal.Card>
+                  );
+                })}
+              </ProgressiveCardReveal>
             )}
           </div>
         </div>
@@ -420,7 +579,6 @@ export default function Profile() {
         </div>
       )}
 
-      <BottomNav activeTab="profile" />
-    </div>
+          </div>
   );
 }
