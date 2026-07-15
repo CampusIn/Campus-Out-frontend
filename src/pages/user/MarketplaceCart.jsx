@@ -8,7 +8,7 @@ import { getCoupons, getPlatformSettings } from '../../api/order.api';
 import { Tag, Loader, Store, Percent, Phone, CreditCard, Building2, GraduationCap, ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Layers, AlertTriangle, Check, X, MapPin } from 'lucide-react';
 
 import { createMarketplaceOrder } from '../../api/marketplace.api';
-import { HoldConfirmButton } from '../../components/HoldConfirmButton';
+import { SlideConfirmButton } from '../../components/SlideConfirmButton';
 import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 import { confetti } from '../../components/Confetti';
 
@@ -1124,39 +1124,22 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                 </div>
 
                 {/* Confirm & Place Order trigger */}
-                <HoldConfirmButton 
-                  className="btn btn-primary hover-lift hover-darken" 
+                <SlideConfirmButton 
+                  variant="destructive"
                   onConfirm={handleCheckout}
                   disabled={isPlacingOrder}
-                  style={{ 
-                    padding: '16px', 
-                    background: '#b31522', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    borderRadius: '12px', 
-                    fontWeight: 700, 
-                    fontSize: '0.95rem', 
-                    cursor: isPlacingOrder ? 'not-allowed' : 'pointer',
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    opacity: isPlacingOrder ? 0.7 : 1,
-                    width: '100%',
-                    height: '54px'
-                  }}
-                  holdingLabel={`Confirming... (₹${pricing.finalAmount.toFixed(2)})`}
                   confirmedLabel="Order Placed!"
+                  style={{ marginTop: '12px' }}
                 >
                   {isPlacingOrder ? (
                     <>
                       <Loader size={18} className="animate-spin" />
-                      <span>Placing Order...</span>
+                      <span style={{ marginLeft: '8px' }}>Placing Order...</span>
                     </>
                   ) : (
-                    <span>Hold to Place Order (&#8377;{pricing.finalAmount.toFixed(2)})</span>
+                    <span>Slide to Place Order (&#8377;{pricing.finalAmount.toFixed(2)})</span>
                   )}
-                </HoldConfirmButton>
+                </SlideConfirmButton>
               </div>
             </div>
           )}

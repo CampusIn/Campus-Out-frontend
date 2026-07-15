@@ -16,7 +16,7 @@ import {
   updateAdminMarketplaceOrderStatus,
   assignAdminMarketplaceDeliveryPartner,
 } from '../../api/marketplace.api';
-import { HoldConfirmButton } from '../../components/HoldConfirmButton';
+import { SlideConfirmButton } from '../../components/SlideConfirmButton';
 import './AdminPortal.css';
 
 const getWhatsAppLink = (phone) => {
@@ -1107,33 +1107,15 @@ export default function AdminDashboard() {
                         {selectedOrder.orderStatus === 'PENDING' ? (
                           !isRejectingMarketplace ? (
                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                              <HoldConfirmButton
+                              <SlideConfirmButton
                                 variant="default"
-                                className="btn btn-primary"
-                                style={{
-                                  flex: '1 1 120px',
-                                  padding: '10px 16px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '6px',
-                                  fontWeight: 700,
-                                  borderRadius: '12px',
-                                  fontSize: '0.82rem',
-                                  height: '42px',
-                                  background: 'var(--primary)',
-                                  color: '#ffffff',
-                                  border: 'none',
-                                  opacity: statusUpdating ? 0.7 : 1
-                                }}
+                                style={{ flex: '1 1 120px', minHeight: '48px' }}
                                 onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'CONFIRMED')}
                                 disabled={statusUpdating}
-                                holdingLabel="Accepting..."
                                 confirmedLabel="Accepted!"
                               >
-                                Hold to Accept Order
-                                <ChevronRight size={16} style={{ marginLeft: '4px' }} />
-                              </HoldConfirmButton>
+                                Slide to Accept Order
+                              </SlideConfirmButton>
                               <button
                                 type="button"
                                 className="btn btn-outline"
@@ -1194,27 +1176,15 @@ export default function AdminDashboard() {
                                 >
                                   Cancel
                                 </button>
-                                  <HoldConfirmButton
+                                  <SlideConfirmButton
                                     variant="destructive"
-                                    className="btn btn-primary"
-                                    style={{
-                                      padding: '6px 16px',
-                                      borderRadius: '10px',
-                                      height: '34px',
-                                      background: '#dc2626',
-                                      color: '#ffffff',
-                                      fontSize: '0.78rem',
-                                      border: 'none',
-                                      width: 'auto',
-                                      opacity: (statusUpdating || !rejectionMsgInput.trim()) ? 0.7 : 1
-                                    }}
+                                    style={{ flex: '1 1 120px', minHeight: '42px' }}
                                     onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')}
                                     disabled={statusUpdating || !rejectionMsgInput.trim()}
-                                    holdingLabel="Rejecting..."
                                     confirmedLabel="Rejected"
                                   >
-                                    Hold to Confirm Reject
-                                  </HoldConfirmButton>
+                                    Slide to Reject
+                                  </SlideConfirmButton>
                               </div>
                             </div>
                           )
@@ -1229,33 +1199,15 @@ export default function AdminDashboard() {
                             const transition = transitionMap[selectedOrder.orderStatus];
                             if (!transition) return null;
                             return (
-                              <HoldConfirmButton
+                              <SlideConfirmButton
                                 variant="default"
-                                className="btn btn-primary"
-                                style={{
-                                  width: '100%',
-                                  padding: '12px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '6px',
-                                  fontWeight: 700,
-                                  borderRadius: '12px',
-                                  fontSize: '0.85rem',
-                                  height: '42px',
-                                  background: 'var(--primary)',
-                                  color: '#ffffff',
-                                  border: 'none',
-                                  opacity: statusUpdating ? 0.7 : 1
-                                }}
+                                style={{ width: '100%', minHeight: '48px' }}
                                 onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, transition.next)}
                                 disabled={statusUpdating}
-                                holdingLabel="Updating..."
                                 confirmedLabel="Updated!"
                               >
-                                Hold to {transition.label}
-                                <ChevronRight size={16} style={{ marginLeft: '4px' }} />
-                              </HoldConfirmButton>
+                                Slide to {transition.label}
+                              </SlideConfirmButton>
                             );
                           })()
                         )}

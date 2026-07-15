@@ -9,7 +9,7 @@ import MarketplaceCart from './MarketplaceCart';
 
 import { Store, Gift, Tag, Receipt, ShoppingCart, Building, Coffee, Compass, Wallet, Loader, Percent, Phone, ArrowLeft, Trash2, Plus, Minus, MapPin, BookOpen, Edit, ShoppingBag, Check, X, AlertTriangle } from 'lucide-react';
 import { confetti } from '../../components/Confetti';
-import { HoldConfirmButton } from '../../components/HoldConfirmButton';
+import { SlideConfirmButton } from '../../components/SlideConfirmButton';
 import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 
 export default function Cart() {
@@ -819,28 +819,15 @@ export default function Cart() {
                 </div>
 
                 {/* Confirm & Place Order trigger */}
-                <HoldConfirmButton 
-                  className="btn btn-primary hover-lift hover-darken" 
+                <SlideConfirmButton 
+                  variant="destructive"
                   onConfirm={() => handleOrder(paymentMethod)}
                   disabled={false}
-                  style={{ 
-                    padding: '16px', 
-                    background: '#b31522', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    borderRadius: '12px', 
-                    fontWeight: 700, 
-                    fontSize: '0.95rem', 
-                    cursor: 'pointer',
-                    opacity: 1,
-                    width: '100%',
-                    height: '54px'
-                  }}
-                  holdingLabel={`Confirming... (₹${((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})`}
                   confirmedLabel="Order Placed!"
+                  style={{ marginTop: '12px' }}
                 >
-                  Hold to Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
-                </HoldConfirmButton>
+                  Slide to Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
+                </SlideConfirmButton>
               </div>
             </div>
 
