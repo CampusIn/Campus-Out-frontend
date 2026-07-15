@@ -213,7 +213,7 @@ body.hide-bottom-nav .bottom-nav-container {
   border-radius: 9999px;
   background: #b31522; /* Primary red color */
   box-shadow: 0 2px 8px rgba(179, 21, 34, 0.3);
-  z-index: -1;
+  z-index: 0;
 }
 
 .godui-tab-icon-wrapper {
