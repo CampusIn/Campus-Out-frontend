@@ -41,7 +41,10 @@ export function CartProvider({ children }) {
 
     setCart(prevCart => {
       let updatedItems = [];
-      if (prevCart && prevCart.restaurant === restaurantId) {
+      const currentRestaurantId = prevCart?.restaurant
+        ? (typeof prevCart.restaurant === 'object' ? prevCart.restaurant._id : prevCart.restaurant)
+        : null;
+      if (prevCart && currentRestaurantId?.toString() === restaurantId?.toString()) {
         updatedItems = [...prevCart.items];
         const idx = updatedItems.findIndex(item => {
           const idToCheck = item.menuItem?._id || item.menuItem;
