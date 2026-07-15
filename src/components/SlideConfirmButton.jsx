@@ -28,6 +28,7 @@ const SlideConfirmButton = React.forwardRef(
       onConfirm,
       threshold = 0.8,
       confirmedLabel = "Confirmed",
+      processingLabel = "Placing Order...",
       disabled = false,
       className = "",
       style = {},
@@ -148,7 +149,7 @@ const SlideConfirmButton = React.forwardRef(
           width: '100%',
           userSelect: 'none',
           touchAction: 'none',
-          pointerEvents: (disabled && status === 'idle') ? 'none' : 'auto',
+          pointerEvents: (disabled || status === 'processing' || status === 'confirmed') ? 'none' : 'auto',
           opacity: (disabled && status === 'idle') ? 0.6 : 1,
           ...style
         }}
@@ -186,6 +187,15 @@ const SlideConfirmButton = React.forwardRef(
         >
           {label}
         </motion.span>
+        <style>{`
+          @keyframes spin-button {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .btn-spinner {
+            animation: spin-button 0.8s linear infinite;
+          }
+        `}</style>
         {confirmed && (
           <span 
             style={{
@@ -203,12 +213,38 @@ const SlideConfirmButton = React.forwardRef(
             {confirmedLabel}
           </span>
         )}
+        {status === "processing" && (
+          <span 
+            style={{
+              pointerEvents: 'none',
+              position: 'absolute',
+              inset: 0,
+              zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 600,
+              color: '#ffffff',
+              gap: '8px'
+            }}
+          >
+            <div className="btn-spinner" style={{
+              width: '16px',
+              height: '16px',
+              border: '2.5px solid rgba(255, 255, 255, 0.2)',
+              borderTop: '2.5px solid #ffffff',
+              borderRadius: '50%',
+              display: 'inline-block'
+            }} />
+            <span>{processingLabel}</span>
+          </span>
+        )}
 
         <motion.button
           type="button"
           aria-label={typeof label === "string" ? label : "Slide to confirm"}
-          disabled={disabled}
-          drag={confirmed || disabled ? false : "x"}
+          disabled={disabled || status === "processing"}
+          drag={confirmed || disabled || status === "processing" ? false : "x"}
           dragConstraints={{ left: 0, right: maxX }}
           dragElastic={0.04}
           dragMomentum={false}
