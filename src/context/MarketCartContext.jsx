@@ -9,6 +9,7 @@ export function MarketCartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [updatingItems, setUpdatingItems] = useState({});
 
   const fetchCart = useCallback(async () => {
     if (!user || user.role !== 'user') {
@@ -41,19 +42,28 @@ export function MarketCartProvider({ children }) {
 
   const addToCartOptimistic = useCallback(async (product, quantityToAdd = 1) => {
     if (!user) return;
+    const productId = product._id;
+    setUpdatingItems(prev => ({ ...prev, [productId]: true }));
     try {
-      const { data } = await addToMarketCart(product._id, quantityToAdd);
+      const { data } = await addToMarketCart(productId, quantityToAdd);
       if (data.success) {
         setCart(data.data);
         return data.data;
       }
     } catch (err) {
       throw err;
+    } finally {
+      setUpdatingItems(prev => {
+        const copy = { ...prev };
+        delete copy[productId];
+        return copy;
+      });
     }
   }, [user]);
 
   const updateCartItemQtyOptimistic = useCallback(async (productId, quantity) => {
     if (!user) return;
+    setUpdatingItems(prev => ({ ...prev, [productId]: true }));
 
     // Optimistic update to UI state
     setCart(prevCart => {
@@ -88,13 +98,20 @@ export function MarketCartProvider({ children }) {
         });
       }
     } catch (err) {
-      fetchCart(); // Reset to server state on error
+      await fetchCart(); // Reset to server state on error
       throw err;
+    } finally {
+      setUpdatingItems(prev => {
+        const copy = { ...prev };
+        delete copy[productId];
+        return copy;
+      });
     }
   }, [user, fetchCart]);
 
   const deleteCartItemOptimistic = useCallback(async (productId) => {
     if (!user) return;
+    setUpdatingItems(prev => ({ ...prev, [productId]: true }));
 
     // Optimistic delete
     setCart(prevCart => {
@@ -122,8 +139,14 @@ export function MarketCartProvider({ children }) {
         }
       }
     } catch (err) {
-      fetchCart();
+      await fetchCart();
       throw err;
+    } finally {
+      setUpdatingItems(prev => {
+        const copy = { ...prev };
+        delete copy[productId];
+        return copy;
+      });
     }
   }, [user, fetchCart]);
 
@@ -133,7 +156,7 @@ export function MarketCartProvider({ children }) {
     try {
       await clearMarketCart();
     } catch (err) {
-      fetchCart();
+      await fetchCart();
       throw err;
     }
   }, [user, fetchCart]);
@@ -154,7 +177,8 @@ export function MarketCartProvider({ children }) {
       addToCartOptimistic,
       updateCartItemQtyOptimistic,
       deleteCartItemOptimistic,
-      clearCartOptimistic
+      clearCartOptimistic,
+      updatingItems
     }}>
       {children}
     </MarketCartContext.Provider>

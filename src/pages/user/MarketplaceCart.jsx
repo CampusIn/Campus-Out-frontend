@@ -24,7 +24,8 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     fetchCart, 
     updateCartItemQtyOptimistic, 
     deleteCartItemOptimistic, 
-    clearCartOptimistic 
+    clearCartOptimistic,
+    updatingItems
   } = useMarketCart();
 
   // Coupon states
@@ -571,14 +572,14 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       )}
                     </div>
 
-                    {/* Quantity controls and remove button */}
+                     {/* Quantity controls and remove button */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                      <div className="quantity-pill" style={{ height: '36px', padding: '0 8px', display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '8px', border: '1px solid #e2e8f0', gap: '12px' }}>
+                      <div className="quantity-pill" style={{ height: '36px', padding: '0 8px', display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '8px', border: '1px solid #e2e8f0', gap: '12px', opacity: updatingItems[product._id] ? 0.6 : 1 }}>
                         <button 
                           className="qty-btn hover-scale" 
                           onClick={() => handleQtyChange(product._id, item.quantity, product.stock, false)}
-                          disabled={item.quantity <= 1}
-                          style={{ fontSize: '1rem', width: '20px', border: 'none', background: 'none', cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer', color: item.quantity <= 1 ? '#cbd5e0' : '#718096' }}
+                          disabled={updatingItems[product._id] || item.quantity <= 1}
+                          style={{ fontSize: '1rem', width: '20px', border: 'none', background: 'none', cursor: (updatingItems[product._id] || item.quantity <= 1) ? 'not-allowed' : 'pointer', color: (updatingItems[product._id] || item.quantity <= 1) ? '#cbd5e0' : '#718096' }}
                         >
                           <Minus size={14} />
                         </button>
@@ -590,14 +591,14 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                         <button 
                           className="qty-btn hover-scale" 
                           onClick={() => handleQtyChange(product._id, item.quantity, product.stock, true)}
-                          disabled={item.quantity >= product.stock}
+                          disabled={updatingItems[product._id] || item.quantity >= product.stock}
                           style={{ 
                             fontSize: '1rem', 
                             width: '20px', 
                             border: 'none', 
                             background: 'none', 
-                            cursor: item.quantity >= product.stock ? 'not-allowed' : 'pointer', 
-                            color: item.quantity >= product.stock ? '#cbd5e0' : '#718096' 
+                            cursor: (updatingItems[product._id] || item.quantity >= product.stock) ? 'not-allowed' : 'pointer', 
+                            color: (updatingItems[product._id] || item.quantity >= product.stock) ? '#cbd5e0' : '#718096' 
                           }}
                         >
                           <Plus size={14} />
@@ -607,13 +608,14 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       <button 
                         className="hover-scale" 
                         onClick={() => handleRemoveItem(product._id, product.name)}
+                        disabled={updatingItems[product._id]}
                         style={{ 
                           border: 'none',
                           background: 'none',
-                          color: '#dc2626',
+                          color: updatingItems[product._id] ? '#cbd5e0' : '#dc2626',
                           fontSize: '0.8rem',
                           fontWeight: 700,
-                          cursor: 'pointer',
+                          cursor: updatingItems[product._id] ? 'not-allowed' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '4px',

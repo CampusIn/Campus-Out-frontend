@@ -9,6 +9,7 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [updatingItems, setUpdatingItems] = useState({});
 
   const fetchCart = useCallback(async () => {
     if (!user || user.role !== 'user') {
@@ -35,6 +36,8 @@ export function CartProvider({ children }) {
 
   const addToCartOptimistic = useCallback(async (menuItem, restaurantId, quantityToAdd = 1) => {
     if (!user) return;
+    const itemId = menuItem._id;
+    setUpdatingItems(prev => ({ ...prev, [itemId]: true }));
 
     setCart(prevCart => {
       let updatedItems = [];
@@ -74,15 +77,22 @@ export function CartProvider({ children }) {
 
     try {
       await addToCart({ menuItemId: menuItem._id, quantity: quantityToAdd });
-      fetchCart();
+      await fetchCart();
     } catch (err) {
-      fetchCart(); // Reset to server state on error
+      await fetchCart(); // Reset to server state on error
       throw err;
+    } finally {
+      setUpdatingItems(prev => {
+        const copy = { ...prev };
+        delete copy[itemId];
+        return copy;
+      });
     }
   }, [user, fetchCart]);
 
   const updateCartItemQtyOptimistic = useCallback(async (menuItemId, quantity) => {
     if (!user) return;
+    setUpdatingItems(prev => ({ ...prev, [menuItemId]: true }));
 
     setCart(prevCart => {
       if (!prevCart) return null;
@@ -104,15 +114,22 @@ export function CartProvider({ children }) {
 
     try {
       await updateCartItemQty(menuItemId, quantity);
-      fetchCart();
+      await fetchCart();
     } catch (err) {
-      fetchCart();
+      await fetchCart();
       throw err;
+    } finally {
+      setUpdatingItems(prev => {
+        const copy = { ...prev };
+        delete copy[menuItemId];
+        return copy;
+      });
     }
   }, [user, fetchCart]);
 
   const deleteCartItemOptimistic = useCallback(async (menuItemId) => {
     if (!user) return;
+    setUpdatingItems(prev => ({ ...prev, [menuItemId]: true }));
 
     setCart(prevCart => {
       if (!prevCart) return null;
@@ -131,10 +148,16 @@ export function CartProvider({ children }) {
 
     try {
       await deleteCartItem(menuItemId);
-      fetchCart();
+      await fetchCart();
     } catch (err) {
-      fetchCart();
+      await fetchCart();
       throw err;
+    } finally {
+      setUpdatingItems(prev => {
+        const copy = { ...prev };
+        delete copy[menuItemId];
+        return copy;
+      });
     }
   }, [user, fetchCart]);
 
@@ -153,7 +176,8 @@ export function CartProvider({ children }) {
       setError,
       addToCartOptimistic,
       updateCartItemQtyOptimistic,
-      deleteCartItemOptimistic
+      deleteCartItemOptimistic,
+      updatingItems
     }}>
       {children}
     </CartContext.Provider>

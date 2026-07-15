@@ -11,7 +11,7 @@ export default function FoodDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const { cart, fetchCart, addToCartOptimistic, updateCartItemQtyOptimistic, deleteCartItemOptimistic } = useCart();
+  const { cart, fetchCart, addToCartOptimistic, updateCartItemQtyOptimistic, deleteCartItemOptimistic, updatingItems } = useCart();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -236,12 +236,13 @@ export default function FoodDetail() {
 
             {/* Action controls */}
             {getCartQty(id) > 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '12px 20px', gap: '24px', justifyContent: 'center', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '12px 20px', gap: '24px', justifyContent: 'center', width: '100%', opacity: updatingItems[id] ? 0.6 : 1 }}>
                 <span style={{ fontWeight: 750, fontSize: '0.95rem', color: '#4a5568' }}>In Cart:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <button 
                     onClick={() => handleDecrement(id, getCartQty(id))}
-                    style={{ background: '#e2e8f0', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#111111', width: '32px', height: '32px', borderRadius: '50%', justifyContent: 'center' }}
+                    disabled={updatingItems[id]}
+                    style={{ background: '#e2e8f0', border: 'none', cursor: updatingItems[id] ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', color: '#111111', width: '32px', height: '32px', borderRadius: '50%', justifyContent: 'center' }}
                     className="hover-scale"
                   >
                     <Minus size={16} />
@@ -251,7 +252,8 @@ export default function FoodDetail() {
                   </span>
                   <button 
                     onClick={() => handleIncrement(id, getCartQty(id))}
-                    style={{ background: '#e2e8f0', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#111111', width: '32px', height: '32px', borderRadius: '50%', justifyContent: 'center' }}
+                    disabled={updatingItems[id]}
+                    style={{ background: '#e2e8f0', border: 'none', cursor: updatingItems[id] ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', color: '#111111', width: '32px', height: '32px', borderRadius: '50%', justifyContent: 'center' }}
                     className="hover-scale"
                   >
                     <Plus size={16} />
@@ -282,10 +284,23 @@ export default function FoodDetail() {
                 
                 <button 
                   onClick={handleAddToCart}
+                  disabled={updatingItems[id]}
                   className="btn btn-primary hover-lift hover-darken"
-                  style={{ flex: 1, padding: '16px', borderRadius: '12px', background: 'var(--primary)', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'center' }}
+                  style={{ 
+                    flex: 1, 
+                    padding: '16px', 
+                    borderRadius: '12px', 
+                    background: updatingItems[id] ? '#cbd5e0' : 'var(--primary)', 
+                    color: '#ffffff', 
+                    border: 'none', 
+                    fontWeight: 700, 
+                    fontSize: '0.95rem', 
+                    cursor: updatingItems[id] ? 'not-allowed' : 'pointer', 
+                    textAlign: 'center',
+                    opacity: updatingItems[id] ? 0.7 : 1
+                  }}
                 >
-                  Add to Cart
+                  {updatingItems[id] ? 'Adding...' : 'Add to Cart'}
                 </button>
               </div>
             )}

@@ -16,7 +16,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
-  const { cart, setCart, fetchCart, loading, updateCartItemQtyOptimistic, deleteCartItemOptimistic, error: cartError } = useCart();
+  const { cart, setCart, fetchCart, loading, updateCartItemQtyOptimistic, deleteCartItemOptimistic, error: cartError, updatingItems } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const activeTab = searchParams.get('tab') === 'marketplace' ? 'marketplace' : 'food';
@@ -900,26 +900,27 @@ export default function Cart() {
 
                     {/* Quantity controls and remove button */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                      <div className="quantity-pill" style={{ height: '36px', padding: '0 8px', display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '8px', border: '1px solid #e2e8f0', gap: '12px' }}>
+                      <div className="quantity-pill" style={{ height: '36px', padding: '0 8px', display: 'flex', alignItems: 'center', background: '#f7fafc', borderRadius: '8px', border: '1px solid #e2e8f0', gap: '12px', opacity: updatingItems[item.menuItem?._id || item.menuItem] ? 0.6 : 1 }}>
                         <button 
                           className="qty-btn hover-scale" 
-                          onClick={() => handleQtyChange(item.menuItem?._id, item.quantity - 1)}
-                          style={{ fontSize: '1rem', width: '20px', border: 'none', background: 'none', cursor: 'pointer', color: '#718096' }}
+                          onClick={() => handleQtyChange(item.menuItem?._id || item.menuItem, item.quantity - 1)}
+                          disabled={updatingItems[item.menuItem?._id || item.menuItem]}
+                          style={{ fontSize: '1rem', width: '20px', border: 'none', background: 'none', cursor: updatingItems[item.menuItem?._id || item.menuItem] ? 'not-allowed' : 'pointer', color: '#718096' }}
                         >
                           <Minus size={14} />
                         </button>
                         <span className="qty-number" style={{ width: '20px', fontSize: '0.85rem', fontWeight: 700, textAlign: 'center', color: '#111111' }}>{item.quantity}</span>
                         <button 
                           className="qty-btn hover-scale" 
-                          onClick={() => handleQtyChange(item.menuItem?._id, item.quantity + 1)}
-                          disabled={item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty}
+                          onClick={() => handleQtyChange(item.menuItem?._id || item.menuItem, item.quantity + 1)}
+                          disabled={updatingItems[item.menuItem?._id || item.menuItem] || (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty)}
                           style={{ 
                             fontSize: '1rem', 
                             width: '20px', 
                             border: 'none', 
                             background: 'none', 
-                            cursor: (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty) ? 'not-allowed' : 'pointer', 
-                            color: (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty) ? '#cbd5e0' : '#718096' 
+                            cursor: (updatingItems[item.menuItem?._id || item.menuItem] || (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty)) ? 'not-allowed' : 'pointer', 
+                            color: (updatingItems[item.menuItem?._id || item.menuItem] || (item.menuItem?.stockQty !== undefined && item.quantity >= item.menuItem.stockQty)) ? '#cbd5e0' : '#718096' 
                           }}
                         >
                           <Plus size={14} />
@@ -928,14 +929,15 @@ export default function Cart() {
 
                       <button 
                         className="hover-scale" 
-                        onClick={() => handleRemove(item.menuItem?._id)}
+                        onClick={() => handleRemove(item.menuItem?._id || item.menuItem)}
+                        disabled={updatingItems[item.menuItem?._id || item.menuItem]}
                         style={{ 
                           border: 'none',
                           background: 'none',
-                          color: '#dc2626',
+                          color: updatingItems[item.menuItem?._id || item.menuItem] ? '#cbd5e0' : '#dc2626',
                           fontSize: '0.8rem',
                           fontWeight: 700,
-                          cursor: 'pointer',
+                          cursor: updatingItems[item.menuItem?._id || item.menuItem] ? 'not-allowed' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '4px',

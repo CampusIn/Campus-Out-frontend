@@ -21,7 +21,7 @@ export default function RestaurantDetail() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const { cart, fetchCart, addToCartOptimistic, updateCartItemQtyOptimistic, deleteCartItemOptimistic } = useCart();
+  const { cart, fetchCart, addToCartOptimistic, updateCartItemQtyOptimistic, deleteCartItemOptimistic, updatingItems } = useCart();
   
   const [activeTab, setActiveTab] = useState('Menu'); // 'Menu', 'Reviews', 'Info'
   const [activeSubcategory, setActiveSubcategory] = useState('All');
@@ -622,18 +622,44 @@ export default function RestaurantDetail() {
                       {/* ADD Button on Top Picks */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
                         {qty > 0 ? (
-                          <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', borderRadius: '12px', padding: '2px 6px', gap: '6px', border: '1px solid #cbd5e0', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
-                            <button type="button" onClick={() => handleDecrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer' }}>-</button>
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', borderRadius: '12px', padding: '2px 6px', gap: '6px', border: '1px solid #cbd5e0', boxShadow: '0 2px 6px rgba(0,0,0,0.15)', opacity: updatingItems[item._id] ? 0.6 : 1 }}>
+                            <button 
+                              type="button" 
+                              onClick={() => handleDecrement(item._id, qty)} 
+                              disabled={updatingItems[item._id]}
+                              style={{ border: 'none', background: 'none', color: updatingItems[item._id] ? '#cbd5e0' : '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer' }}
+                            >
+                              -
+                            </button>
                             <span style={{ fontWeight: 800, fontSize: '0.75rem', color: '#111111' }}>{qty}</span>
-                            <button type="button" onClick={() => handleIncrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer' }}>+</button>
+                            <button 
+                              type="button" 
+                              onClick={() => handleIncrement(item._id, qty)} 
+                              disabled={updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)}
+                              style={{ border: 'none', background: 'none', color: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? '#cbd5e0' : '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? 'not-allowed' : 'pointer' }}
+                            >
+                              +
+                            </button>
                           </div>
                         ) : (
                           <button 
                             type="button" 
                             onClick={() => handleAdd(item._id)} 
-                            style={{ background: '#ffffff', border: '1.5px solid #1f8a4c', color: '#1f8a4c', borderRadius: '8px', padding: '4px 10px', fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                            disabled={updatingItems[item._id]}
+                            style={{ 
+                              background: '#ffffff', 
+                              border: updatingItems[item._id] ? '1.5px solid #a0aec0' : '1.5px solid #1f8a4c', 
+                              color: updatingItems[item._id] ? '#a0aec0' : '#1f8a4c', 
+                              borderRadius: '8px', 
+                              padding: '4px 10px', 
+                              fontSize: '0.72rem', 
+                              fontWeight: 800, 
+                              cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer', 
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                              opacity: updatingItems[item._id] ? 0.7 : 1
+                            }}
                           >
-                            ADD
+                            {updatingItems[item._id] ? '...' : 'ADD'}
                           </button>
                         )}
                       </div>
@@ -730,20 +756,28 @@ export default function RestaurantDetail() {
                                       padding: '4px 10px', 
                                       gap: '10px', 
                                       border: '1px solid #cbd5e0',
-                                      boxShadow: '0 4px 10px rgba(0,0,0,0.12)' 
+                                      boxShadow: '0 4px 10px rgba(0,0,0,0.12)',
+                                      opacity: updatingItems[item._id] ? 0.6 : 1
                                     }}>
-                                      <button type="button" onClick={() => handleDecrement(item._id, qty)} style={{ border: 'none', background: 'none', color: '#b31522', fontWeight: 900, cursor: 'pointer', fontSize: '0.9rem' }}>-</button>
+                                      <button 
+                                        type="button" 
+                                        onClick={() => handleDecrement(item._id, qty)} 
+                                        disabled={updatingItems[item._id]}
+                                        style={{ border: 'none', background: 'none', color: updatingItems[item._id] ? '#cbd5e0' : '#b31522', fontWeight: 900, cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer', fontSize: '0.9rem' }}
+                                      >
+                                        -
+                                      </button>
                                       <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#111111' }}>{qty}</span>
                                       <button 
                                         type="button" 
                                         onClick={() => handleIncrement(item._id, qty)} 
-                                        disabled={qty >= (item.stockQty ?? Infinity)}
+                                        disabled={updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)}
                                         style={{ 
                                           border: 'none', 
                                           background: 'none', 
-                                          color: qty >= (item.stockQty ?? Infinity) ? '#cbd5e0' : '#b31522', 
+                                          color: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? '#cbd5e0' : '#b31522', 
                                           fontWeight: 900, 
-                                          cursor: qty >= (item.stockQty ?? Infinity) ? 'not-allowed' : 'pointer', 
+                                          cursor: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? 'not-allowed' : 'pointer', 
                                           fontSize: '0.9rem' 
                                         }}
                                       >
@@ -754,19 +788,21 @@ export default function RestaurantDetail() {
                                     <button 
                                       type="button" 
                                       onClick={() => handleAdd(item._id)}
+                                      disabled={updatingItems[item._id]}
                                       style={{ 
                                         background: '#ffffff', 
-                                        border: '1.5px solid #1f8a4c', 
-                                        color: '#1f8a4c', 
+                                        border: updatingItems[item._id] ? '1.5px solid #a0aec0' : '1.5px solid #1f8a4c', 
+                                        color: updatingItems[item._id] ? '#a0aec0' : '#1f8a4c', 
                                         borderRadius: '12px', 
                                         padding: '6px 20px', 
                                         fontWeight: 800, 
                                         fontSize: '0.8rem', 
-                                        cursor: 'pointer',
-                                        boxShadow: '0 4px 10px rgba(0,0,0,0.08)' 
+                                        cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+                                        opacity: updatingItems[item._id] ? 0.7 : 1
                                       }}
                                     >
-                                      ADD
+                                      {updatingItems[item._id] ? '...' : 'ADD'}
                                     </button>
                                   ) : (
                                     <span style={{ 

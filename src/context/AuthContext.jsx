@@ -14,12 +14,39 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
+    const token = localStorage.getItem('accessToken');
     const saved = localStorage.getItem('user');
-    if (!saved || saved === 'undefined') return null;
+
+    if (!token || !saved || saved === 'undefined') {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('lastActive');
+      return null;
+    }
+
     try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000;
+      const remaining = expiry - Date.now();
+
+      if (remaining <= 0) {
+        const savedLastActive = localStorage.getItem('lastActive');
+        const lastActiveTime = savedLastActive ? parseInt(savedLastActive, 10) : Date.now();
+        const INACTIVITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes inactivity limit
+        const isActive = (Date.now() - lastActiveTime) < INACTIVITY_THRESHOLD;
+
+        if (!isActive) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('lastActive');
+          return null;
+        }
+      }
       return JSON.parse(saved);
     } catch (e) {
+      localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
+      localStorage.removeItem('lastActive');
       return null;
     }
   });
