@@ -123,33 +123,33 @@ const SlideConfirmButton = React.forwardRef(
 
     const isDestructive = variant === "destructive";
     
-    // Fallback colors for inline styles if CSS classes are not fully resolving
-    const trackBg = isDestructive ? "rgba(179, 21, 34, 0.1)" : "rgba(17, 17, 17, 0.05)";
-    const trackBorder = isDestructive ? "rgba(179, 21, 34, 0.3)" : "rgba(0, 0, 0, 0.1)";
-    const fillBg = isDestructive ? "rgba(179, 21, 34, 0.25)" : "rgba(17, 17, 17, 0.2)";
-    const textCol = isDestructive ? "#b31522" : "#111111";
-    const thumbBg = isDestructive ? "#b31522" : "var(--primary, #111111)";
-    const thumbColor = "#ffffff";
+    // Use solid colors to match the old HoldConfirmButton
+    const trackBg = isDestructive ? "#b31522" : "#111111";
+    const trackBorder = "transparent";
+    const fillBg = "rgba(0, 0, 0, 0.25)"; // Darker fill trailing the thumb
+    const textCol = "#ffffff";
+    const thumbBg = "#ffffff";
+    const thumbColor = isDestructive ? "#b31522" : "#111111";
 
     return (
       <div
         ref={forwardedRef}
         data-status={status}
-        className={`slide-confirm-track ${disabled ? "disabled" : ""} ${className}`}
+        className={`slide-confirm-track ${className}`}
         style={{
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           overflow: 'hidden',
           borderRadius: '9999px',
-          backgroundColor: confirmed ? thumbBg : trackBg,
+          backgroundColor: trackBg,
           border: `1px solid ${trackBorder}`,
-          height: '52px',
+          height: '54px', // Match previous HoldConfirmButton height roughly
           width: '100%',
           userSelect: 'none',
           touchAction: 'none',
-          pointerEvents: disabled ? 'none' : 'auto',
-          opacity: disabled ? 0.5 : 1,
+          pointerEvents: (disabled && status === 'idle') ? 'none' : 'auto',
+          opacity: (disabled && status === 'idle') ? 0.6 : 1,
           ...style
         }}
         {...props}
