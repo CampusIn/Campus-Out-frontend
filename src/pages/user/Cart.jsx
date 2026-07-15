@@ -823,7 +823,7 @@ export default function Cart() {
                   variant="destructive"
                   onConfirm={() => handleOrder(paymentMethod)}
                   disabled={false}
-                  confirmedLabel="Order Placed!"
+                  confirmedLabel="Order Confirmed"
                   style={{ marginTop: '12px' }}
                 >
                   Slide to Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})

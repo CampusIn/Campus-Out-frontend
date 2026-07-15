@@ -1128,7 +1128,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                   variant="destructive"
                   onConfirm={handleCheckout}
                   disabled={isPlacingOrder}
-                  confirmedLabel="Order Placed!"
+                  confirmedLabel="Order Confirmed"
                   style={{ marginTop: '12px' }}
                 >
                   {isPlacingOrder ? (
