@@ -54,5 +54,12 @@ export const downloadOrderInvoice = (orderId) => api.get(`/admin/orders/${orderI
 export const getAbandonedCarts = (params) => api.get('/admin/abandoned-carts', { params });
 export const sendAbandonedCartReminder = (userId) => api.post(`/admin/abandoned-carts/${userId}/remind`);
 
-
-
+// Marketplace
+export const getMarketPlaceDashboard = () => api.get('/admin/marketplace/dashboard');
+export const getTopMarketPlaceProducts = () => api.get('/admin/marketplace/dashboard/top-products');
+export const getTopMarketPlaceCategories = () => api.get('/admin/marketplace/dashboard/top-categories');
+export const getMarketPlaceInventory = () => api.get('/admin/marketplace/dashboard/inventory');
+export const getAdminMarketPlaceOrders = (params) => api.get('/admin/marketplace/orders', { params });
+export const getAdminMarketPlaceOrderById = (id) => api.get(`/admin/marketplace/orders/${id}`);
+export const updateMarketPlaceOrderStatus = (id, data) => api.patch(`/admin/marketplace/orders/${id}/status`, data);
+export const assignMarketPlaceDelivery = (id, data) => api.patch(`/admin/marketplace/orders/${id}/assign-delivery`, data);

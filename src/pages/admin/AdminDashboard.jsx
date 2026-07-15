@@ -9,7 +9,7 @@ import {
   downloadOrderInvoice,
 } from '../../api/admin.api';
 
-import { DollarSign, Store, FileDown, Loader2, Phone, UserPlus, Search, ChevronLeft, ChevronRight, RefreshCw, ShoppingBag, Users, Calendar, ClipboardList, ChevronDown, Copy, MessageSquare, X } from 'lucide-react';
+import { DollarSign, Store, FileDown, Loader2, Phone, UserPlus, Search, ChevronLeft, ChevronRight, RefreshCw, ShoppingBag, Users, Calendar, ClipboardList, ChevronDown, Copy, MessageSquare, X, Package, Tag } from 'lucide-react';
 import {
   getAdminMarketplaceOrders,
   getAdminMarketplaceOrderById,
@@ -17,6 +17,7 @@ import {
   assignAdminMarketplaceDeliveryPartner,
 } from '../../api/marketplace.api';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { getMarketPlaceDashboard, getTopMarketPlaceProducts, getTopMarketPlaceCategories } from '../../api/admin.api';
 import './AdminPortal.css';
 
 const getWhatsAppLink = (phone) => {
@@ -61,6 +62,22 @@ export default function AdminDashboard() {
   // Top restaurants states
   const [topRestaurantsList, setTopRestaurantsList] = useState([]);
   const [topRestaurantsLoading, setTopRestaurantsLoading] = useState(true);
+
+  // Marketplace stats states
+  const [marketplaceStats, setMarketplaceStats] = useState({
+    totalRevenue: 0,
+    todaysRevenue: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    categoriesCount: 0,
+  });
+  const [marketplaceStatsLoading, setMarketplaceStatsLoading] = useState(false);
+  const [revenueCardFlipped, setRevenueCardFlipped] = useState(false);
+  const [topProducts, setTopProducts] = useState([]);
+  const [showAllTopProducts, setShowAllTopProducts] = useState(false);
+  const [topCategories, setTopCategories] = useState([]);
+  const [showAllTopCategories, setShowAllTopCategories] = useState(false);
+
   const [platformSettings, setPlatformSettings] = useState({
     deliveryCharge: 0,
     freeDeliveryAbove: 0,
@@ -74,7 +91,7 @@ export default function AdminDashboard() {
     message: '',
     confirmText: 'Confirm',
     isDestructive: false,
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   const openConfirmModal = (options) => {
@@ -125,21 +142,57 @@ export default function AdminDashboard() {
     fetchTopRestaurants();
   }, [fetchTopRestaurants]);
 
+  const fetchMarketplaceDashboard = useCallback(async () => {
+    setMarketplaceStatsLoading(true);
+    try {
+      const [statsRes, productsRes, categoriesRes] = await Promise.all([
+        getMarketPlaceDashboard(),
+        getTopMarketPlaceProducts(),
+        getTopMarketPlaceCategories()
+      ]);
+      if (statsRes.data.success) {
+        setMarketplaceStats({
+          totalRevenue: statsRes.data.data.overviewCards?.revenue || 0,
+          todaysRevenue: statsRes.data.data.overviewCards?.todaysRevenue || 0,
+          totalOrders: statsRes.data.data.overviewCards?.completedOrders || 0,
+          totalProducts: statsRes.data.data.overviewCards?.productsListed || 0,
+          categoriesCount: statsRes.data.data.overviewCards?.categories?.length || 0,
+        });
+      }
+      if (productsRes.data.success) {
+        setTopProducts(productsRes.data.data || []);
+      }
+      if (categoriesRes.data.success) {
+        setTopCategories(categoriesRes.data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching marketplace stats:', err);
+    } finally {
+      setMarketplaceStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (dashboardServiceType === 'marketplace') {
+      fetchMarketplaceDashboard();
+    }
+  }, [dashboardServiceType, fetchMarketplaceDashboard]);
+
   // Fetch orders
   const fetchOrders = useCallback(async () => {
     setTabLoading(true);
     try {
       const { data } = await (dashboardServiceType === 'food'
         ? getAdminOrders({
-            status: ordersStatus || undefined,
-            page: ordersPage,
-            limit: 8,
-          })
+          status: ordersStatus || undefined,
+          page: ordersPage,
+          limit: 8,
+        })
         : getAdminMarketplaceOrders({
-            status: ordersStatus || undefined,
-            page: ordersPage,
-            limit: 8,
-          }));
+          status: ordersStatus || undefined,
+          page: ordersPage,
+          limit: 8,
+        }));
       if (data.success) {
         setOrdersList(data.data.orders || []);
         setOrdersTotalPages(data.data.pagination?.totalPages || 1);
@@ -242,7 +295,7 @@ export default function AdminDashboard() {
     setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: true }));
     try {
       const response = await downloadOrderInvoice(orderId);
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -252,12 +305,12 @@ export default function AdminDashboard() {
       link.click();
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast.success(`Invoice #${orderNumber} downloaded successfully`);
     } catch (err) {
       console.error('Invoice download failed:', err);
       let errorMsg = 'Failed to download invoice';
-      
+
       if (err.response?.data instanceof Blob) {
         try {
           const text = await err.response.data.text();
@@ -269,7 +322,7 @@ export default function AdminDashboard() {
       } else if (err.response?.data?.message) {
         errorMsg = err.response.data.message;
       }
-      
+
       toast.error(errorMsg);
     } finally {
       setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: false }));
@@ -284,21 +337,25 @@ export default function AdminDashboard() {
   return (
     <div className="overview-tab-content">
       {/* Header */}
-      <header className="admin-header card" style={{ marginBottom: '28px' }}>
+      <header className="admin-header card" style={{ marginBottom: '20px' }}>
         <div className="admin-title-area">
           <span className="admin-role-badge">SYSTEM CONTROL</span>
           <h1>Campus Administration</h1>
           <p>Monitor real-time revenue stats, users activity, vendors, and cafeteria status</p>
         </div>
-        <button 
-          className="btn btn-sm btn-outline refresh-btn" 
+        <button
+          className="btn btn-sm btn-outline refresh-btn"
           onClick={() => {
-            fetchStats();
+            if (dashboardServiceType === 'food') {
+              fetchStats();
+              fetchTopRestaurants();
+            } else {
+              fetchMarketplaceDashboard();
+            }
             fetchOrders();
-            fetchTopRestaurants();
             toast.success('Data refreshed successfully');
           }}
-          disabled={statsLoading || tabLoading || topRestaurantsLoading}
+          disabled={statsLoading || tabLoading || topRestaurantsLoading || marketplaceStatsLoading}
           style={{ width: 'auto', gap: '6px' }}
         >
           <RefreshCw size={14} className={statsLoading || tabLoading ? 'spin-anim' : ''} />
@@ -306,7 +363,71 @@ export default function AdminDashboard() {
         </button>
       </header>
 
-      {statsLoading ? (
+      {/* Sliding Toggle Control for Service Type */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
+        <div style={{
+          background: '#f1f5f9',
+          padding: '4px',
+          borderRadius: '30px',
+          display: 'inline-flex',
+          border: '1.5px solid #e2e8f0',
+          cursor: 'pointer',
+          userSelect: 'none',
+          gap: '4px'
+        }}>
+          <button
+            onClick={() => {
+              setDashboardServiceType('food');
+              setOrdersPage(1);
+            }}
+            style={{
+              border: 'none',
+              background: dashboardServiceType === 'food' ? 'var(--primary)' : 'transparent',
+              color: dashboardServiceType === 'food' ? '#ffffff' : '#64748b',
+              padding: '10px 20px',
+              borderRadius: '26px',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Store size={16} />
+            Food Orders
+          </button>
+
+          <button
+            onClick={() => {
+              setDashboardServiceType('marketplace');
+              setOrdersPage(1);
+            }}
+            style={{
+              border: 'none',
+              background: dashboardServiceType === 'marketplace' ? 'var(--primary)' : 'transparent',
+              color: dashboardServiceType === 'marketplace' ? '#ffffff' : '#64748b',
+              padding: '10px 20px',
+              borderRadius: '26px',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <ShoppingBag size={16} />
+            Marketplace Orders
+          </button>
+        </div>
+      </div>
+
+      {statsLoading || marketplaceStatsLoading ? (
         <div className="loading-container">
           <div className="spinner"></div>
           <p>Calculating system analytics...</p>
@@ -314,255 +435,395 @@ export default function AdminDashboard() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div className="overview-main-layout">
-            {/* Stats Cards Grid */}
-            <div className="stats-cards-grid">
-              {/* Revenue Card */}
-              <div className="stat-card card gradient-card-revenue animate-slide-up">
-                <div className="stat-card-header">
-                  <span className="stat-card-title">Total Revenue</span>
-                  <div className="stat-icon-wrapper">
-                    <DollarSign size={22} color="#ffffff" />
-                  </div>
-                </div>
-                <div className="stat-card-value">₹{stats.revenue.toLocaleString()}</div>
-                <div className="stat-card-footer">
-                  <span>Delivered orders total amount</span>
-                </div>
-              </div>
 
-              {/* Orders Card */}
-              <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                <div className="stat-card-header">
-                  <span className="stat-card-title">Completed Orders</span>
-                  <div className="stat-icon-wrapper icon-bg-blue">
-                    <ShoppingBag size={22} color="#4f46e5" />
-                  </div>
-                </div>
-                <div className="stat-card-value">{stats.orderCount}</div>
-                <div className="stat-card-footer text-muted">
-                  <span>All order instances recorded</span>
-                </div>
-              </div>
-
-              {/* Active Users */}
-              <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <div className="stat-card-header">
-                  <span className="stat-card-title">Campus Customers</span>
-                  <div className="stat-icon-wrapper icon-bg-red">
-                    <Users size={22} color="#b31522" />
-                  </div>
-                </div>
-                <div className="stat-card-value">{stats.userCount}</div>
-                <div className="stat-card-footer text-muted">
-                  <span>Active students & staff accounts</span>
-                </div>
-              </div>
-
-              {/* Active Vendors */}
-              <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.3s' }}>
-                <div className="stat-card-header">
-                  <span className="stat-card-title">Eatery Vendors</span>
-                  <div className="stat-icon-wrapper icon-bg-green">
-                    <Store size={22} color="#06c169" />
-                  </div>
-                </div>
-                <div className="stat-card-value">{stats.vendorCount}</div>
-                <div className="stat-card-footer text-muted">
-                  <span>Registered cafeteria managers</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side metrics and widgets layout */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', width: '100%' }}>
-              {/* Key Efficiency Ratios */}
-              <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                <h3 className="chart-title">Key Efficiency Ratios</h3>
-                <p className="chart-subtitle">Calculated operational metric indicators</p>
-
-                <div className="metric-bars-container">
-                  {/* Metric 1 */}
-                  <div className="metric-bar-group">
-                    <div className="metric-bar-label-row">
-                      <span className="metric-bar-name">Average Order Value (AOV)</span>
-                      <span className="metric-bar-val">₹{avgOrderValue}</span>
-                    </div>
-                    <div className="metric-progress-bg">
-                      <div 
-                        className="metric-progress-fill color-rev" 
-                        style={{ width: `${Math.min((stats.revenue / (stats.orderCount || 1)) / 500 * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="metric-description">Target Benchmark: ₹250.00 / order</span>
-                  </div>
-
-                  {/* Metric 2 */}
-                  <div className="metric-bar-group">
-                    <div className="metric-bar-label-row">
-                      <span className="metric-bar-name">Orders Per Customer Ratio</span>
-                      <span className="metric-bar-val">{userEngagementRatio}x</span>
-                    </div>
-                    <div className="metric-progress-bg">
-                      <div 
-                        className="metric-progress-fill color-orders" 
-                        style={{ width: `${Math.min((userEngagementRatio / 10) * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="metric-description">Customer usage frequency scale</span>
-                  </div>
-
-                  {/* Metric 3 */}
-                  <div className="metric-bar-group">
-                    <div className="metric-bar-label-row">
-                      <span className="metric-bar-name">Cafeterias per Vendor Ratio</span>
-                      <span className="metric-bar-val">{restVendorRatio}</span>
-                    </div>
-                    <div className="metric-progress-bg">
-                      <div 
-                        className="metric-progress-fill color-vendors" 
-                        style={{ width: `${Math.min((restVendorRatio / 2) * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="metric-description">Average outlets run per manager</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Top Restaurants widget */}
-              <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.5s', padding: '24px' }}>
-                <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Store size={18} style={{ color: '#b31522' }} />
-                  <span>Top Eateries</span>
-                </h3>
-                <p className="chart-subtitle" style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 16px 0' }}>
-                  Top 5 cafeterias by completed order revenue
-                </p>
-
-                {topRestaurantsLoading ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 0' }}>
-                    <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
-                    <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
-                    <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
-                  </div>
-                ) : topRestaurantsList.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: '0.85rem' }}>
-                    No sales data available.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {topRestaurantsList.map((rest, index) => {
-                      const name = Array.isArray(rest.restaurantName) ? rest.restaurantName[0] : (rest.restaurantName || 'Unknown eatery');
-                      return (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                            <span style={{ 
-                              background: index === 0 ? '#fff5f5' : '#f8fafc',
-                              color: index === 0 ? '#b31522' : '#64748b',
-                              fontWeight: 800,
-                              fontSize: '0.8rem',
-                              width: '24px',
-                              height: '24px',
-                              borderRadius: '50%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0
-                            }}>
-                              #{index + 1}
-                            </span>
-                            <span style={{ 
-                              fontWeight: 700, 
-                              color: '#0f172a', 
-                              fontSize: '0.85rem',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}>
-                              {name}
-                            </span>
-                          </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
-                              ₹{rest.totalRevenue.toLocaleString()}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                              {rest.totalOrders} {rest.totalOrders === 1 ? 'order' : 'orders'}
-                            </div>
+            {dashboardServiceType === 'marketplace' ? (
+              <>
+                <div className="stats-cards-grid">
+                  <div className="flip-card-container animate-slide-up" onClick={() => setRevenueCardFlipped(!revenueCardFlipped)}>
+                    <div className={`flip-card-inner ${revenueCardFlipped ? 'flipped' : ''}`}>
+                      
+                      {/* Front: Today's Revenue */}
+                      <div className="flip-card-front">
+                        <div className="stat-card-header">
+                          <span className="stat-card-title" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Today's Revenue</span>
+                          <div className="stat-icon-wrapper" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
+                            <DollarSign size={22} color="#ffffff" />
                           </div>
                         </div>
-                      );
-                    })}
+                        <div>
+                          <div className="stat-card-value" style={{ color: '#ffffff', marginBottom: '4px' }}>
+                            ₹{(marketplaceStats?.todaysRevenue || 0).toLocaleString()}
+                          </div>
+                          <div className="stat-card-footer" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                            <span>Revenue generated today</span>
+                          </div>
+                        </div>
+                        <div className="flip-hint-badge">
+                          <span>Click to Flip</span>
+                        </div>
+                      </div>
+
+                      {/* Back: Marketplace Revenue (Total) */}
+                      <div className="flip-card-back">
+                        <div className="stat-card-header">
+                          <span className="stat-card-title" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Marketplace Revenue</span>
+                          <div className="stat-icon-wrapper" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
+                            <DollarSign size={22} color="#ffffff" />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="stat-card-value" style={{ color: '#ffffff', marginBottom: '4px' }}>
+                            ₹{(marketplaceStats?.totalRevenue || 0).toLocaleString()}
+                          </div>
+                          <div className="stat-card-footer" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                            <span>Total from delivered orders</span>
+                          </div>
+                        </div>
+                        <div className="flip-hint-badge">
+                          <span>Click to Flip</span>
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+
+                  <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Marketplace Orders</span>
+                      <div className="stat-icon-wrapper icon-bg-blue">
+                        <ShoppingBag size={22} color="#4f46e5" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">{marketplaceStats?.totalOrders || 0}</div>
+                    <div className="stat-card-footer text-muted">
+                      <span>Completed marketplace orders</span>
+                    </div>
+                  </div>
+
+                  <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Total Products</span>
+                      <div className="stat-icon-wrapper icon-bg-red">
+                        <Package size={22} color="#b31522" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">{marketplaceStats?.totalProducts || 0}</div>
+                    <div className="stat-card-footer text-muted">
+                      <span>Available products</span>
+                    </div>
+                  </div>
+
+                  <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Categories</span>
+                      <div className="stat-icon-wrapper icon-bg-green">
+                        <ClipboardList size={22} color="#06c169" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">{marketplaceStats?.categoriesCount || 0}</div>
+                    <div className="stat-card-footer text-muted">
+                      <span>Active categories</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '28px', width: '100%' }}>
+                  <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s', padding: '24px' }}>
+                    <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Package size={18} style={{ color: '#b31522' }} />
+                      <span>Top Marketplace Products</span>
+                    </h3>
+
+                    {topProducts.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: '0.85rem' }}>
+                        No product data available.
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
+                          {topProducts.slice(0, 3).map((prod, index) => (
+                            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                <span style={{
+                                  background: index === 0 ? '#fff5f5' : '#f8fafc',
+                                  color: index === 0 ? '#b31522' : '#64748b',
+                                  fontWeight: 800, fontSize: '0.8rem', width: '24px', height: '24px',
+                                  borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                }}>
+                                  #{index + 1}
+                                </span>
+                                <img 
+                                  src={prod.productImage || 'https://via.placeholder.com/24'} 
+                                  alt={prod.productName} 
+                                  style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }}
+                                />
+                                <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {prod.productName || 'Unknown Product'}
+                                </span>
+                              </div>
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
+                                  ₹{(prod.totalRevenue || 0).toLocaleString()}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                  {prod.totalSold || 0} sold
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {topProducts.length > 3 && (
+                          <button 
+                            className="btn btn-outline btn-sm"
+                            style={{ width: '100%', marginTop: '16px', borderRadius: '8px', padding: '8px' }}
+                            onClick={() => setShowAllTopProducts(true)}
+                          >
+                            View All {topProducts.length} Products
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.5s', padding: '24px' }}>
+                    <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ClipboardList size={18} style={{ color: '#06c169' }} />
+                      <span>Top Marketplace Categories</span>
+                    </h3>
+
+                    {topCategories.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: '0.85rem' }}>
+                        No category data available.
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
+                          {topCategories.slice(0, 3).map((cat, index) => (
+                            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                <span style={{
+                                  background: index === 0 ? '#f0fdf4' : '#f8fafc',
+                                  color: index === 0 ? '#16a34a' : '#64748b',
+                                  fontWeight: 800, fontSize: '0.8rem', width: '24px', height: '24px',
+                                  borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                }}>
+                                  #{index + 1}
+                                </span>
+                                <div style={{
+                                  width: '24px', height: '24px', borderRadius: '4px', background: '#f1f5f9',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                  <Tag size={14} color="#64748b" />
+                                </div>
+                                <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {cat.categoryName || 'Unknown Category'}
+                                </span>
+                              </div>
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
+                                  ₹{(cat.totalRevenue || 0).toLocaleString()}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                  {cat.totalOrders || 0} orders
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {topCategories.length > 3 && (
+                          <button 
+                            className="btn btn-outline btn-sm"
+                            style={{ width: '100%', marginTop: '16px', borderRadius: '8px', padding: '8px' }}
+                            onClick={() => setShowAllTopCategories(true)}
+                          >
+                            View All {topCategories.length} Categories
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="stats-cards-grid">
+                  <div className="stat-card card gradient-card-revenue animate-slide-up">
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Total Revenue</span>
+                      <div className="stat-icon-wrapper">
+                        <DollarSign size={22} color="#ffffff" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">₹{stats.revenue.toLocaleString()}</div>
+                    <div className="stat-card-footer">
+                      <span>Delivered orders total amount</span>
+                    </div>
+                  </div>
+
+                  <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Completed Orders</span>
+                      <div className="stat-icon-wrapper icon-bg-blue">
+                        <ShoppingBag size={22} color="#4f46e5" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">{stats.orderCount}</div>
+                    <div className="stat-card-footer text-muted">
+                      <span>All order instances recorded</span>
+                    </div>
+                  </div>
+
+                  <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Campus Customers</span>
+                      <div className="stat-icon-wrapper icon-bg-red">
+                        <Users size={22} color="#b31522" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">{stats.userCount}</div>
+                    <div className="stat-card-footer text-muted">
+                      <span>Active students & staff accounts</span>
+                    </div>
+                  </div>
+
+                  <div className="stat-card card animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                    <div className="stat-card-header">
+                      <span className="stat-card-title">Eatery Vendors</span>
+                      <div className="stat-icon-wrapper icon-bg-green">
+                        <Store size={22} color="#06c169" />
+                      </div>
+                    </div>
+                    <div className="stat-card-value">{stats.vendorCount}</div>
+                    <div className="stat-card-footer text-muted">
+                      <span>Registered cafeteria managers</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', width: '100%' }}>
+                  <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                    <h3 className="chart-title">Key Efficiency Ratios</h3>
+                    <p className="chart-subtitle">Calculated operational metric indicators</p>
+
+                    <div className="metric-bars-container">
+                      <div className="metric-bar-group">
+                        <div className="metric-bar-label-row">
+                          <span className="metric-bar-name">Average Order Value (AOV)</span>
+                          <span className="metric-bar-val">₹{avgOrderValue}</span>
+                        </div>
+                        <div className="metric-progress-bg">
+                          <div
+                            className="metric-progress-fill color-rev"
+                            style={{ width: `${Math.min((stats.revenue / (stats.orderCount || 1)) / 500 * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="metric-description">Target Benchmark: ₹250.00 / order</span>
+                      </div>
+
+                      <div className="metric-bar-group">
+                        <div className="metric-bar-label-row">
+                          <span className="metric-bar-name">Orders Per Customer Ratio</span>
+                          <span className="metric-bar-val">{userEngagementRatio}x</span>
+                        </div>
+                        <div className="metric-progress-bg">
+                          <div
+                            className="metric-progress-fill color-orders"
+                            style={{ width: `${Math.min((userEngagementRatio / 10) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="metric-description">Customer usage frequency scale</span>
+                      </div>
+
+                      <div className="metric-bar-group">
+                        <div className="metric-bar-label-row">
+                          <span className="metric-bar-name">Cafeterias per Vendor Ratio</span>
+                          <span className="metric-bar-val">{restVendorRatio}</span>
+                        </div>
+                        <div className="metric-progress-bg">
+                          <div
+                            className="metric-progress-fill color-vendors"
+                            style={{ width: `${Math.min((restVendorRatio / 2) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="metric-description">Average outlets run per manager</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.5s', padding: '24px' }}>
+                    <h3 className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Store size={18} style={{ color: '#b31522' }} />
+                      <span>Top Eateries</span>
+                    </h3>
+                    <p className="chart-subtitle" style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 16px 0' }}>
+                      Top 5 cafeterias by completed order revenue
+                    </p>
+
+                    {topRestaurantsLoading ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 0' }}>
+                        <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
+                        <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
+                        <div style={{ height: '40px', background: '#f1f5f9', borderRadius: '10px', animation: 'pulseSoft 1.5s infinite' }}></div>
+                      </div>
+                    ) : topRestaurantsList.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: '0.85rem' }}>
+                        No sales data available.
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {topRestaurantsList.map((rest, index) => {
+                          const name = Array.isArray(rest.restaurantName) ? rest.restaurantName[0] : (rest.restaurantName || 'Unknown eatery');
+                          return (
+                            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                <span style={{
+                                  background: index === 0 ? '#fff5f5' : '#f8fafc',
+                                  color: index === 0 ? '#b31522' : '#64748b',
+                                  fontWeight: 800,
+                                  fontSize: '0.8rem',
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}>
+                                  #{index + 1}
+                                </span>
+                                <span style={{
+                                  fontWeight: 700,
+                                  color: '#0f172a',
+                                  fontSize: '0.85rem',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }}>
+                                  {name}
+                                </span>
+                              </div>
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
+                                  ₹{rest.totalRevenue.toLocaleString()}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                  {rest.totalOrders} {rest.totalOrders === 1 ? 'order' : 'orders'}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
           </div>
 
           {/* Orders Management Directory */}
           <div className="data-table-tab card animate-fade-in" style={{ width: '100%' }}>
-            {/* Sliding Toggle Control for Service Type */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 20px 0 20px' }}>
-              <div style={{ 
-                background: '#f1f5f9', 
-                padding: '4px', 
-                borderRadius: '30px', 
-                display: 'inline-flex',
-                border: '1.5px solid #e2e8f0',
-                cursor: 'pointer',
-                userSelect: 'none',
-                gap: '4px'
-              }}>
-                <button
-                  onClick={() => {
-                    setDashboardServiceType('food');
-                    setOrdersPage(1);
-                  }}
-                  style={{
-                    border: 'none',
-                    background: dashboardServiceType === 'food' ? 'var(--primary)' : 'transparent',
-                    color: dashboardServiceType === 'food' ? '#ffffff' : '#64748b',
-                    padding: '10px 20px',
-                    borderRadius: '26px',
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Store size={16} />
-                  Food Orders
-                </button>
-
-                <button
-                  onClick={() => {
-                    setDashboardServiceType('marketplace');
-                    setOrdersPage(1);
-                  }}
-                  style={{
-                    border: 'none',
-                    background: dashboardServiceType === 'marketplace' ? 'var(--primary)' : 'transparent',
-                    color: dashboardServiceType === 'marketplace' ? '#ffffff' : '#64748b',
-                    padding: '10px 20px',
-                    borderRadius: '26px',
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <ShoppingBag size={16} />
-                  Marketplace Orders
-                </button>
-              </div>
-            </div>
 
             <div className="table-actions-header">
               <h2>Recent Orders Ledger</h2>
@@ -610,8 +871,8 @@ export default function AdminDashboard() {
 
                 {/* Mobile Dropdown (Redesigned Custom Select) */}
                 <div className="show-mobile custom-dropdown-container">
-                  <button 
-                    className="custom-dropdown-trigger" 
+                  <button
+                    className="custom-dropdown-trigger"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     type="button"
                   >
@@ -622,38 +883,38 @@ export default function AdminDashboard() {
                     <>
                       <div className="custom-dropdown-backdrop" onClick={() => setIsDropdownOpen(false)}></div>
                       <ul className="custom-dropdown-menu">
-                        <li 
-                          className={ordersStatus === '' ? 'active' : ''} 
+                        <li
+                          className={ordersStatus === '' ? 'active' : ''}
                           onClick={() => { setOrdersStatus(''); setOrdersPage(1); setIsDropdownOpen(false); }}
                         >
                           ALL ORDERS
                         </li>
-                        <li 
-                          className={ordersStatus === 'PENDING' ? 'active' : ''} 
+                        <li
+                          className={ordersStatus === 'PENDING' ? 'active' : ''}
                           onClick={() => { setOrdersStatus('PENDING'); setOrdersPage(1); setIsDropdownOpen(false); }}
                         >
                           PENDING
                         </li>
-                        <li 
-                          className={ordersStatus === 'PREPARING' ? 'active' : ''} 
+                        <li
+                          className={ordersStatus === 'PREPARING' ? 'active' : ''}
                           onClick={() => { setOrdersStatus('PREPARING'); setOrdersPage(1); setIsDropdownOpen(false); }}
                         >
                           PREPARING
                         </li>
-                        <li 
-                          className={ordersStatus === 'READY' ? 'active' : ''} 
+                        <li
+                          className={ordersStatus === 'READY' ? 'active' : ''}
                           onClick={() => { setOrdersStatus('READY'); setOrdersPage(1); setIsDropdownOpen(false); }}
                         >
                           READY
                         </li>
-                        <li 
-                          className={ordersStatus === 'DELIVERED' ? 'active' : ''} 
+                        <li
+                          className={ordersStatus === 'DELIVERED' ? 'active' : ''}
                           onClick={() => { setOrdersStatus('DELIVERED'); setOrdersPage(1); setIsDropdownOpen(false); }}
                         >
                           DELIVERED
                         </li>
-                        <li 
-                          className={ordersStatus === 'CANCELLED' ? 'active' : ''} 
+                        <li
+                          className={ordersStatus === 'CANCELLED' ? 'active' : ''}
                           onClick={() => { setOrdersStatus('CANCELLED'); setOrdersPage(1); setIsDropdownOpen(false); }}
                         >
                           CANCELLED
@@ -726,12 +987,12 @@ export default function AdminDashboard() {
                                     onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
                                     disabled={downloadingInvoiceMap[ord._id]}
                                     title="Download Invoice PDF"
-                                    style={{ 
-                                      width: '30px', 
-                                      height: '30px', 
-                                      padding: 0, 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
+                                    style={{
+                                      width: '30px',
+                                      height: '30px',
+                                      padding: 0,
+                                      display: 'flex',
+                                      alignItems: 'center',
                                       justifyContent: 'center',
                                       borderRadius: '8px'
                                     }}
@@ -798,13 +1059,13 @@ export default function AdminDashboard() {
                               className="btn btn-sm btn-outline"
                               onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
                               disabled={downloadingInvoiceMap[ord._id]}
-                              style={{ 
-                                width: '36px', 
-                                height: '36px', 
-                                padding: 0, 
-                                borderRadius: '10px', 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                              style={{
+                                width: '36px',
+                                height: '36px',
+                                padding: 0,
+                                borderRadius: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
                                 justifyContent: 'center',
                                 flexShrink: 0
                               }}
@@ -875,16 +1136,16 @@ export default function AdminDashboard() {
                   <div>
                     <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Phone</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
-                      <a 
+                      <a
                         href={`tel:${selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone}`}
                         style={{ margin: 0, fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem', textDecoration: 'none' }}
                       >
                         {selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone || '+91 98765 43210'}
                       </a>
-                      
+
                       {/* Copy Button */}
                       {(selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone) && (
-                        <button 
+                        <button
                           onClick={() => handleCopyToClipboard(selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone, 'Phone number')}
                           style={{
                             background: 'transparent',
@@ -908,7 +1169,7 @@ export default function AdminDashboard() {
 
                       {/* Call Icon Link */}
                       {(selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone) && (
-                        <a 
+                        <a
                           href={`tel:${selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone}`}
                           style={{
                             display: 'flex',
@@ -932,7 +1193,7 @@ export default function AdminDashboard() {
 
                       {/* SMS Icon Link */}
                       {(selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone) && (
-                        <a 
+                        <a
                           href={`sms:${selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone}`}
                           style={{
                             display: 'flex',
@@ -956,7 +1217,7 @@ export default function AdminDashboard() {
 
                       {/* WhatsApp Icon Link */}
                       {(selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone) && (
-                        <a 
+                        <a
                           href={getWhatsAppLink(selectedOrder.customerPhone || selectedOrder.phone || selectedOrder.user?.phone)}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -1002,10 +1263,10 @@ export default function AdminDashboard() {
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {image ? (
-                            <img 
-                              src={image} 
-                              alt={name} 
-                              style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }} 
+                            <img
+                              src={image}
+                              alt={name}
+                              style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }}
                             />
                           ) : (
                             <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: '#94a3b8' }}>🍽️</div>
@@ -1117,11 +1378,11 @@ export default function AdminDashboard() {
               {/* Marketplace specific status update & delivery partner assignment */}
               {dashboardServiceType === 'marketplace' && (
                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  
+
                   {/* Status header & actions */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #edf2f7' }}>
                     <span style={{ color: '#94a3b8', fontSize: '0.7rem', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Update Status</span>
-                    
+
                     {!['DELIVERED', 'CANCELLED', 'REJECTED'].includes(selectedOrder.orderStatus) ? (
                       <div>
                         {selectedOrder.orderStatus === 'PENDING' ? (
@@ -1214,25 +1475,25 @@ export default function AdminDashboard() {
                                 >
                                   Cancel
                                 </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    style={{
-                                      flex: '1 1 120px', minHeight: '48px', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, borderRadius: '12px', background: '#dc2626', color: '#ffffff', fontSize: '0.82rem', border: 'none', opacity: (statusUpdating || !rejectionMsgInput.trim()) ? 0.7 : 1
-                                    }}
-                                    onClick={() => {
-                                      openConfirmModal({
-                                        title: 'Reject Order',
-                                        message: 'Are you sure you want to reject this order?',
-                                        confirmText: 'Reject Order',
-                                        isDestructive: true,
-                                        onConfirm: () => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')
-                                      });
-                                    }}
-                                    disabled={statusUpdating || !rejectionMsgInput.trim()}
-                                  >
-                                    Confirm Reject
-                                  </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  style={{
+                                    flex: '1 1 120px', minHeight: '48px', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, borderRadius: '12px', background: '#dc2626', color: '#ffffff', fontSize: '0.82rem', border: 'none', opacity: (statusUpdating || !rejectionMsgInput.trim()) ? 0.7 : 1
+                                  }}
+                                  onClick={() => {
+                                    openConfirmModal({
+                                      title: 'Reject Order',
+                                      message: 'Are you sure you want to reject this order?',
+                                      confirmText: 'Reject Order',
+                                      isDestructive: true,
+                                      onConfirm: () => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')
+                                    });
+                                  }}
+                                  disabled={statusUpdating || !rejectionMsgInput.trim()}
+                                >
+                                  Confirm Reject
+                                </button>
                               </div>
                             </div>
                           )
@@ -1362,19 +1623,19 @@ export default function AdminDashboard() {
 
             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               {dashboardServiceType === 'food' && (
-                <button 
-                  className="btn btn-primary" 
-                  style={{ 
-                    width: 'auto', 
-                    padding: '8px 20px', 
-                    borderRadius: '10px', 
-                    fontWeight: 700, 
-                    height: '36px', 
+                <button
+                  className="btn btn-primary"
+                  style={{
+                    width: 'auto',
+                    padding: '8px 20px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    height: '36px',
                     fontSize: '0.8rem',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px'
-                  }} 
+                  }}
                   onClick={() => handleDownloadInvoice(selectedOrder._id, selectedOrder.orderNumber)}
                   disabled={downloadingInvoiceMap[selectedOrder._id]}
                 >
@@ -1399,10 +1660,109 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <ConfirmModal 
-        {...confirmModalState} 
-        onClose={closeConfirmModal} 
+      <ConfirmModal
+        {...confirmModalState}
+        onClose={closeConfirmModal}
       />
+
+      {/* View All Products Modal */}
+      {showAllTopProducts && (
+        <div className="modal-overlay" onClick={() => setShowAllTopProducts(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Package size={20} style={{ color: '#b31522' }} />
+                <span>All Top Marketplace Products</span>
+              </h3>
+              <button className="close-modal-btn" onClick={() => setShowAllTopProducts(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {topProducts.map((prod, index) => (
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <span style={{
+                      background: index === 0 ? '#fff5f5' : '#f8fafc',
+                      color: index === 0 ? '#b31522' : '#64748b',
+                      fontWeight: 800, fontSize: '0.8rem', width: '28px', height: '28px',
+                      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                    }}>
+                      #{index + 1}
+                    </span>
+                    <img 
+                      src={prod.productImage || 'https://via.placeholder.com/40'} 
+                      alt={prod.productName} 
+                      style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }}
+                    />
+                    <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>
+                      {prod.productName || 'Unknown Product'}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>
+                      ₹{(prod.totalRevenue || 0).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {prod.totalSold || 0} sold
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View All Categories Modal */}
+      {showAllTopCategories && (
+        <div className="modal-overlay" onClick={() => setShowAllTopCategories(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <ClipboardList size={20} style={{ color: '#06c169' }} />
+                <span>All Top Marketplace Categories</span>
+              </h3>
+              <button className="close-modal-btn" onClick={() => setShowAllTopCategories(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {topCategories.map((cat, index) => (
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <span style={{
+                      background: index === 0 ? '#f0fdf4' : '#f8fafc',
+                      color: index === 0 ? '#16a34a' : '#64748b',
+                      fontWeight: 800, fontSize: '0.8rem', width: '28px', height: '28px',
+                      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                    }}>
+                      #{index + 1}
+                    </span>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '8px', background: '#f1f5f9',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <Tag size={20} color="#64748b" />
+                    </div>
+                    <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>
+                      {cat.categoryName || 'Unknown Category'}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>
+                      ₹{(cat.totalRevenue || 0).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {cat.totalOrders || 0} orders
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

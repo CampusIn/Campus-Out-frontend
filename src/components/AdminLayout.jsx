@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getAdminDashboard } from '../api/admin.api';
 
-import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag } from 'lucide-react';
+import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag, ClipboardList } from 'lucide-react';
 import '../pages/admin/AdminPortal.css';
 
 export default function AdminLayout() {
@@ -67,6 +67,7 @@ export default function AdminLayout() {
     { path: '/admin/restaurants', label: `Cafeteria Directory (${stats.restaurantCount})`, icon: <Store size={18} /> },
     { path: '/admin/users', label: `User Directory (${stats.userCount + stats.vendorCount})`, icon: <Users size={18} /> },
     { path: '/admin/abandoned-carts', label: 'Abandoned Carts', icon: <ShoppingBag size={18} /> },
+    { path: '/admin/inventory', label: 'Inventory Tracker', icon: <ClipboardList size={18} /> },
   ];
 
   const getCurrentPageLabel = () => {
@@ -167,6 +168,14 @@ export default function AdminLayout() {
             >
               <ShoppingBag size={20} />
               <span>Abandoned Carts</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/inventory"
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <ClipboardList size={20} />
+              <span>Inventory Tracker</span>
             </NavLink>
           </nav>
 

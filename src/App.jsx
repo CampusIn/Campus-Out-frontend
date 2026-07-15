@@ -45,6 +45,7 @@ const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
 const AdminAbandonedCarts = lazy(() => import('./pages/admin/AdminAbandonedCarts'));
 const AdminMarketplace = lazy(() => import('./pages/admin/AdminMarketplace'));
+const AdminInventory = lazy(() => import('./pages/admin/AdminInventory'));
 const Marketplace = lazy(() => import('./pages/user/Marketplace'));
 const MarketplaceProductDetail = lazy(() => import('./pages/user/MarketplaceProductDetail'));
 const MarketplaceCart = lazy(() => import('./pages/user/MarketplaceCart'));
@@ -160,6 +161,7 @@ export default function App() {
                       <Route path="restaurants" element={<AdminRestaurants />} />
                       <Route path="users" element={<AdminUsers />} />
                       <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
+                      <Route path="inventory" element={<AdminInventory />} />
                     </Route>
                     <Route path="/delivery/login" element={<DeliveryLogin />} />
                     <Route path="/delivery/register" element={<DeliveryRegister />} />
