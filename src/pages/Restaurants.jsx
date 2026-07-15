@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar } from 'lucide-react';
-import { MorphingDialog, MorphingDialogTrigger, MorphingDialogContent, MorphingDialogClose } from '../components/MorphingDialog';
+
 import { DynamicIsland } from '../components/DynamicIsland';
 import { motion } from 'framer-motion';
 
@@ -938,81 +938,34 @@ export default function Restaurants() {
               const foodImage = foodImages[idx % foodImages.length];
               const promoText = promoTexts[idx % promoTexts.length];
               return (
-                <MorphingDialog key={r._id}>
-                  <MorphingDialogTrigger 
-                    className="swiggy-restaurant-card"
-                    style={{ borderRadius: '16px', backgroundColor: 'transparent', boxShadow: 'none' }}
-                  >
-                    {/* Image Banner with Overlay */}
-                    <div className="swiggy-card-img-wrapper">
-                      <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
-                      <div className="swiggy-card-overlay">
-                        <span className="swiggy-promo-text">{promoText}</span>
-                      </div>
+                <Link 
+                  to={`/restaurants/${r._id}`}
+                  key={r._id} 
+                  className="swiggy-restaurant-card hover-lift"
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                >
+                  {/* Image Banner with Overlay */}
+                  <div className="swiggy-card-img-wrapper">
+                    <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
+                    <div className="swiggy-card-overlay">
+                      <span className="swiggy-promo-text">{promoText}</span>
                     </div>
-                    {/* Restaurant Info */}
-                    <div className="swiggy-card-info">
-                      <h3 className="swiggy-card-name">{r.restaurantName}</h3>
-                      <div className="swiggy-card-rating-row">
-                        <div className="swiggy-rating-star-circle">
-                          <Star size={10} color="#ffffff" fill="#ffffff" />
-                        </div>
-                        <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
-                        <span className="swiggy-bullet-dot">&bull;</span>
-                        <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
+                  </div>
+                  {/* Restaurant Info */}
+                  <div className="swiggy-card-info">
+                    <h3 className="swiggy-card-name">{r.restaurantName}</h3>
+                    <div className="swiggy-card-rating-row">
+                      <div className="swiggy-rating-star-circle">
+                        <Star size={10} color="#ffffff" fill="#ffffff" />
                       </div>
-                      <p className="swiggy-card-cuisines">{r.category}</p>
-                      <p className="swiggy-card-location">{r.location}</p>
+                      <span className="swiggy-rating-val">{r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}</span>
+                      <span className="swiggy-bullet-dot">&bull;</span>
+                      <span className="swiggy-delivery-time">{r.deliveryTime} mins</span>
                     </div>
-                  </MorphingDialogTrigger>
-                  <MorphingDialogContent style={{ width: '90vw', maxWidth: '450px', padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
-                    <MorphingDialogClose />
-                    <motion.div
-                      initial={{ opacity: 0, filter: 'blur(4px)' }}
-                      animate={{ opacity: 1, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0, filter: 'blur(4px)' }}
-                      transition={{ duration: 0.25, delay: 0.1 }}
-                      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                    >
-                      <div style={{ width: '100%', height: '220px', position: 'relative', flexShrink: 0 }}>
-                        <img src={foodImage} alt={r.restaurantName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%)', color: 'white' }}>
-                          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>{r.restaurantName}</h2>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ffc700', color: '#111', padding: '3px 8px', borderRadius: '8px', fontWeight: 750, fontSize: '0.8rem' }}>
-                              <Star size={12} fill="#111" /> {r.averageRating > 0 ? r.averageRating.toFixed(1) : '4.5'}
-                            </span>
-                            <span style={{ opacity: 0.8 }}>&bull;</span>
-                            <span style={{ fontWeight: 600, opacity: 0.9 }}>{r.deliveryTime} mins</span>
-                            <span style={{ opacity: 0.8 }}>&bull;</span>
-                            <span style={{ fontWeight: 600, opacity: 0.9 }}>{r.location}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ padding: '24px', flex: 1 }}>
-                        <div style={{ marginBottom: '24px' }}>
-                          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111', marginBottom: '8px' }}>About this place</h3>
-                          <p style={{ color: '#4a5568', fontSize: '0.95rem', lineHeight: 1.6, margin: 0 }}>
-                            Craving {r.category}? Look no further! Enjoy our freshly prepared dishes right from {r.restaurantName} delivered straight to your hostel in {r.deliveryTime} minutes. 
-                          </p>
-                        </div>
-                        
-                        <div style={{ padding: '16px', background: 'rgba(255, 199, 0, 0.1)', borderRadius: '12px', border: '1px dashed #ffc700', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <Megaphone size={20} color="#b45309" />
-                          <span style={{ fontSize: '0.9rem', color: '#b45309', fontWeight: 600 }}>{promoText} on selected items!</span>
-                        </div>
-
-                        <Link 
-                          to={`/restaurants/${r._id}`}
-                          className="hover-lift"
-                          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', width: '100%', padding: '16px', background: '#b31522', color: 'white', textAlign: 'center', borderRadius: '12px', fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(179, 21, 34, 0.3)' }}
-                        >
-                          <Utensils size={18} /> View Menu & Order
-                        </Link>
-                      </div>
-                    </motion.div>
-                  </MorphingDialogContent>
-                </MorphingDialog>
+                    <p className="swiggy-card-cuisines">{r.category}</p>
+                    <p className="swiggy-card-location">{r.location}</p>
+                  </div>
+                </Link>
               );
             })}
           </div>
