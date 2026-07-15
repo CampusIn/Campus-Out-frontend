@@ -16,7 +16,7 @@ import {
   updateAdminMarketplaceOrderStatus,
   assignAdminMarketplaceDeliveryPartner,
 } from '../../api/marketplace.api';
-import { SlideConfirmButton } from '../../components/SlideConfirmButton';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import './AdminPortal.css';
 
 const getWhatsAppLink = (phone) => {
@@ -67,6 +67,26 @@ export default function AdminDashboard() {
     gstPercentage: 0,
     packagingCharge: 0
   });
+
+  const [confirmModalState, setConfirmModalState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    isDestructive: false,
+    onConfirm: () => {}
+  });
+
+  const openConfirmModal = (options) => {
+    setConfirmModalState({
+      isOpen: true,
+      ...options
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModalState(prev => ({ ...prev, isOpen: false }));
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -1107,15 +1127,26 @@ export default function AdminDashboard() {
                         {selectedOrder.orderStatus === 'PENDING' ? (
                           !isRejectingMarketplace ? (
                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                              <SlideConfirmButton
-                                variant="default"
-                                style={{ flex: '1 1 120px', minHeight: '48px' }}
-                                onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'CONFIRMED')}
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                style={{
+                                  flex: '1 1 120px', minHeight: '48px',
+                                  padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px', fontSize: '0.82rem', background: 'var(--primary)', color: '#ffffff', border: 'none', opacity: statusUpdating ? 0.7 : 1
+                                }}
+                                onClick={() => {
+                                  openConfirmModal({
+                                    title: 'Accept Order',
+                                    message: 'Are you sure you want to accept this order?',
+                                    confirmText: 'Accept Order',
+                                    isDestructive: false,
+                                    onConfirm: () => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'CONFIRMED')
+                                  });
+                                }}
                                 disabled={statusUpdating}
-                                confirmedLabel="Accepted!"
                               >
-                                Slide to Accept Order
-                              </SlideConfirmButton>
+                                Accept Order
+                              </button>
                               <button
                                 type="button"
                                 className="btn btn-outline"
@@ -1131,7 +1162,7 @@ export default function AdminDashboard() {
                                   fontWeight: 700,
                                   borderRadius: '12px',
                                   fontSize: '0.82rem',
-                                  height: '42px',
+                                  minHeight: '48px',
                                   background: 'transparent'
                                 }}
                                 onClick={() => setIsRejectingMarketplace(true)}
@@ -1162,11 +1193,18 @@ export default function AdminDashboard() {
                                   type="button"
                                   className="btn btn-outline"
                                   style={{
-                                    padding: '6px 16px',
-                                    borderRadius: '10px',
-                                    height: '34px',
-                                    fontSize: '0.78rem',
-                                    width: 'auto'
+                                    flex: '1 1 120px',
+                                    minHeight: '48px',
+                                    padding: '10px 16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 700,
+                                    borderRadius: '12px',
+                                    fontSize: '0.82rem',
+                                    borderColor: '#64748b',
+                                    color: '#64748b',
+                                    background: 'transparent'
                                   }}
                                   onClick={() => {
                                     setIsRejectingMarketplace(false);
@@ -1176,15 +1214,25 @@ export default function AdminDashboard() {
                                 >
                                   Cancel
                                 </button>
-                                  <SlideConfirmButton
-                                    variant="destructive"
-                                    style={{ flex: '1 1 120px', minHeight: '42px' }}
-                                    onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')}
+                                  <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    style={{
+                                      flex: '1 1 120px', minHeight: '48px', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, borderRadius: '12px', background: '#dc2626', color: '#ffffff', fontSize: '0.82rem', border: 'none', opacity: (statusUpdating || !rejectionMsgInput.trim()) ? 0.7 : 1
+                                    }}
+                                    onClick={() => {
+                                      openConfirmModal({
+                                        title: 'Reject Order',
+                                        message: 'Are you sure you want to reject this order?',
+                                        confirmText: 'Reject Order',
+                                        isDestructive: true,
+                                        onConfirm: () => handleUpdateMarketplaceOrderStatus(selectedOrder._id, 'REJECTED')
+                                      });
+                                    }}
                                     disabled={statusUpdating || !rejectionMsgInput.trim()}
-                                    confirmedLabel="Rejected"
                                   >
-                                    Slide to Reject
-                                  </SlideConfirmButton>
+                                    Confirm Reject
+                                  </button>
                               </div>
                             </div>
                           )
@@ -1199,15 +1247,25 @@ export default function AdminDashboard() {
                             const transition = transitionMap[selectedOrder.orderStatus];
                             if (!transition) return null;
                             return (
-                              <SlideConfirmButton
-                                variant="default"
-                                style={{ width: '100%', minHeight: '48px' }}
-                                onConfirm={() => handleUpdateMarketplaceOrderStatus(selectedOrder._id, transition.next)}
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                style={{
+                                  width: '100%', minHeight: '48px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700, borderRadius: '12px', fontSize: '0.85rem', background: 'var(--primary)', color: '#ffffff', border: 'none', opacity: statusUpdating ? 0.7 : 1
+                                }}
+                                onClick={() => {
+                                  openConfirmModal({
+                                    title: transition.label,
+                                    message: `Are you sure you want to ${transition.label.toLowerCase()}?`,
+                                    confirmText: 'Confirm',
+                                    isDestructive: false,
+                                    onConfirm: () => handleUpdateMarketplaceOrderStatus(selectedOrder._id, transition.next)
+                                  });
+                                }}
                                 disabled={statusUpdating}
-                                confirmedLabel="Updated!"
                               >
-                                Slide to {transition.label}
-                              </SlideConfirmButton>
+                                {transition.label}
+                              </button>
                             );
                           })()
                         )}
@@ -1340,6 +1398,11 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      <ConfirmModal 
+        {...confirmModalState} 
+        onClose={closeConfirmModal} 
+      />
     </div>
   );
 }
