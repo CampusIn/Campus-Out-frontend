@@ -1,8 +1,8 @@
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 
-import { ShoppingCart, Flame, Store, Shield, Bike, Navigation, ClipboardList, User, LogOut, ChevronDown, Search } from 'lucide-react';
+import { ShoppingCart, Flame, Store, Shield, Bike, Navigation, ClipboardList, User, LogOut, ChevronDown, Search, ShoppingBag } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
 
 const savedAddresses = [
@@ -261,10 +261,9 @@ export default function Navbar() {
           )}
         </div>
 
-        {isHomepage ? (
-          <div className="navbar-right-content-homepage">
-            {/* Search Bar */}
-            <form onSubmit={handleSearchSubmit} className="desktop-header-search-form-nav" ref={suggestionsRef}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {isHomepage && (
+            <form onSubmit={handleSearchSubmit} className="desktop-header-search-form-nav" style={{ width: '320px' }} ref={suggestionsRef}>
               <input 
                 type="text" 
                 className="desktop-search-input-field-nav"
@@ -325,177 +324,104 @@ export default function Navbar() {
                 </div>
               )}
             </form>
+          )}
 
-            {/* Homepage Desktop-Only circular Profile User Avatar button */}
-            <div className="homepage-profile-avatar-container">
-              <Link to="/profile" className="homepage-profile-circle-btn hover-scale">
-                <User size={18} color="#ffffff" />
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-
+          <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {user ? (
               <>
                 {user.role === 'user' && (
                   <>
-                    <Link 
+                    <NavLink 
+                      to="/restaurants" 
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Restaurants"
+                    >
+                      <Store size={18} />
+                    </NavLink>
+                    <NavLink 
+                      to="/marketplace" 
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Marketplace"
+                    >
+                      <ShoppingBag size={18} />
+                    </NavLink>
+                    <NavLink 
                       to="/cart" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/cart') ? '#b31522' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Cart"
                     >
                       <ShoppingCart size={18} />
-                      Cart
-                    </Link>
-                    <Link 
+                    </NavLink>
+                    <NavLink 
                       to="/orders" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/orders') ? '#b31522' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Orders"
                     >
                       <ClipboardList size={18} />
-                      Orders
-                    </Link>
-                    <Link 
+                    </NavLink>
+                    <NavLink 
                       to="/profile" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/profile') ? '#b31522' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Profile"
                     >
                       <User size={18} />
-                      Profile
-                    </Link>
+                    </NavLink>
                   </>
                 )}
                 
                 {user.role === 'vendor' && (
                   <>
-                    <Link 
+                    <NavLink 
                       to="/vendor" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/vendor') ? '#b31522' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Vendor Dashboard"
                     >
                       <Store size={18} />
-                      Dashboard
-                    </Link>
-                    <Link 
+                    </NavLink>
+                    <NavLink 
                       to="/profile" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/profile') ? '#b31522' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Profile"
                     >
                       <User size={18} />
-                      Profile
-                    </Link>
+                    </NavLink>
                   </>
                 )}
                 
                 {user.role === 'admin' && (
                   <>
-                    <Link 
+                    <NavLink 
                       to="/admin" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/admin') ? '#b31522' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Admin Dashboard"
                     >
                       <Shield size={18} />
-                      Admin Dashboard
-                    </Link>
+                    </NavLink>
                   </>
                 )}
                 
                 {user.role === 'delivery_partner' && (
                   <>
-                    <Link 
+                    <NavLink 
                       to="/delivery/dashboard" 
-                      className="nav-link"
-                      style={{ 
-                        color: isActive('/delivery/dashboard') ? '#06c169' : '#718096', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px',
-                        fontSize: '0.9rem',
-                        transition: 'color 0.2s'
-                      }}
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Delivery Dashboard"
                     >
                       <Bike size={18} />
-                      Delivery Dashboard
-                    </Link>
+                    </NavLink>
                   </>
                 )}
                 
                 <button 
                   onClick={logout} 
-                  className="nav-link hover-darken" 
-                  style={{ 
-                    background: '#fff5f5', 
-                    border: 'none', 
-                    color: '#b31522',
-                    cursor: 'pointer', 
-                    fontFamily: 'inherit', 
-                    fontWeight: 700, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px',
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontSize: '0.9rem',
-                    transition: 'all 0.2s'
-                  }}
+                  className="desktop-logout-btn"
+                  title="Logout"
                 >
-                  <LogOut size={16} />
-                  Logout
+                  <LogOut size={18} />
                 </button>
               </>
             ) : (
               <>
-
                 <Link 
                   to="/login" 
                   className="nav-link"
@@ -525,7 +451,7 @@ export default function Navbar() {
               </>
             )}
           </div>
-        )}
+        </div>
       </ContentWrapper>
     </nav>
   );

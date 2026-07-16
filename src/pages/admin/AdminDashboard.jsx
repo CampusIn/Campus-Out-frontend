@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -15,9 +15,12 @@ import {
   getAdminMarketplaceOrderById,
   updateAdminMarketplaceOrderStatus,
   assignAdminMarketplaceDeliveryPartner,
+  downloadAdminMarketplaceOrderInvoice,
 } from '../../api/marketplace.api';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { getMarketPlaceDashboard, getTopMarketPlaceProducts, getTopMarketPlaceCategories } from '../../api/admin.api';
+import { viewDeliveryPartners } from '../../api/delivery.api';
+import Combobox from '../../components/Combobox';
 import './AdminPortal.css';
 
 const getWhatsAppLink = (phone) => {
@@ -58,6 +61,28 @@ export default function AdminDashboard() {
   const [partnerIdInput, setPartnerIdInput] = useState('');
   const [assignDeliveryOpen, setAssignDeliveryOpen] = useState(false);
   const [assigningPartner, setAssigningPartner] = useState(false);
+  const [deliveryPartners, setDeliveryPartners] = useState([]);
+
+  const fetchDeliveryPartners = async () => {
+    try {
+      const { data } = await viewDeliveryPartners();
+      if (data.success && data.data) {
+        setDeliveryPartners(data.data || []);
+      } else {
+        setDeliveryPartners([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch delivery partners', err);
+    }
+  };
+
+  const partnerOptions = useMemo(() => {
+    return deliveryPartners.map(p => ({
+      value: p._id,
+      label: `${p.user?.username || 'Partner'} (${p.phoneNumber})`,
+      description: `Vehicle: ${p.vehicleNumber}`
+    }));
+  }, [deliveryPartners]);
 
   // Top restaurants states
   const [topRestaurantsList, setTopRestaurantsList] = useState([]);
@@ -122,6 +147,7 @@ export default function AdminDashboard() {
       }
     };
     fetchSettings();
+    fetchDeliveryPartners();
   }, []);
 
   const fetchTopRestaurants = useCallback(async () => {
@@ -262,16 +288,16 @@ export default function AdminDashboard() {
   };
 
   const handleAssignMarketplaceDeliveryPartner = async (e) => {
-    e.preventDefault();
-    if (!partnerIdInput.trim()) {
-      toast.error('Please paste a valid Delivery Partner Document ID');
+    if (e && e.preventDefault) e.preventDefault();
+    if (!partnerIdInput) {
+      toast.error('Please select a Delivery Partner');
       return;
     }
 
     setAssigningPartner(true);
     try {
       const { data } = await assignAdminMarketplaceDeliveryPartner(selectedOrder._id, {
-        deliveryPartnerId: partnerIdInput.trim()
+        deliveryPartnerId: partnerIdInput
       });
       if (data.success) {
         toast.success('Delivery partner assigned successfully!');
@@ -283,6 +309,7 @@ export default function AdminDashboard() {
           setSelectedOrder(updated.data.order);
         }
         fetchOrders();
+        await fetchDeliveryPartners();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to assign delivery partner');
@@ -294,7 +321,9 @@ export default function AdminDashboard() {
   const handleDownloadInvoice = async (orderId, orderNumber) => {
     setDownloadingInvoiceMap((prev) => ({ ...prev, [orderId]: true }));
     try {
-      const response = await downloadOrderInvoice(orderId);
+      const response = await (dashboardServiceType === 'food'
+        ? downloadOrderInvoice(orderId)
+        : downloadAdminMarketplaceOrderInvoice(orderId));
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
@@ -952,7 +981,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {ordersList.map((ord) => {
-                        const total = dashboardServiceType === 'food' ? ord.totalAmount : (ord.pricing?.finalAmount || ord.totalAmount);
+                        const total = ord.pricing?.finalAmount || ord.totalAmount;
                         return (
                           <tr key={ord._id}>
                             <td className="font-bold">#{ord.orderNumber}</td>
@@ -981,29 +1010,27 @@ export default function AdminDashboard() {
                                 >
                                   View Details
                                 </button>
-                                {dashboardServiceType === 'food' && (
-                                  <button
-                                    className="btn btn-sm btn-outline"
-                                    onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
-                                    disabled={downloadingInvoiceMap[ord._id]}
-                                    title="Download Invoice PDF"
-                                    style={{
-                                      width: '30px',
-                                      height: '30px',
-                                      padding: 0,
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      borderRadius: '8px'
-                                    }}
-                                  >
-                                    {downloadingInvoiceMap[ord._id] ? (
-                                      <Loader2 size={14} className="spin-anim" />
-                                    ) : (
-                                      <FileDown size={14} />
-                                    )}
-                                  </button>
-                                )}
+                                <button
+                                  className="btn btn-sm btn-outline"
+                                  onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
+                                  disabled={downloadingInvoiceMap[ord._id]}
+                                  title="Download Invoice PDF"
+                                  style={{
+                                    width: '30px',
+                                    height: '30px',
+                                    padding: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: '8px'
+                                  }}
+                                >
+                                  {downloadingInvoiceMap[ord._id] ? (
+                                    <Loader2 size={14} className="spin-anim" />
+                                  ) : (
+                                    <FileDown size={14} />
+                                  )}
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -1015,7 +1042,7 @@ export default function AdminDashboard() {
 
                 <div className="show-mobile admin-mobile-cards-list">
                   {ordersList.map((ord) => {
-                    const total = dashboardServiceType === 'food' ? ord.totalAmount : (ord.pricing?.finalAmount || ord.totalAmount);
+                    const total = ord.pricing?.finalAmount || ord.totalAmount;
                     return (
                       <div className="admin-mobile-card" key={ord._id}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1054,7 +1081,6 @@ export default function AdminDashboard() {
                           >
                             View Details
                           </button>
-                          {dashboardServiceType === 'food' && (
                             <button
                               className="btn btn-sm btn-outline"
                               onClick={() => handleDownloadInvoice(ord._id, ord.orderNumber)}
@@ -1077,7 +1103,6 @@ export default function AdminDashboard() {
                                 <FileDown size={16} />
                               )}
                             </button>
-                          )}
                         </div>
                       </div>
                     );
@@ -1285,6 +1310,37 @@ export default function AdminDashboard() {
 
               {/* Invoice Breakdown */}
               {dashboardServiceType === 'food' ? (() => {
+                if (selectedOrder.pricing) {
+                  const p = selectedOrder.pricing;
+                  const discount = p.couponDiscount || p.discountAmount || 0;
+                  return (
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #edf2f7', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem', color: '#64748b' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Subtotal</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.subTotal}</span>
+                      </div>
+                      {discount > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Coupon Discount {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
+                          <span style={{ color: '#06c169', fontWeight: 700 }}>-₹{discount}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>GST ({p.gstPercentage}%)</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.gstAmount}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Packaging Charge</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.packagingCharge}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Delivery Charge</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.deliveryCharge}</span>
+                      </div>
+                    </div>
+                  );
+                }
+
                 const subTotal = selectedOrder.items ? selectedOrder.items.reduce((total, item) => total + ((item.priceAtPurchase || item.price || 0) * item.quantity), 0) : selectedOrder.totalAmount;
                 const discount = selectedOrder.discountAmount || 0;
                 const subTotalAfterDiscount = subTotal - discount;
@@ -1357,7 +1413,7 @@ export default function AdminDashboard() {
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Total Paid</span>
                   <p style={{ margin: '2px 0 0 0', fontWeight: 850, color: 'var(--primary)', fontSize: '1.1rem' }}>
-                    ₹{dashboardServiceType === 'food' ? selectedOrder.totalAmount : (selectedOrder.pricing?.finalAmount || selectedOrder.totalAmount)}
+                    ₹{selectedOrder.pricing?.finalAmount || selectedOrder.totalAmount}
                   </p>
                 </div>
               </div>
@@ -1578,24 +1634,18 @@ export default function AdminDashboard() {
 
                         {assignDeliveryOpen && (
                           <form onSubmit={handleAssignMarketplaceDeliveryPartner} style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                            <input
-                              type="text"
-                              placeholder="Paste Partner ID..."
+                            <Combobox
+                              placeholder="Select Partner..."
+                              options={partnerOptions}
                               value={partnerIdInput}
-                              onChange={(e) => setPartnerIdInput(e.target.value)}
-                              style={{
-                                flex: 1,
-                                padding: '6px 10px',
-                                fontSize: '0.78rem',
-                                border: '1px solid #cbd5e1',
-                                borderRadius: '8px',
-                                height: '30px'
-                              }}
+                              onChange={(val) => setPartnerIdInput(val)}
+                              disabled={assigningPartner}
+                              style={{ flex: 1, minWidth: '160px' }}
                             />
                             <button
                               type="submit"
                               className="btn btn-primary"
-                              style={{ width: 'auto', padding: '0 10px', height: '30px', borderRadius: '8px', fontSize: '0.75rem' }}
+                              style={{ width: 'auto', padding: '0 10px', height: '36px', borderRadius: '8px', fontSize: '0.75rem' }}
                               disabled={assigningPartner}
                             >
                               {assigningPartner ? '...' : 'Assign'}
@@ -1607,7 +1657,7 @@ export default function AdminDashboard() {
                                 setAssignDeliveryOpen(false);
                                 setPartnerIdInput('');
                               }}
-                              style={{ width: 'auto', padding: '0 8px', height: '30px', borderRadius: '8px', fontSize: '0.75rem' }}
+                              style={{ width: 'auto', padding: '0 8px', height: '36px', borderRadius: '8px', fontSize: '0.75rem' }}
                             >
                               Cancel
                             </button>
@@ -1622,7 +1672,6 @@ export default function AdminDashboard() {
             </div>
 
             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              {dashboardServiceType === 'food' && (
                 <button
                   className="btn btn-primary"
                   style={{
@@ -1651,7 +1700,6 @@ export default function AdminDashboard() {
                     </>
                   )}
                 </button>
-              )}
               <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 20px', borderRadius: '10px', fontWeight: 700, height: '36px', fontSize: '0.8rem' }} onClick={() => setShowOrderModal(false)}>
                 Close Window
               </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useToast } from '../../context/ToastContext';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -20,6 +20,8 @@ import {
 } from '../../api/marketplace.api';
 
 import { ToggleLeft, ToggleRight, Package, Truck, UserPlus, CreditCard, Search, ChevronLeft, ChevronRight, ChevronDown, Plus, Edit, Eye, X, Upload, Trash2, Layers, Image, Clock, Check, FileText } from 'lucide-react';
+import { viewDeliveryPartners } from '../../api/delivery.api';
+import Combobox from '../../components/Combobox';
 import './AdminPortal.css';
 
 export default function AdminMarketplace() {
@@ -76,6 +78,28 @@ export default function AdminMarketplace() {
   const [assigningPartner, setAssigningPartner] = useState(false);
   const [rejectionMsgInput, setRejectionMsgInput] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [deliveryPartners, setDeliveryPartners] = useState([]);
+
+  const fetchDeliveryPartners = async () => {
+    try {
+      const { data } = await viewDeliveryPartners();
+      if (data.success && data.data) {
+        setDeliveryPartners(data.data || []);
+      } else {
+        setDeliveryPartners([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch delivery partners', err);
+    }
+  };
+
+  const partnerOptions = useMemo(() => {
+    return deliveryPartners.map(p => ({
+      value: p._id,
+      label: `${p.user?.username || 'Partner'} (${p.phoneNumber})`,
+      description: `Vehicle: ${p.vehicleNumber}`
+    }));
+  }, [deliveryPartners]);
 
   // Category Form State
   const [catForm, setCatForm] = useState({
@@ -193,6 +217,7 @@ export default function AdminMarketplace() {
       fetchProducts();
     } else if (innerTab === 'orders') {
       fetchOrders();
+      fetchDeliveryPartners();
     }
   }, [innerTab, fetchCategories, fetchProducts, fetchOrders]);
 
@@ -586,15 +611,15 @@ export default function AdminMarketplace() {
   };
 
   const handleAssignDeliveryPartner = async (e) => {
-    e.preventDefault();
-    if (!partnerIdInput.trim()) {
-      toast.error('Delivery Partner ID is required');
+    if (e && e.preventDefault) e.preventDefault();
+    if (!partnerIdInput) {
+      toast.error('Please select a Delivery Partner');
       return;
     }
     setAssigningPartner(true);
     try {
       const { data } = await assignAdminMarketplaceDeliveryPartner(selectedOrder._id, {
-        deliveryPartnerId: partnerIdInput.trim()
+        deliveryPartnerId: partnerIdInput
       });
       if (data.success) {
         toast.success('Delivery partner assigned successfully!');
@@ -606,6 +631,7 @@ export default function AdminMarketplace() {
           setSelectedOrder(detailsRes.data.order);
         }
         fetchOrders();
+        await fetchDeliveryPartners();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to assign delivery partner');

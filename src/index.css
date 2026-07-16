@@ -4168,3 +4168,159 @@ input:checked + .switch-slider:before {
     opacity: 0;
   }
 }
+
+/* === Custom Premium Desktop Navigation Links === */
+.desktop-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.desktop-nav-link:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+.desktop-nav-link.active {
+  color: #b31522;
+  background-color: #fff5f5;
+}
+
+.desktop-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.desktop-logout-btn:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+/* === GodUI Combobox Styles === */
+.godui-combobox-container {
+  position: relative;
+  width: 100%;
+}
+
+.godui-combobox-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.godui-combobox-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px 0 12px;
+  height: 36px;
+  font-size: 0.8rem;
+  width: 100%;
+  background-color: #f8fafc;
+  border: 1.5px solid #eef0eb;
+  border-radius: 8px;
+  color: var(--vendor-text-main, #0f172a);
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.godui-combobox-input:focus {
+  border-color: var(--vendor-primary, #b31522);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(179, 21, 34, 0.1);
+}
+
+.godui-combobox-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.godui-combobox-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #eef0eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  margin: 0;
+  list-style: none;
+  z-index: 99999;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.godui-combobox-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--vendor-text-main, #0f172a);
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.godui-combobox-option:hover,
+.godui-combobox-option.active {
+  background-color: #f1f5f9;
+}
+
+.godui-combobox-option.selected {
+  background-color: var(--vendor-primary-light, #fff5f5);
+  color: var(--vendor-primary, #b31522);
+  font-weight: 800;
+}
+
+.godui-combobox-option-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.godui-combobox-option-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.godui-combobox-empty {
+  padding: 16px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 500;
+}
+
+

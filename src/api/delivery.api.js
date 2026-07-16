@@ -28,3 +28,6 @@ export const deliverOrder = (orderId) =>
 export const getDeliveryMarketplaceOrders = () => api.get('/delivery/marketplace/orders');
 export const getDeliveryMarketplaceOrderById = (orderId) => api.get(`/delivery/marketplace/orders/${orderId}`);
 export const updateDeliveryMarketplaceOrderStatus = (orderId) => api.patch(`/delivery/marketplace/orders/${orderId}/status`);
+
+// Get all available delivery partners
+export const viewDeliveryPartners = () => api.get('/delivery/view');

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { getSingleVendorOrder, changeOrderStatus, getPlatformSettingsVendor } from '../../api/order.api';
 import { downloadVendorOrderInvoice } from '../../api/vendor.api';
-import { assignDeliveryPartner } from '../../api/delivery.api';
+import { assignDeliveryPartner, viewDeliveryPartners } from '../../api/delivery.api';
+import Combobox from '../../components/Combobox';
 import { useToast } from '../../context/ToastContext';
 
 import { Phone, CreditCard, UserPlus, Loader, Package, FileDown, ArrowLeft, Clock, User, MapPin, CheckCircle, ChevronRight, Copy, MessageSquare } from 'lucide-react';
@@ -36,6 +37,28 @@ export default function VendorOrderDetails() {
   const [assignLoading, setAssignLoading] = useState(false);
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [deliveryPartners, setDeliveryPartners] = useState([]);
+
+  const fetchDeliveryPartners = async () => {
+    try {
+      const { data } = await viewDeliveryPartners();
+      if (data.success && data.data) {
+        setDeliveryPartners(data.data || []);
+      } else {
+        setDeliveryPartners([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch delivery partners', err);
+    }
+  };
+
+  const partnerOptions = useMemo(() => {
+    return deliveryPartners.map(p => ({
+      value: p._id,
+      label: `${p.user?.username || 'Partner'} (${p.phoneNumber})`,
+      description: `Vehicle: ${p.vehicleNumber}`
+    }));
+  }, [deliveryPartners]);
   const [platformSettings, setPlatformSettings] = useState({
     deliveryCharge: 0,
     freeDeliveryAbove: 0,
@@ -67,6 +90,7 @@ export default function VendorOrderDetails() {
   useEffect(() => {
     if (orderId && restaurant) {
       fetchOrderDetails();
+      fetchDeliveryPartners();
     }
   }, [orderId, restaurant]);
 
@@ -125,17 +149,18 @@ export default function VendorOrderDetails() {
       toast.error('Actions are disabled because your restaurant is suspended.');
       return;
     }
-    if (!partnerId.trim()) {
-      toast.error('Please enter a valid Delivery Partner ID');
+    if (!partnerId) {
+      toast.error('Please select a Delivery Partner');
       return;
     }
     
     setAssignLoading(true);
     try {
-      await assignDeliveryPartner(orderId, partnerId.trim());
+      await assignDeliveryPartner(orderId, partnerId);
       toast.success('Delivery partner assigned successfully!');
       setPartnerId('');
       await fetchOrderDetails(true);
+      await fetchDeliveryPartners();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to assign delivery partner');
     } finally {
@@ -196,13 +221,25 @@ export default function VendorOrderDetails() {
     );
   }
 
-  const subTotal = order.items ? order.items.reduce((total, item) => total + (item.priceAtPurchase * item.quantity), 0) : order.totalAmount;
-  const discount = order.discountAmount || 0;
+  const subTotal = order.pricing 
+    ? order.pricing.subTotal 
+    : (order.items ? order.items.reduce((total, item) => total + (item.priceAtPurchase * item.quantity), 0) : order.totalAmount);
+  const discount = order.pricing 
+    ? (order.pricing.couponDiscount || order.pricing.discountAmount || 0) 
+    : (order.discountAmount || 0);
   const subTotalAfterDiscount = subTotal - discount;
 
-  const gst = order.gstAmount !== undefined && order.gstAmount !== null && order.gstAmount !== 0 ? order.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
-  const packaging = order.packagingCharge !== undefined && order.packagingCharge !== null && order.packagingCharge !== 0 ? order.packagingCharge : platformSettings.packagingCharge;
-  const delivery = order.deliveryCharge !== undefined && order.deliveryCharge !== null && order.deliveryCharge !== 0 ? order.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge);
+  const gst = order.pricing 
+    ? order.pricing.gstAmount 
+    : (order.gstAmount !== undefined && order.gstAmount !== null && order.gstAmount !== 0 ? order.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100));
+  const gstPercentage = order.pricing ? order.pricing.gstPercentage : (order.gstPercentage ?? platformSettings.gstPercentage);
+  const packaging = order.pricing 
+    ? order.pricing.packagingCharge 
+    : (order.packagingCharge !== undefined && order.packagingCharge !== null && order.packagingCharge !== 0 ? order.packagingCharge : platformSettings.packagingCharge);
+  const delivery = order.pricing 
+    ? order.pricing.deliveryCharge 
+    : (order.deliveryCharge !== undefined && order.deliveryCharge !== null && order.deliveryCharge !== 0 ? order.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge));
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
@@ -523,7 +560,7 @@ export default function VendorOrderDetails() {
               )}
               {gst > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>GST ({order.gstPercentage ?? platformSettings.gstPercentage}%)</span>
+                  <span>GST ({gstPercentage}%)</span>
                   <span style={{ fontWeight: 650, color: '#1e293b' }}>₹{gst}</span>
                 </div>
               )}
@@ -541,7 +578,7 @@ export default function VendorOrderDetails() {
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1', fontSize: '1.05rem', fontWeight: 800, color: '#1e293b' }}>
                 <span>Total Amount</span>
-                <span style={{ color: 'var(--vendor-primary)' }}>₹{order.totalAmount}</span>
+                <span style={{ color: 'var(--vendor-primary)' }}>₹{order.pricing?.finalAmount || order.totalAmount}</span>
               </div>
             </div>
           </div>
@@ -556,24 +593,30 @@ export default function VendorOrderDetails() {
                   </div>
                   <div>
                     <strong style={{ display: 'block', fontSize: '0.9rem', color: '#1e293b' }}>Partner Assigned</strong>
-                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{order.deliveryPartner.username || order.deliveryPartner.name || order.deliveryPartner}</span>
+                    <span style={{ fontSize: '0.85rem', color: '#1e293b', fontWeight: 700, display: 'block' }}>
+                      {order.deliveryPartner.user?.username || 'Assigned'}
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block', marginTop: '2px' }}>
+                      Vehicle: {order.deliveryPartner.vehicleNumber} &bull; Phone: {order.deliveryPartner.phoneNumber}
+                    </span>
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
-                    Enter the Delivery Partner ID to assign this order for delivery.
+                    Select a Delivery Partner to assign this order for delivery.
                   </p>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input 
-                      type="text"
-                      className="input-field" 
-                      style={{ flex: 1, padding: '12px 16px', borderRadius: '10px', border: '1.5px solid #e2e8f0', outline: 'none', fontSize: '0.9rem' }}
-                      placeholder="Partner ID..."
-                      value={partnerId}
-                      onChange={(e) => setPartnerId(e.target.value)}
-                      disabled={restaurant?.isSuspended || assignLoading}
-                    />
+                    <div style={{ flex: 1 }}>
+                      <Combobox
+                        placeholder="Select Partner"
+                        options={partnerOptions}
+                        value={partnerId}
+                        onChange={(val) => setPartnerId(val)}
+                        disabled={restaurant?.isSuspended || assignLoading}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
                     <button 
                       className="btn btn-outline hover-lift" 
                       style={{ padding: '0 20px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}

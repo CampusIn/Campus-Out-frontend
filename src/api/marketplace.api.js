@@ -36,3 +36,5 @@ export const getAdminMarketplaceOrders = (params) => api.get('/admin/marketplace
 export const getAdminMarketplaceOrderById = (orderId) => api.get(`/admin/marketplace/orders/${orderId}`);
 export const updateAdminMarketplaceOrderStatus = (orderId, data) => api.patch(`/admin/marketplace/orders/${orderId}/status`, data);
 export const assignAdminMarketplaceDeliveryPartner = (orderId, data) => api.patch(`/admin/marketplace/orders/${orderId}/assign-delivery`, data);
+export const downloadAdminMarketplaceOrderInvoice = (orderId) => api.get(`/admin/marketplace/orders/${orderId}/invoice`, { responseType: 'blob' });
+
