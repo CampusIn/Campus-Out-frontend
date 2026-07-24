@@ -57,8 +57,20 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        // Determine the role-prefixed refresh endpoint
+        let rolePrefix = 'user';
+        try {
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userObj = JSON.parse(userStr);
+            if (userObj.role === 'vendor') rolePrefix = 'vendor';
+            else if (userObj.role === 'admin') rolePrefix = 'admin';
+            else if (userObj.role === 'delivery_partner') rolePrefix = 'delivery-partner';
+          }
+        } catch (e) { /* default to user */ }
+
         const { data } = await axios.post(
-          `${BASE_URL}/auth/refresh-token`,
+          `${BASE_URL}/auth/${rolePrefix}/refresh-token`,
           {},
           { withCredentials: true }
         );
@@ -76,9 +88,9 @@ api.interceptors.response.use(
           const userStr = localStorage.getItem('user');
           if (userStr) {
             const userObj = JSON.parse(userStr);
-            if (userObj.role === 'delivery_partner') {
-              redirectUrl = '/delivery/login';
-            }
+            if (userObj.role === 'delivery_partner') redirectUrl = '/delivery/login';
+            else if (userObj.role === 'vendor') redirectUrl = '/vendor/login';
+            else if (userObj.role === 'admin') redirectUrl = '/admin/login';
           }
         } catch (e) {
           console.error('Failed to determine redirect URL:', e);

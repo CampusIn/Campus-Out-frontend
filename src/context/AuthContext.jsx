@@ -5,10 +5,73 @@ import {
   verifyEmailOtp,
   logoutUser,
   logoutAllDevices,
-  refreshToken,
+  refreshToken as refreshTokenUser,
   getMe,
   resendOtp as resendOtpApi,
+  loginVendor,
+  registerVendor,
+  verifyEmailVendor,
+  logoutVendor,
+  logoutAllVendor,
+  refreshTokenVendor,
+  resendOtpVendor,
+  loginAdmin,
+  verifyEmailAdmin,
+  logoutAdmin,
+  logoutAllAdmin,
+  refreshTokenAdmin,
+  resendOtpAdmin,
+  loginDeliveryPartner,
+  registerDeliveryPartner,
+  verifyEmailDeliveryPartner,
+  logoutDeliveryPartner,
+  logoutAllDeliveryPartner,
+  refreshTokenDeliveryPartner,
+  resendOtpDeliveryPartner,
 } from '../api/auth.api';
+
+// Helper: choose the correct API function based on role
+const getLoginFn = (role) => {
+  if (role === 'vendor') return loginVendor;
+  if (role === 'admin') return loginAdmin;
+  if (role === 'delivery_partner') return loginDeliveryPartner;
+  return loginUser;
+};
+const getRegisterFn = (role) => {
+  if (role === 'vendor') return registerVendor;
+  if (role === 'delivery_partner') return registerDeliveryPartner;
+  return registerUser; 
+};
+const getVerifyEmailFn = (role) => {
+  if (role === 'vendor') return verifyEmailVendor;
+  if (role === 'admin') return verifyEmailAdmin;
+  if (role === 'delivery_partner') return verifyEmailDeliveryPartner;
+  return verifyEmailOtp;
+};
+const getResendOtpFn = (role) => {
+  if (role === 'vendor') return resendOtpVendor;
+  if (role === 'admin') return resendOtpAdmin;
+  if (role === 'delivery_partner') return resendOtpDeliveryPartner;
+  return resendOtpApi;
+};
+const getLogoutFn = (role) => {
+  if (role === 'vendor') return logoutVendor;
+  if (role === 'admin') return logoutAdmin;
+  if (role === 'delivery_partner') return logoutDeliveryPartner;
+  return logoutUser;
+};
+const getLogoutAllFn = (role) => {
+  if (role === 'vendor') return logoutAllVendor;
+  if (role === 'admin') return logoutAllAdmin;
+  if (role === 'delivery_partner') return logoutAllDeliveryPartner;
+  return logoutAllDevices;
+};
+const getRefreshFn = (role) => {
+  if (role === 'vendor') return refreshTokenVendor;
+  if (role === 'admin') return refreshTokenAdmin;
+  if (role === 'delivery_partner') return refreshTokenDeliveryPartner;
+  return refreshTokenUser;
+};
 
 const AuthContext = createContext(null);
 
@@ -161,7 +224,11 @@ export function AuthProvider({ children }) {
       setUser(null);
       localStorage.setItem('authRedirectMessage', 'Your session has expired. Please log in again.');
       
-      const redirectUrl = userRole === 'delivery_partner' ? '/delivery/login' : '/login';
+      let redirectUrl = '/login';
+      if (userRole === 'delivery_partner') redirectUrl = '/delivery/login';
+      else if (userRole === 'vendor') redirectUrl = '/vendor/login';
+      else if (userRole === 'admin') redirectUrl = '/admin/login';
+
       const protectedPaths = ['/admin', '/vendor', '/delivery/dashboard', '/cart', '/orders', '/profile'];
       const isCurrentPathProtected = protectedPaths.some(path => window.location.pathname.startsWith(path));
       
@@ -195,7 +262,8 @@ export function AuthProvider({ children }) {
           if (isActive) {
             // User is actively using the portal -> generate a new access token
             try {
-              const { data } = await refreshToken();
+              const refreshFn = getRefreshFn(user?.role);
+              const { data } = await refreshFn();
               const newToken = data.data.accessToken;
               localStorage.setItem('accessToken', newToken);
               const { data: meRes } = await getMe();
@@ -221,7 +289,8 @@ export function AuthProvider({ children }) {
           if (remaining <= refreshBuffer) {
             if (isActive) {
               try {
-                const { data } = await refreshToken();
+                const refreshFn = getRefreshFn(user?.role);
+                const { data } = await refreshFn();
                 const newToken = data.data.accessToken;
                 localStorage.setItem('accessToken', newToken);
                 const { data: meRes } = await getMe();
@@ -259,10 +328,11 @@ export function AuthProvider({ children }) {
     };
   }, [user]);
 
-  const login = async (email, password) => {
+  const login = async (email, password, role = 'user') => {
     setLoading(true);
     try {
-      const { data } = await loginUser({ email, password });
+      const loginFn = getLoginFn(role);
+      const { data } = await loginFn({ email, password });
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('lastActive', Date.now().toString());
       sessionStorage.removeItem('dismissedAnnouncements');
@@ -282,10 +352,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (username, email, password, role) => {
+  const register = async (username, email, password, role = 'user') => {
     setLoading(true);
     try {
-      const { data } = await registerUser({ username, email, password, role });
+      const registerFn = getRegisterFn(role);
+      const { data } = await registerFn({ username, email, password });
       return { success: true, message: data.message, email };
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
@@ -295,10 +366,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const verifyEmail = async (email, otp) => {
+  const verifyEmail = async (email, otp, role = 'user') => {
     setLoading(true);
     try {
-      const { data } = await verifyEmailOtp({ email, otp });
+      const verifyFn = getVerifyEmailFn(role);
+      const { data } = await verifyFn({ email, otp });
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('lastActive', Date.now().toString());
       sessionStorage.removeItem('dismissedAnnouncements');
@@ -318,10 +390,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const resendOtp = async (email) => {
+  const resendOtp = async (email, role = 'user') => {
     setLoading(true);
     try {
-      const { data } = await resendOtpApi({ email });
+      const resendFn = getResendOtpFn(role);
+      const { data } = await resendFn({ email });
       return { success: true, message: data.message };
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to resend OTP';
@@ -331,9 +404,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (role) => {
     try {
-      await logoutUser();
+      const logoutFn = getLogoutFn(role || user?.role);
+      await logoutFn();
     } catch {
       // ignore
     }
@@ -342,9 +416,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const logoutAll = async () => {
+  const logoutAll = async (role) => {
     try {
-      await logoutAllDevices();
+      const logoutAllFn = getLogoutAllFn(role || user?.role);
+      await logoutAllFn();
     } catch {
       // ignore
     }

@@ -9,6 +9,7 @@ export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const email = searchParams.get('email') || '';
+  const role = searchParams.get('role') || 'user';
 
   const [otp, setOtp] = useState('');
   const [msg, setMsg] = useState(null);
@@ -31,17 +32,19 @@ export default function VerifyEmail() {
       return;
     }
     
-    const result = await verifyEmail(email, otp);
+    const result = await verifyEmail(email, otp, role);
     setMsg(result);
     if (result.success) {
       setTimeout(() => {
         const token = localStorage.getItem('accessToken');
         if (token) {
-          const role = JSON.parse(atob(token.split('.')[1])).role;
-          if (role === 'admin') {
+          const tokenRole = JSON.parse(atob(token.split('.')[1])).role;
+          if (tokenRole === 'admin') {
             navigate('/admin', { replace: true });
+          } else if (tokenRole === 'vendor') {
+            navigate('/vendor', { replace: true });
           } else {
-            navigate(role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+            navigate('/restaurants', { replace: true });
           }
         }
       }, 1000);
@@ -51,7 +54,7 @@ export default function VerifyEmail() {
   const handleResend = async () => {
     if (timeLeft > 0) return;
     setMsg(null);
-    const result = await resendOtp(email);
+    const result = await resendOtp(email, role);
     setMsg(result);
     if (result.success) {
       setTimeLeft(60);

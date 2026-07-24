@@ -7,19 +7,15 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function Register() {
   const { register, loading, user } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', role: 'user' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [msg, setMsg] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'admin') {
-        navigate('/admin', { replace: true });
-      } else if (user.role === 'delivery_partner') {
-        navigate('/delivery/dashboard', { replace: true });
-      } else {
-        navigate(user.role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+      if (user.role === 'user') {
+        navigate('/restaurants', { replace: true });
       }
     }
   }, [user, navigate]);
@@ -40,7 +36,7 @@ export default function Register() {
       setMsg({ success: false, error: 'Passwords do not match' });
       return;
     }
-    const result = await register(form.username, form.email, form.password, form.role);
+    const result = await register(form.username, form.email, form.password, 'user');
     setMsg(result);
     if (result.success) {
       setTimeout(() => {
@@ -82,25 +78,6 @@ export default function Register() {
 
           {/* Stacked Inputs Container */}
           <div className="swiggy-inputs-stack">
-            
-            {/* Custom Tab Role Selector */}
-            <div className="swiggy-role-selector">
-              <button 
-                type="button" 
-                onClick={() => setForm(p => ({ ...p, role: 'user' }))}
-                className={`swiggy-role-btn ${form.role === 'user' ? 'active' : ''}`}
-              >
-                Customer
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setForm(p => ({ ...p, role: 'vendor' }))}
-                className={`swiggy-role-btn ${form.role === 'vendor' ? 'active' : ''}`}
-              >
-                Vendor Partner
-              </button>
-            </div>
-
             {/* Username Input */}
             <div className="swiggy-input-container border-bottom-none">
               <input 

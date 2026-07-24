@@ -33,6 +33,9 @@ import VendorSettings from './pages/vendor/VendorSettings';
 import DeliveryLogin from './pages/auth/DeliveryLogin';
 import DeliveryRegister from './pages/auth/DeliveryRegister';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
+import VendorLogin from './pages/auth/VendorLogin';
+import VendorRegister from './pages/auth/VendorRegister';
+import AdminLogin from './pages/auth/AdminLogin';
 
 // Admin Lazy Pages
 const AdminLayout = lazy(() => import('./components/AdminLayout'));
@@ -125,6 +128,9 @@ export default function App() {
                         </ProtectedRoute>
                       } 
                     />
+                    <Route path="/vendor/login" element={<VendorLogin />} />
+                    <Route path="/vendor/register" element={<VendorRegister />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
                       <Route index element={<Navigate to="dashboard" replace />} />
                       <Route path="dashboard" element={<VendorDashboard />} />

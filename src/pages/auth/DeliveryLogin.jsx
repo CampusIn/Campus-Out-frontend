@@ -40,7 +40,7 @@ export default function DeliveryLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const result = await login(form.email, form.password);
+    const result = await login(form.email, form.password, 'delivery_partner');
     if (result.success) {
       const token = localStorage.getItem('accessToken');
       if (token) {

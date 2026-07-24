@@ -449,19 +449,26 @@ export default function Home() {
               </nav>
             </div>
 
-            {/* Column 2: For Restaurants & Delivery Partners */}
+            {/* Column 2: For Restaurants, Delivery Partners & Admins */}
             <div className="zomato-footer-col">
               <div className="zomato-footer-subcol">
                 <h6 className="zomato-footer-title">For Restaurants</h6>
                 <nav className="zomato-footer-links">
-                  <Link to="/register">Partner With Us</Link>
+                  <Link to="/vendor/register">Partner With Us</Link>
+                  <Link to="/vendor/login">Vendor Login</Link>
                 </nav>
               </div>
               <div className="zomato-footer-subcol" style={{ marginTop: '24px' }}>
                 <h6 className="zomato-footer-title">For Delivery Partners</h6>
                 <nav className="zomato-footer-links">
-                  <Link to="/register">Partner With Us</Link>
+                  <Link to="/delivery/register">Partner With Us</Link>
                   <Link to="/delivery/login">Delivery Portal</Link>
+                </nav>
+              </div>
+              <div className="zomato-footer-subcol" style={{ marginTop: '24px' }}>
+                <h6 className="zomato-footer-title">For Admins</h6>
+                <nav className="zomato-footer-links">
+                  <Link to="/admin/login">Admin Portal</Link>
                 </nav>
               </div>
             </div>

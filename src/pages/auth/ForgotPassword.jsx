@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 
 import { KeyRound, ShieldCheck, ArrowLeft, Eye, EyeOff, Mail, CheckCircle } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
-import { forgotPassword, verifyResetOtp, resetPassword } from '../../api/auth.api';
+import {
+  forgotPassword, verifyResetOtp, resetPassword,
+  forgotPasswordVendor, verifyResetOtpVendor, resetPasswordVendor,
+  forgotPasswordAdmin, verifyResetOtpAdmin, resetPasswordAdmin,
+} from '../../api/auth.api';
 
 const STEPS = {
   EMAIL: 'email',
@@ -15,6 +19,30 @@ const STEPS = {
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const toast = useToast();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role') || 'user';
+
+  // Helper: pick the correct API function based on role
+  const getForgotFn = () => {
+    if (role === 'vendor') return forgotPasswordVendor;
+    if (role === 'admin') return forgotPasswordAdmin;
+    return forgotPassword;
+  };
+  const getVerifyResetFn = () => {
+    if (role === 'vendor') return verifyResetOtpVendor;
+    if (role === 'admin') return verifyResetOtpAdmin;
+    return verifyResetOtp;
+  };
+  const getResetFn = () => {
+    if (role === 'vendor') return resetPasswordVendor;
+    if (role === 'admin') return resetPasswordAdmin;
+    return resetPassword;
+  };
+  const getLoginPath = () => {
+    if (role === 'vendor') return '/vendor/login';
+    if (role === 'admin') return '/admin/login';
+    return '/login';
+  };
 
   const [step, setStep] = useState(STEPS.EMAIL);
   const [email, setEmail] = useState('');
@@ -51,7 +79,7 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const { data } = await forgotPassword({ email: email.trim().toLowerCase() });
+      const { data } = await getForgotFn()({ email: email.trim().toLowerCase() });
       toast.success('OTP Sent', data.message || 'Check your email for the OTP');
       setStep(STEPS.OTP);
       setTimeLeft(60);
@@ -70,7 +98,7 @@ export default function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await forgotPassword({ email: email.trim().toLowerCase() });
+      const { data } = await getForgotFn()({ email: email.trim().toLowerCase() });
       toast.success('OTP Resent', data.message || 'A new OTP has been sent to your email');
       setTimeLeft(60);
       setOtp('');
@@ -93,7 +121,7 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const { data } = await verifyResetOtp({ email: email.trim().toLowerCase(), otp });
+      const { data } = await getVerifyResetFn()({ email: email.trim().toLowerCase(), otp });
       setResetToken(data.data.resetToken);
       toast.success('OTP Verified', 'You can now set your new password');
       setStep(STEPS.PASSWORD);
@@ -120,7 +148,7 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     try {
-      await resetPassword({ resetToken, password });
+      await getResetFn()({ resetToken, password });
       toast.success('Password Reset', 'Your password has been reset successfully');
       setStep(STEPS.SUCCESS);
     } catch (err) {
@@ -153,9 +181,9 @@ export default function ForgotPassword() {
       setOtp('');
     } else if (step === STEPS.PASSWORD) {
       // Can't go back from password step since resetToken is one-use
-      navigate('/login');
+      navigate(getLoginPath());
     } else {
-      navigate('/login');
+      navigate(getLoginPath());
     }
   };
 
@@ -444,7 +472,7 @@ export default function ForgotPassword() {
             </p>
             <button
               className="swiggy-auth-submit-btn hover-lift"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate(getLoginPath())}
             >
               GO TO LOGIN
             </button>
