@@ -6,7 +6,7 @@ import { getActiveBanners, getActiveAnnouncements } from '../api/homepageCMS.api
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar } from 'lucide-react';
+import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar, Wrench, ChevronRight } from 'lucide-react';
 
 import { DynamicIsland } from '../components/DynamicIsland';
 import { motion } from 'framer-motion';
@@ -742,13 +742,52 @@ export default function Restaurants() {
         <div className="secondary-carousel-section animate-slide-up" style={{ margin: 0 }}>
           <h3 className="carousel-section-heading">Featured Offers For You</h3>
           <div className="banners-carousel-scrollable" ref={carouselRef}>
+            
+            {/* Permanent Campus Repair Desk Banner Card */}
+            <div 
+              className="carousel-banner-card repair-banner-card hover-lift"
+              onClick={() => navigate('/repair-requests')}
+              style={{
+                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                color: '#ffffff',
+                padding: '12px 14px',
+                borderRadius: '18px',
+                height: '125px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                boxSizing: 'border-box'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: 'rgba(179, 21, 34, 0.3)', padding: '5px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Wrench size={16} color="#f87171" />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 850, color: '#ffffff' }}>Repair Desk</span>
+                </div>
+                <span style={{ background: '#b31522', color: '#ffffff', fontSize: '0.6rem', fontWeight: 850, padding: '2px 6px', borderRadius: '6px' }}>NEW</span>
+              </div>
+
+              <div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.74rem', color: '#cbd5e1', fontWeight: 500, lineHeight: 1.25 }}>
+                  Quick fix for Mobiles, Laptops & Appliances right on campus.
+                </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#f87171', fontSize: '0.75rem', fontWeight: 800 }}>
+                  Request Repair <ChevronRight size={13} />
+                </div>
+              </div>
+            </div>
             {loadingCMS ? (
               // Banners Carousel Skeleton
               Array.from({ length: 3 }).map((_, idx) => (
                 <div 
                   key={idx} 
                   className="carousel-banner-card animate-pulse"
-                  style={{ background: '#e2e8f0', borderRadius: '16px', width: '280px', height: '160px', flexShrink: 0 }}
+                  style={{ background: '#e2e8f0', borderRadius: '16px', height: '125px' }}
                 />
               ))
             ) : banners.slice(1).length > 0 ? (

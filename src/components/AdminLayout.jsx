@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getAdminDashboard } from '../api/admin.api';
 
-import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag, ClipboardList } from 'lucide-react';
+import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag, ClipboardList, Wrench } from 'lucide-react';
 import '../pages/admin/AdminPortal.css';
 
 export default function AdminLayout() {
@@ -66,6 +66,7 @@ export default function AdminLayout() {
     { path: '/admin/banners', label: 'Banner Ads', icon: <Image size={18} /> },
     { path: '/admin/restaurants', label: `Cafeteria Directory (${stats.restaurantCount})`, icon: <Store size={18} /> },
     { path: '/admin/users', label: `User Directory (${stats.userCount + stats.vendorCount})`, icon: <Users size={18} /> },
+    { path: '/admin/repair-partners', label: 'Repair Partners', icon: <Wrench size={18} /> },
     { path: '/admin/abandoned-carts', label: 'Abandoned Carts', icon: <ShoppingBag size={18} /> },
     { path: '/admin/inventory', label: 'Inventory Tracker', icon: <ClipboardList size={18} /> },
   ];
@@ -160,6 +161,14 @@ export default function AdminLayout() {
             >
               <Users size={20} />
               <span>Users ({stats.userCount + stats.vendorCount})</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/repair-partners"
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <Wrench size={20} />
+              <span>Repair Partners</span>
             </NavLink>
 
             <NavLink

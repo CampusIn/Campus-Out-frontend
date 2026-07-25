@@ -49,10 +49,12 @@ const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
 const AdminAbandonedCarts = lazy(() => import('./pages/admin/AdminAbandonedCarts'));
 const AdminMarketplace = lazy(() => import('./pages/admin/AdminMarketplace'));
 const AdminInventory = lazy(() => import('./pages/admin/AdminInventory'));
+const AdminRepairPartners = lazy(() => import('./pages/admin/AdminRepairPartners'));
 const Marketplace = lazy(() => import('./pages/user/Marketplace'));
 const MarketplaceProductDetail = lazy(() => import('./pages/user/MarketplaceProductDetail'));
 const MarketplaceCart = lazy(() => import('./pages/user/MarketplaceCart'));
 const MarketplaceOrderDetail = lazy(() => import('./pages/user/MarketplaceOrderDetail'));
+const RepairRequests = lazy(() => import('./pages/user/RepairRequests'));
 
 export default function App() {
   return (
@@ -94,6 +96,46 @@ export default function App() {
                       } 
                     />
                     <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
+                    <Route 
+                      path="/repair-requests" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="homepage-content-wrapper animate-pulse" style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 16px 96px 16px' }}>
+                              {/* Header Outlay */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e2e8f0' }} />
+                                <div>
+                                  <div style={{ width: '180px', height: '22px', background: '#e2e8f0', borderRadius: '8px', marginBottom: '6px' }} />
+                                  <div style={{ width: '240px', height: '14px', background: '#e2e8f0', borderRadius: '6px' }} />
+                                </div>
+                              </div>
+
+                              {/* Tab Switcher Outlay */}
+                              <div style={{ height: '48px', background: '#e2e8f0', borderRadius: '16px', marginBottom: '24px' }} />
+
+                              {/* Cards Outlay */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                {Array.from({ length: 3 }).map((_, idx) => (
+                                  <div key={idx} style={{ height: '115px', background: '#ffffff', borderRadius: '20px', border: '1.5px solid #edf2f7', padding: '18px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ width: '150px', height: '20px', background: '#e2e8f0', borderRadius: '8px' }} />
+                                      <div style={{ width: '80px', height: '22px', background: '#e2e8f0', borderRadius: '12px' }} />
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ width: '180px', height: '16px', background: '#e2e8f0', borderRadius: '6px' }} />
+                                      <div style={{ width: '100px', height: '28px', background: '#e2e8f0', borderRadius: '10px' }} />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          }>
+                            <RepairRequests />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route 
                       path="/marketplace" 
                       element={
@@ -166,6 +208,7 @@ export default function App() {
                       <Route path="banners" element={<AdminBanners />} />
                       <Route path="restaurants" element={<AdminRestaurants />} />
                       <Route path="users" element={<AdminUsers />} />
+                      <Route path="repair-partners" element={<AdminRepairPartners />} />
                       <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
                       <Route path="inventory" element={<AdminInventory />} />
                     </Route>

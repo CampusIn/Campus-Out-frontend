@@ -63,3 +63,10 @@ export const getAdminMarketPlaceOrders = (params) => api.get('/admin/marketplace
 export const getAdminMarketPlaceOrderById = (id) => api.get(`/admin/marketplace/orders/${id}`);
 export const updateMarketPlaceOrderStatus = (id, data) => api.patch(`/admin/marketplace/orders/${id}/status`, data);
 export const assignMarketPlaceDelivery = (id, data) => api.patch(`/admin/marketplace/orders/${id}/assign-delivery`, data);
+
+// Repair Partners
+export const createRepairPartner = (data) => api.post('/admin/repair-partners', data);
+export const getAllRepairPartners = (params) => api.get('/admin/repair-partners', { params });
+export const getOneRepairPartner = (partnerId) => api.get(`/admin/repair-partners/${partnerId}`);
+export const updateRepairPartner = (partnerId, data) => api.patch(`/admin/repair-partners/${partnerId}`, data);
+export const updateRepairPartnerStatus = (partnerId) => api.patch(`/admin/repair-partners/${partnerId}/status`);

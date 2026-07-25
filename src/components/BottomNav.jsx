@@ -14,7 +14,7 @@ export default function BottomNav() {
   const reduceMotion = useReducedMotion();
 
   // Determine if we should show the nav
-  const showNavRoutes = ['/restaurants', '/marketplace', '/orders', '/cart', '/profile'];
+  const showNavRoutes = ['/restaurants', '/marketplace', '/orders', '/cart', '/profile', '/repair-requests'];
   const shouldShowNav = Boolean(user) && showNavRoutes.some(route => location.pathname.startsWith(route));
 
   // Determine active tab
