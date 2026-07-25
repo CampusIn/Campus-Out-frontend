@@ -84,6 +84,7 @@ export default function RepairRequests() {
   // Detail Modal state
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [fetchingDetail, setFetchingDetail] = useState(false);
+  const [loadingDetailId, setLoadingDetailId] = useState(null);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [processingDecisionId, setProcessingDecisionId] = useState(null);
 
@@ -275,8 +276,9 @@ export default function RepairRequests() {
     }
   };
 
-  // Open detail modal
+  // Open detail modal with button loader
   const openDetailModal = async (requestId) => {
+    setLoadingDetailId(requestId);
     setFetchingDetail(true);
     try {
       const res = await getRepairRequestById(requestId);
@@ -289,6 +291,7 @@ export default function RepairRequests() {
       toast.error('Failed to load details');
     } finally {
       setFetchingDetail(false);
+      setLoadingDetailId(null);
     }
   };
 
@@ -903,6 +906,7 @@ export default function RepairRequests() {
                           )}
 
                           <button
+                            disabled={loadingDetailId === item._id}
                             onClick={() => openDetailModal(item._id)}
                             style={{
                               padding: '7px 14px',
@@ -912,14 +916,35 @@ export default function RepairRequests() {
                               color: '#334155',
                               fontWeight: 750,
                               fontSize: '0.78rem',
-                              cursor: 'pointer',
-                              display: 'flex',
+                              cursor: loadingDetailId === item._id ? 'not-allowed' : 'pointer',
+                              display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '6px'
+                              justifyContent: 'center',
+                              gap: '6px',
+                              opacity: loadingDetailId === item._id ? 0.7 : 1
                             }}
                           >
-                            <Eye size={15} />
-                            View Details
+                            {loadingDetailId === item._id ? (
+                              <>
+                                <div
+                                  style={{
+                                    width: '13px',
+                                    height: '13px',
+                                    border: '2px solid rgba(51, 65, 85, 0.2)',
+                                    borderTop: '2px solid #334155',
+                                    borderRadius: '50%',
+                                    animation: 'spin 0.8s linear infinite',
+                                    display: 'inline-block'
+                                  }}
+                                />
+                                <span>Loading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye size={15} />
+                                <span>View Details</span>
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
