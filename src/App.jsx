@@ -37,24 +37,45 @@ import VendorLogin from './pages/auth/VendorLogin';
 import VendorRegister from './pages/auth/VendorRegister';
 import AdminLogin from './pages/auth/AdminLogin';
 
+// Custom lazy wrapper to handle chunk load errors after deployment (e.g. Vercel)
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
+
 // Admin Lazy Pages
-const AdminLayout = lazy(() => import('./components/AdminLayout'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
-const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
-const AdminAnnouncements = lazy(() => import('./pages/admin/AdminAnnouncements'));
-const AdminRestaurants = lazy(() => import('./pages/admin/AdminRestaurants'));
-const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
-const AdminAbandonedCarts = lazy(() => import('./pages/admin/AdminAbandonedCarts'));
-const AdminMarketplace = lazy(() => import('./pages/admin/AdminMarketplace'));
-const AdminInventory = lazy(() => import('./pages/admin/AdminInventory'));
-const AdminRepairPartners = lazy(() => import('./pages/admin/AdminRepairPartners'));
-const Marketplace = lazy(() => import('./pages/user/Marketplace'));
-const MarketplaceProductDetail = lazy(() => import('./pages/user/MarketplaceProductDetail'));
-const MarketplaceCart = lazy(() => import('./pages/user/MarketplaceCart'));
-const MarketplaceOrderDetail = lazy(() => import('./pages/user/MarketplaceOrderDetail'));
-const RepairRequests = lazy(() => import('./pages/user/RepairRequests'));
+const AdminLayout = lazyWithRetry(() => import('./components/AdminLayout'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard'));
+const AdminSettings = lazyWithRetry(() => import('./pages/admin/AdminSettings'));
+const AdminCoupons = lazyWithRetry(() => import('./pages/admin/AdminCoupons'));
+const AdminAnnouncements = lazyWithRetry(() => import('./pages/admin/AdminAnnouncements'));
+const AdminRestaurants = lazyWithRetry(() => import('./pages/admin/AdminRestaurants'));
+const AdminUsers = lazyWithRetry(() => import('./pages/admin/AdminUsers'));
+const AdminBanners = lazyWithRetry(() => import('./pages/admin/AdminBanners'));
+const AdminAbandonedCarts = lazyWithRetry(() => import('./pages/admin/AdminAbandonedCarts'));
+const AdminMarketplace = lazyWithRetry(() => import('./pages/admin/AdminMarketplace'));
+const AdminInventory = lazyWithRetry(() => import('./pages/admin/AdminInventory'));
+const AdminRepairPartners = lazyWithRetry(() => import('./pages/admin/AdminRepairPartners'));
+const AdminRepairRequests = lazyWithRetry(() => import('./pages/admin/AdminRepairRequests'));
+const Marketplace = lazyWithRetry(() => import('./pages/user/Marketplace'));
+const MarketplaceProductDetail = lazyWithRetry(() => import('./pages/user/MarketplaceProductDetail'));
+const MarketplaceCart = lazyWithRetry(() => import('./pages/user/MarketplaceCart'));
+const MarketplaceOrderDetail = lazyWithRetry(() => import('./pages/user/MarketplaceOrderDetail'));
+const RepairRequests = lazyWithRetry(() => import('./pages/user/RepairRequests'));
 
 export default function App() {
   return (
@@ -209,6 +230,7 @@ export default function App() {
                       <Route path="restaurants" element={<AdminRestaurants />} />
                       <Route path="users" element={<AdminUsers />} />
                       <Route path="repair-partners" element={<AdminRepairPartners />} />
+                      <Route path="repair-requests" element={<AdminRepairRequests />} />
                       <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
                       <Route path="inventory" element={<AdminInventory />} />
                     </Route>

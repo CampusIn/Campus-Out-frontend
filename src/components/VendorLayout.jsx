@@ -138,7 +138,7 @@ export default function VendorLayout() {
                 CAMPUS<span style={{ color: '#06c169' }}>IN</span>
               </span>
             </div>
-            <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 16px', borderRadius: '10px' }} onClick={logout}>
+            <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 16px', borderRadius: '10px' }} onClick={() => logout('vendor')}>
               Logout
             </button>
           </div>
@@ -297,7 +297,7 @@ export default function VendorLayout() {
       </div>
 
       <div className="vendor-sidebar-footer">
-        <button className="vendor-sidebar-logout-btn" onClick={logout}>
+        <button className="vendor-sidebar-logout-btn" onClick={() => logout('vendor')}>
           <LogOut size={18} />
           Logout
         </button>
@@ -373,7 +373,7 @@ export default function VendorLayout() {
                     <Settings size={16} />
                     Shop Settings
                   </Link>
-                  <button className="vendor-profile-item logout" onClick={logout}>
+                  <button className="vendor-profile-item logout" onClick={() => logout('vendor')}>
                     <LogOut size={16} />
                     Logout
                   </button>

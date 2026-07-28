@@ -70,3 +70,11 @@ export const getAllRepairPartners = (params) => api.get('/admin/repair-partners'
 export const getOneRepairPartner = (partnerId) => api.get(`/admin/repair-partners/${partnerId}`);
 export const updateRepairPartner = (partnerId, data) => api.patch(`/admin/repair-partners/${partnerId}`, data);
 export const updateRepairPartnerStatus = (partnerId) => api.patch(`/admin/repair-partners/${partnerId}/status`);
+
+// Repair Requests Admin
+export const getAdminRepairRequests = (params) => api.get('/admin/repair-requests', { params });
+export const getAdminRepairRequestById = (requestId) => api.get(`/admin/repair-requests/${requestId}`);
+export const sendRepairRequestEstimate = (requestId, data) => api.patch(`/admin/repair-requests/${requestId}/estimate`, data);
+export const assignRepairPartnerToRequest = (requestId, data) => api.patch(`/admin/repair-requests/${requestId}/assign-partner`, data);
+export const completeRepairRequest = (requestId, data) => api.patch(`/admin/repair-requests/${requestId}/complete`, data);
+

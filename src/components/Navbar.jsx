@@ -413,7 +413,7 @@ export default function Navbar() {
                 )}
                 
                 <button 
-                  onClick={logout} 
+                  onClick={() => logout('user')} 
                   className="desktop-logout-btn"
                   title="Logout"
                 >

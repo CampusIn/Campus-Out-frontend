@@ -1474,6 +1474,29 @@ input:checked + .slider:before {
   }
 }
 
+/* Repair Requests Responsive Rules */
+.repair-desktop-table-card {
+  display: block;
+}
+
+.repair-mobile-card-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .repair-desktop-table-card {
+    display: none !important;
+  }
+  .repair-mobile-card-list {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .hide-mobile-btn {
+    display: none !important;
+  }
+}
+
+
 
 
 

@@ -84,8 +84,10 @@ const SlideConfirmButton = React.forwardRef(
       }
       
       if (!success) {
-        setStatus("idle");
         settleBack();
+        setTimeout(() => {
+          setStatus("idle");
+        }, 400); // Delay so the spring back animation completes before drag is re-enabled
       } else {
         setStatus("confirmed");
       }

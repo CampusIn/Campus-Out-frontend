@@ -67,6 +67,7 @@ export default function AdminLayout() {
     { path: '/admin/restaurants', label: `Cafeteria Directory (${stats.restaurantCount})`, icon: <Store size={18} /> },
     { path: '/admin/users', label: `User Directory (${stats.userCount + stats.vendorCount})`, icon: <Users size={18} /> },
     { path: '/admin/repair-partners', label: 'Repair Partners', icon: <Wrench size={18} /> },
+    { path: '/admin/repair-requests', label: 'Repair Requests', icon: <ClipboardList size={18} /> },
     { path: '/admin/abandoned-carts', label: 'Abandoned Carts', icon: <ShoppingBag size={18} /> },
     { path: '/admin/inventory', label: 'Inventory Tracker', icon: <ClipboardList size={18} /> },
   ];
@@ -169,6 +170,14 @@ export default function AdminLayout() {
             >
               <Wrench size={20} />
               <span>Repair Partners</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/repair-requests"
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <ClipboardList size={20} />
+              <span>Repair Requests</span>
             </NavLink>
 
             <NavLink
@@ -283,7 +292,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="admin-sidebar-footer">
-            <button className="btn btn-outline admin-logout-btn" onClick={logout}>
+            <button className="btn btn-outline admin-logout-btn" onClick={() => logout('admin')}>
               <LogOut size={16} />
               <span>Sign Out</span>
             </button>
