@@ -284,10 +284,10 @@ export default function DeliveryDashboard() {
     setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const activeFoodOrders = orders.filter(o => ['CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(o.orderStatus));
+  const activeFoodOrders = orders.filter(o => o.orderStatus !== 'DELIVERED');
   const pastFoodOrders = orders.filter(o => o.orderStatus === 'DELIVERED');
 
-  const activeMarketplaceOrders = marketplaceOrders.filter(o => ['CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(o.orderStatus));
+  const activeMarketplaceOrders = marketplaceOrders.filter(o => o.orderStatus !== 'DELIVERED');
   const pastMarketplaceOrders = marketplaceOrders.filter(o => o.orderStatus === 'DELIVERED');
 
   const activeOrders = serviceType === 'food' ? activeFoodOrders : activeMarketplaceOrders;

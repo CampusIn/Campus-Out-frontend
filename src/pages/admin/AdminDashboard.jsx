@@ -1397,6 +1397,10 @@ export default function AdminDashboard() {
                       <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.packagingCharge}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Platform Fee</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.platformCharge}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Delivery Charge</span>
                       <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{selectedOrder.pricing.deliveryCharge}</span>
                     </div>
