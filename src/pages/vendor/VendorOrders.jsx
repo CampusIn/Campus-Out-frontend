@@ -503,6 +503,10 @@ export default function VendorOrders() {
                           Reject
                         </button>
                       </div>
+                    ) : o.orderStatus === 'READY' ? (
+                      <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>Waiting for partner delivery</p>
+                      </div>
                     ) : (
                       <button 
                         className="btn btn-primary"

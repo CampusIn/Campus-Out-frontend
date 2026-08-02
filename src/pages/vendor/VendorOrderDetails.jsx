@@ -334,6 +334,10 @@ export default function VendorOrderDetails() {
                       Reject Order
                     </button>
                   </div>
+                ) : order.orderStatus === 'READY' ? (
+                  <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>Waiting for delivery partner to mark as delivered.</p>
+                  </div>
                 ) : (
                   <button 
                     className="btn btn-primary hover-lift"
