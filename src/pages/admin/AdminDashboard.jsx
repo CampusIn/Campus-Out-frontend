@@ -1618,15 +1618,15 @@ export default function AdminDashboard() {
                     ) : (
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.8rem' }}>Unassigned</span>
+                          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.85rem', display: 'flex', alignItems: 'center', height: '30px' }}>Unassigned</span>
                           {['CONFIRMED', 'PREPARING', 'READY'].includes(selectedOrder.orderStatus) && !assignDeliveryOpen && (
                             <button
                               type="button"
                               className="btn btn-sm btn-outline"
                               onClick={() => setAssignDeliveryOpen(true)}
-                              style={{ padding: '4px 8px', height: '26px', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                              style={{ padding: '4px 12px', height: '30px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', borderRadius: '9999px' }}
                             >
-                              <UserPlus size={12} />
+                              <UserPlus size={14} />
                               <span>Assign Partner</span>
                             </button>
                           )}

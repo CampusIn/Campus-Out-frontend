@@ -284,8 +284,7 @@ export default function DeliveryDashboard() {
     setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Filter orders
-  const activeFoodOrders = orders.filter(o => o.orderStatus === 'READY' || o.orderStatus === 'OUT_FOR_DELIVERY');
+  const activeFoodOrders = orders.filter(o => ['CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(o.orderStatus));
   const pastFoodOrders = orders.filter(o => o.orderStatus === 'DELIVERED');
 
   const activeMarketplaceOrders = marketplaceOrders.filter(o => ['CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY'].includes(o.orderStatus));
@@ -807,7 +806,11 @@ export default function DeliveryDashboard() {
                             disabled={false}
                             loading={actionLoading === o._id}
                           />
-                        ) : null
+                        ) : (
+                          <div style={{ textAlign: 'center', background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #edf2f7', color: '#64748b', fontSize: '0.85rem', fontWeight: 700 }}>
+                            Awaiting Restaurant Preparation
+                          </div>
+                        )
                       ) : (
                         o.orderStatus === 'OUT_FOR_DELIVERY' ? (
                           (() => {
