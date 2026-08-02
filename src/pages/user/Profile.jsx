@@ -8,7 +8,7 @@ import { updateMe } from '../../api/auth.api';
 import { getActiveAnnouncements } from '../../api/homepageCMS.api';
 import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 
-import { ShieldAlert, Tag, Megaphone, Heart, HelpCircle, Bell, LogOut, ChevronRight, User, Copy, Check, Volume2, Calendar, Wrench } from 'lucide-react';
+import { ShieldAlert, Tag, Megaphone, Heart, HelpCircle, Bell, LogOut, ChevronRight, User, Copy, Check, Volume2, Calendar, Wrench, Phone, Mail, MessageCircle } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout, logoutAll, setUser } = useAuth();
@@ -33,14 +33,17 @@ export default function Profile() {
   const [editUsername, setEditUsername] = useState(user?.username || '');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Help state
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
   useEffect(() => {
-    if (isPromotionsOpen || isAnnouncementsOpen || isEditOpen) {
+    if (isPromotionsOpen || isAnnouncementsOpen || isEditOpen || isHelpOpen) {
       document.body.classList.add('hide-bottom-nav');
     } else {
       document.body.classList.remove('hide-bottom-nav');
     }
     return () => document.body.classList.remove('hide-bottom-nav');
-  }, [isPromotionsOpen, isAnnouncementsOpen, isEditOpen]);
+  }, [isPromotionsOpen, isAnnouncementsOpen, isEditOpen, isHelpOpen]);
 
   const handleOpenEditProfile = () => {
     setEditUsername(user?.username || '');
@@ -115,7 +118,7 @@ export default function Profile() {
     { label: 'Repair Requests', desc: 'Fix phones, laptops & appliances', icon: <Wrench size={20} />, color: '#b31522', action: () => navigate('/repair-requests') },
     { label: 'Promotions', icon: <Tag size={20} />, color: '#dd6b20', action: handleOpenPromotions },
     { label: 'Notification', icon: <Bell size={20} />, color: '#d69e2e', action: handleOpenAnnouncements },
-    { label: 'Help', icon: <HelpCircle size={20} />, color: '#319795' },
+    { label: 'Help', icon: <HelpCircle size={20} />, color: '#319795', action: () => setIsHelpOpen(true) },
     { label: 'Logout', icon: <LogOut size={20} />, color: '#e53e3e', action: logout },
     { label: 'Logout from all devices', icon: <ShieldAlert size={20} />, color: '#e53e3e', action: handleLogoutAll },
   ];
@@ -442,6 +445,83 @@ export default function Profile() {
                 })}
               </ProgressiveCardReveal>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Help Modal */}
+      {isHelpOpen && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.45)', 
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setIsHelpOpen(false)}
+        >
+          <div 
+            className="animate-slide-up"
+            style={{ 
+              background: '#ffffff', 
+              borderRadius: '24px', 
+              width: '100%', 
+              maxWidth: '420px', 
+              padding: '24px',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111' }}>Help & Support</h3>
+              <button 
+                onClick={() => setIsHelpOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#718096', padding: '4px' }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <a href="tel:+917380193241" style={{ textDecoration: 'none' }}>
+                <div className="hover-lift" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1.5px solid #edf2f7', transition: 'all 0.2s' }}>
+                  <div style={{ color: '#3182ce', background: '#ebf8ff', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={20} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1a202c' }}>Phone</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#718096' }}>+91 73801 93241</p>
+                  </div>
+                </div>
+              </a>
+              
+              <a href="mailto:contact.campusin@gmail.com" style={{ textDecoration: 'none' }}>
+                <div className="hover-lift" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1.5px solid #edf2f7', transition: 'all 0.2s' }}>
+                  <div style={{ color: '#e53e3e', background: '#fff5f5', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={20} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1a202c' }}>Email</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#718096' }}>contact.campusin@gmail.com</p>
+                  </div>
+                </div>
+              </a>
+
+              <a href="https://wa.me/917380193241?text=Hey%20I%20need%20to%20ask%20something%20about%20CampusIn" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                <div className="hover-lift" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1.5px solid #edf2f7', transition: 'all 0.2s' }}>
+                  <div style={{ color: '#38a169', background: '#f0fff4', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageCircle size={20} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1a202c' }}>WhatsApp</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#718096' }}>Message us on WhatsApp</p>
+                  </div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
       )}

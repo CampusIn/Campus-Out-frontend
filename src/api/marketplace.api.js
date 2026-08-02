@@ -4,6 +4,7 @@ import api from './axios';
 export const getUserCategories = (params) => api.get('/marketplace/categories', { params });
 export const getUserProducts = (params) => api.get('/marketplace/products', { params });
 export const getUserProductById = (productId) => api.get(`/marketplace/products/${productId}`);
+export const getMarketplaceSuggestions = (q) => api.get('/marketplace/products/suggestions', { params: { q } });
 
 // User Marketplace Cart APIs
 export const getMarketCart = () => api.get('/marketplace/cart');

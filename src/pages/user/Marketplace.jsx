@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarketCart } from '../../context/MarketCartContext';
-import { getUserCategories, getUserProducts } from '../../api/marketplace.api';
+import { getUserCategories, getUserProducts, getMarketplaceSuggestions } from '../../api/marketplace.api';
 
 import { Tag, DollarSign, Package, Search, ChevronLeft, ChevronRight, Sliders, Layers, Info, ChevronDown, User, Bookmark, MapPin, ShoppingBag } from 'lucide-react';
 
@@ -59,6 +59,45 @@ export default function Marketplace() {
 
   // Filters expanded toggler
   const [showFilters, setShowFilters] = useState(false);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef(null);
+
+  // Fetch suggestions with debounce
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!search.trim()) {
+        setSuggestions([]);
+        return;
+      }
+      try {
+        const { data } = await getMarketplaceSuggestions(search);
+        if (data.success) {
+          setSuggestions(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+      }
+    };
+    
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [search]);
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Fetch categories (active only, no pagination limit)
   useEffect(() => {
@@ -127,14 +166,13 @@ export default function Marketplace() {
         
         {/* Top Location Bar */}
         <div className="dashboard-location-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', position: 'relative', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <MapPin size={22} color="#b31522" className="animate-pulse-soft" />
-            <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#111111' }}>
-              {location}
-            </span>
-            <ChevronDown size={18} color="#718096" />
-          </div>
           
+          {/* Brand Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#b31522', letterSpacing: '-0.5px' }}>
+              CampusIn
+            </span>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Link 
               to="/cart?tab=marketplace"
@@ -201,7 +239,7 @@ export default function Marketplace() {
 
         {/* 2. Search Section */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '100%' }}>
-          <div className="dashboard-search-container" style={{ margin: 0 }}>
+          <div className="dashboard-search-container" style={{ margin: 0, position: 'relative' }} ref={searchRef}>
             <input
               type="text"
               className="dashboard-search-input"
@@ -210,9 +248,59 @@ export default function Marketplace() {
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                if (search.trim()) setShowSuggestions(true);
               }}
             />
             <Search className="dashboard-search-icon" />
+
+            {/* Suggestions Dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                background: '#ffffff',
+                border: '1px solid #edf2f7',
+                borderRadius: '12px',
+                marginTop: '8px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+                zIndex: 50,
+                maxHeight: '280px',
+                overflowY: 'auto',
+                padding: '8px'
+              }}>
+                {suggestions.map((item, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setSearch(item.name);
+                      setShowSuggestions(false);
+                      setPage(1);
+                    }}
+                    style={{
+                      padding: '12px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      borderRadius: '8px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <Search size={16} color="#94a3b8" />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>
+                      {item.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Toggle Filters Button */}

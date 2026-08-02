@@ -363,6 +363,7 @@ export default function Restaurants() {
 
   const [topPicks, setTopPicks] = useState([]);
   const [loadingTopPicks, setLoadingTopPicks] = useState(true);
+  const [showAllPicks, setShowAllPicks] = useState(false);
 
   useEffect(() => {
     const fetchTopPicksMenu = async () => {
@@ -464,93 +465,12 @@ export default function Restaurants() {
       <ContentWrapper>
         {/* Location Bar (hidden on desktop) */}
         <div className="dashboard-location-bar mobile-only-header animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 100, marginTop: '16px' }}>
-          <div className="location-selector-wrapper" ref={locationRef} style={{ position: 'relative' }}>
-            <button 
-              type="button" 
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="location-display-btn"
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'none', 
-                border: 'none', 
-                cursor: 'pointer',
-                padding: '6px 0',
-                fontFamily: 'inherit'
-              }}
-            >
-              <MapPin size={22} color="#b31522" className="animate-pulse-soft" />
-              <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111' }}>
-                {activeLocation ? savedAddresses.find(a => a.name === activeLocation)?.name || activeLocation : 'Select Location'}
-              </span>
-              <ChevronDown size={18} color="#718096" />
-            </button>
-
-            {dropdownOpen && (
-              <div className="swiggy-location-popover animate-scale-in">
-                <div style={{ padding: '0 16px 12px 16px' }}>
-                  <input 
-                    type="text" 
-                    placeholder="Type other hostel / address..." 
-                    style={{ 
-                      width: '100%', 
-                      padding: '8px 12px', 
-                      border: '1.5px solid #e2e8f0', 
-                      borderRadius: '8px', 
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleCustomAddressSubmit(e.target.value);
-                      }
-                    }}
-                  />
-                </div>
-
-                <button 
-                  type="button" 
-                  onClick={handleUseCurrentLocation}
-                  className="swiggy-location-popover-item current-loc-item"
-                >
-                  <Navigation size={18} color="#b31522" className="popover-item-icon" />
-                  <div className="popover-item-details">
-                    <span className="current-loc-title">Use my current location</span>
-                  </div>
-                </button>
-
-                <div className="swiggy-popover-divider"></div>
-
-                <span className="swiggy-popover-header">SAVED ADDRESSES</span>
-
-                {/* Saved Addresses list */}
-                {savedAddresses.map((addr) => (
-                  <button 
-                    key={addr.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveLocation(addr.name);
-                      setDropdownOpen(false);
-                      const newParams = new URLSearchParams(searchParams);
-                      newParams.set('hostel', addr.name);
-                      setSearchParams(newParams);
-                    }}
-                    className="swiggy-location-popover-item address-item"
-                  >
-                    <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
-                    <div className="popover-item-details">
-                      <span className="address-name">{addr.name}</span>
-                      <span 
-                        className="address-desc" 
-                        dangerouslySetInnerHTML={{ __html: addr.detail }}
-                      />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+          
+          {/* Brand Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#b31522', letterSpacing: '-0.5px' }}>
+              CampusIn
+            </span>
           </div>
 
 
@@ -932,30 +852,44 @@ export default function Restaurants() {
                 </div>
               ))
             ) : (
-              topPicks.map((pick) => (
-                <Link 
-                  to={(pick.restaurantId && typeof pick.restaurantId === 'string' && pick.restaurantId.includes('_id')) ? '/restaurants' : `/restaurants/${pick.restaurantId}`} 
-                  key={pick._id} 
-                  className="top-pick-card hover-lift"
-                  style={{ textDecoration: 'none', color: 'inherit', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'block' }}
-                >
-                  <div className="top-pick-img-container" style={{ position: 'relative', height: '140px', overflow: 'hidden' }}>
-                    <img src={pick.image} alt={pick.name} className="top-pick-img hover-scale" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <div className="top-pick-content" style={{ padding: '12px' }}>
-                    <div className="top-pick-name" style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111', marginBottom: '2px' }}>{pick.name}</div>
-                    <div className="top-pick-cuisine" style={{ fontSize: '0.8rem', color: '#718096', marginBottom: '8px' }}>{pick.restaurantName}</div>
-                    <div className="top-pick-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
-                      <span className="top-pick-rating" style={{ fontWeight: 700, color: '#111111', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <Star size={14} color="#ffc700" fill="#ffc700" /> {pick.averageRating > 0 ? pick.averageRating.toFixed(1) : '4.5'}
-                      </span>
-                      <span className="top-pick-price" style={{ fontWeight: 850, color: '#b31522' }}>
-                        ₹{pick.price}
-                      </span>
+              <>
+                {(showAllPicks ? topPicks : topPicks.slice(0, 6)).map((pick) => (
+                  <Link 
+                    to={(pick.restaurantId && typeof pick.restaurantId === 'string' && pick.restaurantId.includes('_id')) ? '/restaurants' : `/restaurants/${pick.restaurantId}`} 
+                    key={pick._id} 
+                    className="top-pick-card hover-lift"
+                    style={{ textDecoration: 'none', color: 'inherit', background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'block' }}
+                  >
+                    <div className="top-pick-img-container" style={{ position: 'relative', height: '140px', overflow: 'hidden' }}>
+                      <img src={pick.image} alt={pick.name} className="top-pick-img hover-scale" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
+                    <div className="top-pick-content" style={{ padding: '12px' }}>
+                      <div className="top-pick-name" style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111111', marginBottom: '2px' }}>{pick.name}</div>
+                      <div className="top-pick-cuisine" style={{ fontSize: '0.8rem', color: '#718096', marginBottom: '8px' }}>{pick.restaurantName}</div>
+                      <div className="top-pick-stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+                        <span className="top-pick-rating" style={{ fontWeight: 700, color: '#111111', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <Star size={14} color="#ffc700" fill="#ffc700" /> {pick.averageRating > 0 ? pick.averageRating.toFixed(1) : '4.5'}
+                        </span>
+                        <span className="top-pick-price" style={{ fontWeight: 850, color: '#b31522' }}>
+                          ₹{pick.price}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                {!showAllPicks && topPicks.length > 6 && (
+                  <div 
+                    className="top-pick-card hover-lift" 
+                    onClick={() => setShowAllPicks(true)}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e0', cursor: 'pointer', padding: '16px', minWidth: '140px', minHeight: '230px' }}
+                  >
+                    <div style={{ background: '#fff5f5', color: '#b31522', padding: '12px', borderRadius: '50%', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ChevronRight size={24} />
+                    </div>
+                    <span style={{ fontWeight: 700, color: '#4a5568', fontSize: '0.9rem' }}>View All</span>
                   </div>
-                </Link>
-              ))
+                )}
+              </>
             )}
           </div>
         </ContentWrapper>
