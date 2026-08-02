@@ -13,6 +13,7 @@ export default function AdminSettings() {
     freeDeliveryAbove: 0,
     minimumOrderValue: 0,
     packagingCharge: 0,
+    platformCharge: 0,
     gstPercentage: 0,
     maintainanceMode: false,
   });
@@ -34,6 +35,7 @@ export default function AdminSettings() {
         freeDeliveryAbove: Number(settings.freeDeliveryAbove ?? 0),
         minimumOrderValue: Number(settings.minimumOrderValue ?? 0),
         packagingCharge: Number(settings.packagingCharge ?? 0),
+        platformCharge: Number(settings.platformCharge ?? 0),
         gstPercentage: Number(settings.gstPercentage ?? 0),
         maintainanceMode: Boolean(settings.maintainanceMode ?? false),
       };
@@ -77,6 +79,7 @@ export default function AdminSettings() {
     const freeDeliveryAbove = Number(form.freeDeliveryAbove);
     const minimumOrderValue = Number(form.minimumOrderValue);
     const packagingCharge = Number(form.packagingCharge);
+    const platformCharge = Number(form.platformCharge);
     const gstPercentage = Number(form.gstPercentage);
 
     if (isNaN(deliveryCharge) || deliveryCharge < 0) {
@@ -90,6 +93,9 @@ export default function AdminSettings() {
     }
     if (isNaN(packagingCharge) || packagingCharge < 0) {
       newErrors.packagingCharge = 'Packaging charge cannot be negative';
+    }
+    if (isNaN(platformCharge) || platformCharge < 0) {
+      newErrors.platformCharge = 'Platform charge cannot be negative';
     }
     if (isNaN(gstPercentage) || gstPercentage < 0 || gstPercentage > 100) {
       newErrors.gstPercentage = 'GST percentage must be between 0 and 100';
@@ -120,6 +126,7 @@ export default function AdminSettings() {
         freeDeliveryAbove: Number(form.freeDeliveryAbove),
         minimumOrderValue: Number(form.minimumOrderValue),
         packagingCharge: Number(form.packagingCharge),
+        platformCharge: Number(form.platformCharge),
         gstPercentage: Number(form.gstPercentage),
         maintainanceMode: Boolean(form.maintainanceMode),
       };
@@ -133,6 +140,7 @@ export default function AdminSettings() {
         freeDeliveryAbove: Number(settings.freeDeliveryAbove ?? payload.freeDeliveryAbove),
         minimumOrderValue: Number(settings.minimumOrderValue ?? payload.minimumOrderValue),
         packagingCharge: Number(settings.packagingCharge ?? payload.packagingCharge),
+        platformCharge: Number(settings.platformCharge ?? payload.platformCharge),
         gstPercentage: Number(settings.gstPercentage ?? payload.gstPercentage),
         maintainanceMode: Boolean(settings.maintainanceMode ?? payload.maintainanceMode),
       };
@@ -251,6 +259,21 @@ export default function AdminSettings() {
           </div>
 
           <div className="settings-grid-row">
+            <div className="settings-input-group">
+              <label>Platform Charge (₹) *</label>
+              <input
+                type="number"
+                name="platformCharge"
+                className={`input-pill ${errors.platformCharge ? 'error-border' : ''}`}
+                value={form.platformCharge}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required
+              />
+              {errors.platformCharge && <span className="input-error-msg">{errors.platformCharge}</span>}
+            </div>
+
             <div className="settings-input-group gst-input-group">
               <label>GST Percentage (%) *</label>
               <input

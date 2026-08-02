@@ -92,7 +92,8 @@ export default function Cart() {
     deliveryCharge: 20,
     freeDeliveryAbove: 80,
     gstPercentage: 0,
-    packagingCharge: 0
+    packagingCharge: 0,
+    platformCharge: 0
   });
 
   useEffect(() => {
@@ -104,7 +105,8 @@ export default function Cart() {
             deliveryCharge: Number(data.data.deliveryCharge ?? 20),
             freeDeliveryAbove: Number(data.data.freeDeliveryAbove ?? 80),
             gstPercentage: Number(data.data.gstPercentage ?? 0),
-            packagingCharge: Number(data.data.packagingCharge ?? 0)
+            packagingCharge: Number(data.data.packagingCharge ?? 0),
+            platformCharge: Number(data.data.platformCharge ?? 0)
           });
         }
       } catch (err) {
@@ -119,14 +121,16 @@ export default function Cart() {
     const subTotal = cart.totalAmount;
     const gstAmount = Math.round((subTotal * platformSettings.gstPercentage) / 100);
     const packagingCharge = platformSettings.packagingCharge;
+    const platformCharge = platformSettings.platformCharge;
     const deliveryCharge = subTotal >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge;
-    const finalAmount = subTotal + gstAmount + deliveryCharge + packagingCharge;
+    const finalAmount = subTotal + gstAmount + deliveryCharge + packagingCharge + platformCharge;
 
     return {
       subTotal,
       couponDiscount: 0,
       gstAmount,
       packagingCharge,
+      platformCharge,
       deliveryCharge,
       finalAmount
     };
@@ -805,6 +809,11 @@ export default function Cart() {
                           <span style={{ color: '#718096' }}>Packaging Charge</span>
                           <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.packagingCharge}</span>
                         </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Platform Fee</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.platformCharge}</span>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                           <span style={{ color: '#718096' }}>Delivery Charge</span>
                           <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.deliveryCharge}</span>
@@ -1129,6 +1138,11 @@ export default function Cart() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                           <span style={{ color: '#718096' }}>Packaging Charge</span>
                           <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.packagingCharge}</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#718096' }}>Platform Fee</span>
+                          <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{currentPricing.platformCharge}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                           <span style={{ color: '#718096' }}>Delivery Charge</span>

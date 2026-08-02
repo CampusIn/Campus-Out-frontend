@@ -58,7 +58,8 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     deliveryCharge: 20,
     freeDeliveryAbove: 80,
     gstPercentage: 0,
-    packagingCharge: 0
+    packagingCharge: 0,
+    platformCharge: 0
   });
 
   useEffect(() => {
@@ -75,7 +76,8 @@ export default function MarketplaceCart({ isEmbedded = false }) {
             deliveryCharge: Number(data.data.deliveryCharge ?? 20),
             freeDeliveryAbove: Number(data.data.freeDeliveryAbove ?? 80),
             gstPercentage: Number(data.data.gstPercentage ?? 0),
-            packagingCharge: Number(data.data.packagingCharge ?? 0)
+            packagingCharge: Number(data.data.packagingCharge ?? 0),
+            platformCharge: Number(data.data.platformCharge ?? 0)
           });
         }
       } catch (err) {
@@ -246,14 +248,16 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     const subTotalAfterDiscount = subTotal - couponDiscount;
     const gstAmount = Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
     const packagingCharge = platformSettings.packagingCharge;
+    const platformCharge = platformSettings.platformCharge;
     const deliveryCharge = subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge;
-    const finalAmount = subTotalAfterDiscount + gstAmount + packagingCharge + deliveryCharge;
+    const finalAmount = subTotalAfterDiscount + gstAmount + packagingCharge + platformCharge + deliveryCharge;
 
     return {
       subTotal,
       couponDiscount,
       gstAmount,
       packagingCharge,
+      platformCharge,
       deliveryCharge,
       finalAmount
     };
@@ -1016,6 +1020,11 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                     <span style={{ color: '#718096' }}>Packaging Charge</span>
                     <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{pricing.packagingCharge}</span>
                   </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>Platform Fee</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{pricing.platformCharge}</span>
+                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                     <span style={{ color: '#718096' }}>Delivery Charge</span>
                     <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{pricing.deliveryCharge}</span>
@@ -1113,6 +1122,11 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: '#718096' }}>Packaging Charge</span>
                       <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{pricing.packagingCharge}</span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                      <span style={{ color: '#718096' }}>Platform Fee</span>
+                      <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{pricing.platformCharge}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: '#718096' }}>Delivery Charge</span>
