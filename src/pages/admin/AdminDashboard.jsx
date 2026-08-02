@@ -1334,6 +1334,10 @@ export default function AdminDashboard() {
                         <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.packagingCharge}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Platform Fee</span>
+                        <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.platformCharge}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Delivery Charge</span>
                         <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{p.deliveryCharge}</span>
                       </div>
@@ -1347,6 +1351,7 @@ export default function AdminDashboard() {
 
                 const gst = selectedOrder.gstAmount !== undefined && selectedOrder.gstAmount !== null ? selectedOrder.gstAmount : Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
                 const packaging = selectedOrder.packagingCharge !== undefined && selectedOrder.packagingCharge !== null ? selectedOrder.packagingCharge : platformSettings.packagingCharge;
+                const platformFee = selectedOrder.platformCharge !== undefined && selectedOrder.platformCharge !== null ? selectedOrder.platformCharge : platformSettings.platformCharge;
                 const delivery = selectedOrder.deliveryCharge !== undefined && selectedOrder.deliveryCharge !== null ? selectedOrder.deliveryCharge : (subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge);
 
                 return (
@@ -1368,6 +1373,10 @@ export default function AdminDashboard() {
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Packaging Charge</span>
                       <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{packaging}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Platform Fee</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>₹{platformFee}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Delivery Charge</span>
