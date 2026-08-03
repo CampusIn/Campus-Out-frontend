@@ -240,14 +240,24 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     }
   };
 
-  // Pre-saved addresses
-  const campusAddresses = [
-    { label: 'Boys Hostel 1', Icon: Building2 },
-    { label: 'Boys Hostel 2', Icon: Building2 },
-    { label: 'Girls Hostel 1', Icon: Building2 },
-    { label: 'Girls Hostel 2', Icon: Building2 },
-    { label: 'Academic Block A', Icon: GraduationCap },
-    { label: 'Academic Block B', Icon: GraduationCap },
+  const boysHostels = [
+    'Boys Hostel 1 (BH-1)',
+    'Boys Hostel 2 (BH-2)',
+    'Boys Hostel 3 (BH-3)',
+    'Boys Hostel 4 (BH-4)',
+    'Boys Hostel 5 (BH-5)',
+    'Boys Hostel 6 (BH-6)',
+    'Boys Hostel 7 (BH-7 & 7E)',
+    'Mega Hostel Boys Block A',
+    'Mega Hostel Boys Block B',
+    'Mega Hostel Boys Block F',
+    'Mega Hostel Boys Block E'
+  ];
+
+  const girlsHostels = [
+    'Girls Hostel 1 (GH-1)',
+    'Girls Hostel 2 (GH-2)',
+    'Mega Girls Hostel'
   ];
 
   // Calculate pricing values including discount and platform charges
@@ -478,6 +488,27 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     );
   }
 
+  const getSelectStyle = (isHostelSelected) => ({
+    padding: '10px 36px 10px 34px',
+    borderRadius: '20px',
+    border: isHostelSelected ? '2px solid #b31522' : '1px solid #edf2f7',
+    backgroundColor: isHostelSelected ? '#fff5f5' : '#ffffff',
+    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+    backgroundSize: '16px',
+    color: isHostelSelected ? '#b31522' : '#4a5568',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '0.85rem',
+    fontFamily: 'inherit',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    MozAppearance: 'none',
+    outline: 'none',
+    minWidth: '150px'
+  });
+
   const renderInnerContent = () => {
     if (!cart || !cart.items || cart.items.length === 0) {
       return (
@@ -670,44 +701,41 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                   className="subcategory-scroll" 
                   style={{ 
                     display: 'flex', 
-                    flexWrap: 'wrap',
-                    gap: '8px', 
+                    gap: '12px', 
                     overflowX: 'auto', 
                     paddingBottom: '8px',
                     width: '100%',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  {campusAddresses.map((addr) => {
-                    const isSelected = deliveryAddress === addr.label;
-                    return (
-                      <button
-                        type="button"
-                        key={addr.label}
-                        onClick={() => setDeliveryAddress(addr.label)}
-                        className="hover-scale"
-                        style={{
-                          padding: '10px 16px',
-                          borderRadius: '20px',
-                          border: isSelected ? '2px solid #b31522' : '1px solid #edf2f7',
-                          background: isSelected ? '#fff5f5' : '#ffffff',
-                          color: isSelected ? '#b31522' : '#4a5568',
-                          cursor: 'pointer',
-                          fontWeight: 700,
-                          fontSize: '0.85rem',
-                          transition: 'all 0.2s',
-                          whiteSpace: 'nowrap',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          outline: 'none'
-                        }}
-                      >
-                        <addr.Icon size={14} style={{ color: isSelected ? '#b31522' : '#718096' }} />
-                        <span>{addr.label}</span>
-                      </button>
-                    );
-                  })}
+                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                    <span style={{ position: 'absolute', left: '12px', fontSize: '14px', pointerEvents: 'none', zIndex: 1 }}>👦</span>
+                    <select 
+                      value={boysHostels.includes(deliveryAddress) ? deliveryAddress : ""}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      style={getSelectStyle(boysHostels.includes(deliveryAddress))}
+                    >
+                      <option value="" disabled>Boys Hostels</option>
+                      {boysHostels.map(hostel => (
+                        <option key={hostel} value={hostel}>{hostel}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                    <span style={{ position: 'absolute', left: '12px', fontSize: '14px', pointerEvents: 'none', zIndex: 1 }}>👧</span>
+                    <select 
+                      value={girlsHostels.includes(deliveryAddress) ? deliveryAddress : ""}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      style={getSelectStyle(girlsHostels.includes(deliveryAddress))}
+                    >
+                      <option value="" disabled>Girls Hostels</option>
+                      {girlsHostels.map(hostel => (
+                        <option key={hostel} value={hostel}>{hostel}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
