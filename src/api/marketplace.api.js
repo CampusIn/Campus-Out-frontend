@@ -13,6 +13,8 @@ export const updateMarketCartItemQty = (productId, quantity) => api.patch(`/mark
 export const deleteMarketCartItem = (productId) => api.delete(`/marketplace/cart/items/${productId}`);
 export const clearMarketCart = () => api.delete('/marketplace/cart');
 
+export const getCategoryPlatformSettings = (categoryId) => api.get('/marketplace/settings', { params: { categoryId } });
+
 // User Marketplace Order APIs
 export const createMarketplaceOrder = (data) => api.post('/marketplace/orders', data);
 export const getMyMarketplaceOrders = (params) => api.get('/marketplace/orders/my', { params });

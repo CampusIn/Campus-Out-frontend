@@ -26,14 +26,14 @@ const categoryIcons = {
 };
 
 const foodImages = [
-  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80', // Burger
-  'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80', // Pizza
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=500&q=80', // Mixed foods
+  'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80', // Veg Pizza
+  'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=500&q=80', // Pasta
   'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80', // Salad bowl
-  'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=500&q=80', // Chinese/Dumplings
-  'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=500&q=80', // Tacos/Mexican
-  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80', // Coffee/Desserts
-  'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80'  // Extra Pizza
+  'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=500&q=80', // Indian Curry
+  'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=500&q=80', // South Indian Dosa
+  'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80', // Dessert
+  'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=500&q=80', // Breakfast / Pancakes
+  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80'  // Coffee & Pastries
 ];
 
 const promoTexts = [
@@ -917,12 +917,9 @@ export default function Restaurants() {
                   className="swiggy-restaurant-card hover-lift"
                   style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
                 >
-                  {/* Image Banner with Overlay */}
+                  {/* Image Banner */}
                   <div className="swiggy-card-img-wrapper">
                     <img src={foodImage} alt={r.restaurantName} className="swiggy-card-img" />
-                    <div className="swiggy-card-overlay">
-                      <span className="swiggy-promo-text">{promoText}</span>
-                    </div>
                   </div>
                   {/* Restaurant Info */}
                   <div className="swiggy-card-info">

@@ -221,9 +221,46 @@ export default function MarketplaceOrderDetail() {
               <span style={{ color: '#718096', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> Placed On</span>
               <span style={{ fontWeight: 700, color: '#111111' }}>{new Date(order.createdAt).toLocaleString('en-IN')}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 800, borderTop: '1.5px dashed #e2e8f0', paddingTop: '12px', marginTop: '4px', color: '#111111' }}>
-              <span>Total Paid</span>
-              <span style={{ color: '#b31522', fontWeight: 900 }}>&#8377;{order.pricing?.finalAmount || order.totalAmount}</span>
+          </div>
+
+          {/* Bill summary breakdown */}
+          <div style={{ background: '#f7fafc', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid #edf2f7' }}>
+            <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: '#111111' }}>Bill Summary</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                <span style={{ color: '#718096' }}>Subtotal</span>
+                <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{order.pricing?.subTotal ?? order.totalAmount}</span>
+              </div>
+              {order.pricing?.couponDiscount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <span style={{ color: '#718096' }}>Coupon Discount</span>
+                  <span style={{ color: '#06c169', fontWeight: 700 }}>-&#8377;{order.pricing.couponDiscount}</span>
+                </div>
+              )}
+              {order.pricing && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>GST</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{order.pricing.gstAmount ?? 0}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>Packaging Charge</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{order.pricing.packagingCharge ?? 0}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>Platform Fee</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{order.pricing.platformCharge ?? 0}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#718096' }}>Delivery Charge</span>
+                    <span style={{ fontWeight: 700, color: '#111111' }}>&#8377;{order.pricing.deliveryCharge ?? 0}</span>
+                  </div>
+                </>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, borderTop: '1px solid #edf2f7', paddingTop: '12px', marginTop: '4px', color: '#111111' }}>
+                <span>Final Amount</span>
+                <span style={{ color: '#b31522', fontWeight: 900 }}>&#8377;{order.pricing?.finalAmount ?? order.totalAmount}</span>
+              </div>
             </div>
           </div>
 

@@ -59,7 +59,7 @@ export default function AdminLayout() {
 
   const menuOptions = [
     { path: '/admin/dashboard', label: 'Dashboard Overview', icon: <LayoutDashboard size={18} /> },
-    { path: '/admin/settings', label: 'Platform Settings', icon: <Settings size={18} /> },
+    { path: '/admin/settings', label: 'Food Platform Settings', icon: <Settings size={18} /> },
     { path: '/admin/marketplace', label: 'Marketplace Console', icon: <Package size={18} /> },
     { path: '/admin/coupons', label: 'Coupon Campaigns', icon: <Ticket size={18} /> },
     { path: '/admin/announcements', label: 'Announcements Bulletin', icon: <Megaphone size={18} /> },
@@ -113,7 +113,7 @@ export default function AdminLayout() {
               className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
             >
               <Settings size={20} />
-              <span>Platform Settings</span>
+              <span>Food Platform Settings</span>
             </NavLink>
 
             <NavLink

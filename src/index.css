@@ -2049,6 +2049,11 @@ input:checked + .switch-slider:before {
   font-size: 1rem;
   color: #111111;
   font-family: inherit;
+  outline: none;
+}
+
+.dashboard-search-input:focus {
+  outline: none;
 }
 
 .dashboard-search-input::placeholder {

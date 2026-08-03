@@ -7,7 +7,7 @@ import { getCoupons, getPlatformSettings } from '../../api/order.api';
 
 import { Tag, Loader, Store, Percent, Phone, CreditCard, Building2, GraduationCap, ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Layers, AlertTriangle, Check, X, MapPin } from 'lucide-react';
 
-import { createMarketplaceOrder } from '../../api/marketplace.api';
+import { createMarketplaceOrder, getCategoryPlatformSettings } from '../../api/marketplace.api';
 import { SlideConfirmButton } from '../../components/SlideConfirmButton';
 import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 import { confetti } from '../../components/Confetti';
@@ -66,9 +66,9 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     fetchCart();
   }, [fetchCart]);
 
-  // Fetch platform settings on mount
+  // Sync category platform settings when cart loads, fallback to global settings
   useEffect(() => {
-    const fetchSettings = async () => {
+    const fetchGlobalSettings = async () => {
       try {
         const { data } = await getPlatformSettings();
         if (data.success && data.data) {
@@ -81,11 +81,34 @@ export default function MarketplaceCart({ isEmbedded = false }) {
           });
         }
       } catch (err) {
-        console.error('Failed to fetch platform settings, using defaults.', err);
+        console.error('Failed to fetch global platform settings', err);
       }
     };
-    fetchSettings();
-  }, []);
+
+    if (cart && cart.category) {
+      const fetchCategorySettings = async () => {
+        try {
+          const { data } = await getCategoryPlatformSettings(cart.category._id);
+          if (data.success && data.data && data.data.extraCharges) {
+            const extraCharges = data.data.extraCharges;
+            setPlatformSettings({
+              deliveryCharge: Number(extraCharges.deliveryCharge ?? 20),
+              freeDeliveryAbove: Number(extraCharges.freeDeliveryAbove ?? 80),
+              gstPercentage: Number(extraCharges.gstPercentage ?? 0),
+              packagingCharge: Number(extraCharges.packagingCharge ?? 0),
+              platformCharge: Number(extraCharges.platformCharge ?? 0)
+            });
+          } else {
+            fetchGlobalSettings();
+          }
+        } catch (err) {
+          console.error('Failed to fetch category platform settings', err);
+          fetchGlobalSettings();
+        }
+      };
+      fetchCategorySettings();
+    }
+  }, [cart]);
 
   // Resize listener for modal sheet layout
   useEffect(() => {

@@ -76,6 +76,9 @@ const MarketplaceProductDetail = lazyWithRetry(() => import('./pages/user/Market
 const MarketplaceCart = lazyWithRetry(() => import('./pages/user/MarketplaceCart'));
 const MarketplaceOrderDetail = lazyWithRetry(() => import('./pages/user/MarketplaceOrderDetail'));
 const RepairRequests = lazyWithRetry(() => import('./pages/user/RepairRequests'));
+const TermsAndConditions = lazyWithRetry(() => import('./pages/TermsAndConditions'));
+const PrivacyPolicy = lazyWithRetry(() => import('./pages/LegalPolicy'));
+const RefundPolicy = lazyWithRetry(() => import('./pages/RefundPolicy'));
 
 export default function App() {
   return (
@@ -95,6 +98,21 @@ export default function App() {
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/auth/success" element={<AuthSuccess />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/terms-and-conditions" element={
+                      <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
+                        <TermsAndConditions />
+                      </Suspense>
+                    } />
+                    <Route path="/privacy-policy" element={
+                      <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
+                        <PrivacyPolicy />
+                      </Suspense>
+                    } />
+                    <Route path="/refund-policy" element={
+                      <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
+                        <RefundPolicy />
+                      </Suspense>
+                    } />
                     <Route path="/restaurants" element={<Restaurants />} />
                     <Route path="/restaurants/:id" element={<RestaurantDetail />} />
                     <Route path="/food/:id" element={<FoodDetail />} />

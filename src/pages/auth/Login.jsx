@@ -237,7 +237,7 @@ export default function Login() {
 
         {/* Footer info text */}
         <p className="swiggy-auth-footer-text">
-          By clicking on Login, I accept the <span className="bold-text">Terms & Conditions</span> & <span className="bold-text">Privacy Policy</span>
+          By clicking on Login, I accept the <Link to="/terms-and-conditions" className="bold-text" style={{textDecoration: 'none', color: 'inherit'}}>Terms & Conditions</Link> & <Link to="/privacy-policy" className="bold-text" style={{textDecoration: 'none', color: 'inherit'}}>Privacy Policy</Link>
         </p>
       </div>
 

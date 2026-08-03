@@ -166,7 +166,7 @@ export default function AdminSettings() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Platform Settings</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>Food Platform Settings</h1>
           <p style={{ fontSize: '0.88rem', color: '#64748b' }}>Configure global settings, minimum orders, and platform charges.</p>
         </div>
         <div className="settings-section-card" style={{ minHeight: '200px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -182,7 +182,7 @@ export default function AdminSettings() {
       {/* Title */}
       <div>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1e293b', marginBottom: '4px' }}>
-          Platform Settings
+          Food Platform Settings
         </h1>
         <p style={{ fontSize: '0.88rem', color: '#64748b' }}>
           Configure delivery tariffs, minimum billing values, tax details, and system maintenance.

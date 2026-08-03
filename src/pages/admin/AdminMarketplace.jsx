@@ -105,7 +105,13 @@ export default function AdminMarketplace() {
   const [catForm, setCatForm] = useState({
     name: '',
     description: '',
-    priority: '1'
+    priority: '1',
+    deliveryCharge: 0,
+    freeDeliveryAbove: 0,
+    minimumOrderValue: 0,
+    packagingCharge: 0,
+    platformCharge: 0,
+    gstPercentage: 0
   });
   const [catImage, setCatImage] = useState(null);
   const [catImagePreview, setCatImagePreview] = useState('');
@@ -240,7 +246,17 @@ export default function AdminMarketplace() {
 
   const handleOpenCreateCategory = () => {
     setModalMode('create');
-    setCatForm({ name: '', description: '', priority: '1' });
+    setCatForm({ 
+      name: '', 
+      description: '', 
+      priority: '1',
+      deliveryCharge: 0,
+      freeDeliveryAbove: 0,
+      minimumOrderValue: 0,
+      packagingCharge: 0,
+      platformCharge: 0,
+      gstPercentage: 0 
+    });
     setCatImage(null);
     setCatImagePreview('');
     setErrors({});
@@ -257,7 +273,13 @@ export default function AdminMarketplace() {
         setCatForm({
           name: cat.name || '',
           description: cat.description || '',
-          priority: cat.priority?.toString() || '1'
+          priority: cat.priority?.toString() || '1',
+          deliveryCharge: cat.pricingSettings?.deliveryCharge ?? 0,
+          freeDeliveryAbove: cat.pricingSettings?.freeDeliveryAbove ?? 0,
+          minimumOrderValue: cat.pricingSettings?.minimumOrderValue ?? 0,
+          packagingCharge: cat.pricingSettings?.packagingCharge ?? 0,
+          platformCharge: cat.pricingSettings?.platformCharge ?? 0,
+          gstPercentage: cat.pricingSettings?.gstPercentage ?? 0
         });
         setCatImage(null);
         setCatImagePreview(cat.image || '');
@@ -304,6 +326,22 @@ export default function AdminMarketplace() {
       newErrors.priority = 'Priority must be a positive integer';
     }
 
+    const freeDeliveryAbove = Number(catForm.freeDeliveryAbove);
+    const minimumOrderValue = Number(catForm.minimumOrderValue);
+
+    if (isNaN(Number(catForm.deliveryCharge)) || Number(catForm.deliveryCharge) < 0) newErrors.deliveryCharge = 'Cannot be negative';
+    if (isNaN(freeDeliveryAbove) || freeDeliveryAbove < 0) newErrors.freeDeliveryAbove = 'Cannot be negative';
+    if (isNaN(minimumOrderValue) || minimumOrderValue < 0) newErrors.minimumOrderValue = 'Cannot be negative';
+    if (isNaN(Number(catForm.packagingCharge)) || Number(catForm.packagingCharge) < 0) newErrors.packagingCharge = 'Cannot be negative';
+    if (isNaN(Number(catForm.platformCharge)) || Number(catForm.platformCharge) < 0) newErrors.platformCharge = 'Cannot be negative';
+    if (isNaN(Number(catForm.gstPercentage)) || Number(catForm.gstPercentage) < 0 || Number(catForm.gstPercentage) > 100) newErrors.gstPercentage = 'Must be 0-100';
+
+    if (!newErrors.freeDeliveryAbove && !newErrors.minimumOrderValue) {
+      if (freeDeliveryAbove < minimumOrderValue) {
+        newErrors.freeDeliveryAbove = 'Must be >= Minimum Order Value';
+      }
+    }
+
     if (modalMode === 'create' && !catImage) {
       newErrors.image = 'Category image is required';
     }
@@ -322,6 +360,12 @@ export default function AdminMarketplace() {
       fd.append('name', catForm.name.trim());
       fd.append('description', catForm.description.trim());
       fd.append('priority', Number(catForm.priority));
+      fd.append('deliveryCharge', Number(catForm.deliveryCharge));
+      fd.append('freeDeliveryAbove', Number(catForm.freeDeliveryAbove));
+      fd.append('minimumOrderValue', Number(catForm.minimumOrderValue));
+      fd.append('packagingCharge', Number(catForm.packagingCharge));
+      fd.append('platformCharge', Number(catForm.platformCharge));
+      fd.append('gstPercentage', Number(catForm.gstPercentage));
       if (catImage) {
         fd.append('image', catImage);
       }
@@ -1118,6 +1162,96 @@ export default function AdminMarketplace() {
                     <option value={1}>1 - Low (Show last/at the end)</option>
                   </select>
                   {errors.priority && <span className="input-error-msg">{errors.priority}</span>}
+                </div>
+
+                {/* Platform Settings & Tariffs */}
+                <div className="settings-section-card" style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '8px' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#334155', marginBottom: '16px' }}>Platform Settings & Tariffs</h4>
+                  
+                  <div className="marketplace-form-row">
+                    <div className="form-group-custom">
+                      <label style={{ fontSize: '0.8rem' }}>Delivery Charge (₹) *</label>
+                      <input
+                        type="number"
+                        className={`input-pill ${errors.deliveryCharge ? 'error-border' : ''}`}
+                        value={catForm.deliveryCharge}
+                        onChange={(e) => setCatForm(prev => ({ ...prev, deliveryCharge: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                      />
+                      {errors.deliveryCharge && <span className="input-error-msg">{errors.deliveryCharge}</span>}
+                    </div>
+
+                    <div className="form-group-custom">
+                      <label style={{ fontSize: '0.8rem' }}>Min Order Value (₹) *</label>
+                      <input
+                        type="number"
+                        className={`input-pill ${errors.minimumOrderValue ? 'error-border' : ''}`}
+                        value={catForm.minimumOrderValue}
+                        onChange={(e) => setCatForm(prev => ({ ...prev, minimumOrderValue: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                      />
+                      {errors.minimumOrderValue && <span className="input-error-msg">{errors.minimumOrderValue}</span>}
+                    </div>
+                  </div>
+
+                  <div className="marketplace-form-row">
+                    <div className="form-group-custom">
+                      <label style={{ fontSize: '0.8rem' }}>Free Delivery Above (₹) *</label>
+                      <input
+                        type="number"
+                        className={`input-pill ${errors.freeDeliveryAbove ? 'error-border' : ''}`}
+                        value={catForm.freeDeliveryAbove}
+                        onChange={(e) => setCatForm(prev => ({ ...prev, freeDeliveryAbove: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                      />
+                      {errors.freeDeliveryAbove && <span className="input-error-msg">{errors.freeDeliveryAbove}</span>}
+                    </div>
+
+                    <div className="form-group-custom">
+                      <label style={{ fontSize: '0.8rem' }}>Packaging Charge (₹) *</label>
+                      <input
+                        type="number"
+                        className={`input-pill ${errors.packagingCharge ? 'error-border' : ''}`}
+                        value={catForm.packagingCharge}
+                        onChange={(e) => setCatForm(prev => ({ ...prev, packagingCharge: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                      />
+                      {errors.packagingCharge && <span className="input-error-msg">{errors.packagingCharge}</span>}
+                    </div>
+                  </div>
+
+                  <div className="marketplace-form-row">
+                    <div className="form-group-custom">
+                      <label style={{ fontSize: '0.8rem' }}>Platform Charge (₹) *</label>
+                      <input
+                        type="number"
+                        className={`input-pill ${errors.platformCharge ? 'error-border' : ''}`}
+                        value={catForm.platformCharge}
+                        onChange={(e) => setCatForm(prev => ({ ...prev, platformCharge: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                      />
+                      {errors.platformCharge && <span className="input-error-msg">{errors.platformCharge}</span>}
+                    </div>
+
+                    <div className="form-group-custom">
+                      <label style={{ fontSize: '0.8rem' }}>GST Percentage (%) *</label>
+                      <input
+                        type="number"
+                        className={`input-pill ${errors.gstPercentage ? 'error-border' : ''}`}
+                        value={catForm.gstPercentage}
+                        onChange={(e) => setCatForm(prev => ({ ...prev, gstPercentage: e.target.value }))}
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                      {errors.gstPercentage && <span className="input-error-msg">{errors.gstPercentage}</span>}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Image Upload */}

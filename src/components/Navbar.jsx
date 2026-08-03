@@ -146,9 +146,12 @@ export default function Navbar() {
     }
   };
 
-  // Hide main customer navbar on homepage, vendor portal, admin dashboard, and delivery partner routes
+  // Hide main customer navbar on homepage, vendor portal, admin dashboard, delivery partner routes, and static pages
   if (
     location.pathname === '/' || 
+    location.pathname === '/terms-and-conditions' || 
+    location.pathname === '/privacy-policy' || 
+    location.pathname === '/refund-policy' || 
     location.pathname.startsWith('/vendor') || 
     location.pathname.startsWith('/admin') || 
     location.pathname.startsWith('/delivery')
