@@ -482,7 +482,7 @@ export default function ForgotPassword() {
         {/* Footer */}
         {step !== STEPS.SUCCESS && (
           <p className="swiggy-auth-footer-text">
-            By continuing, I accept the <span className="bold-text">Terms & Conditions</span> & <span className="bold-text">Privacy Policy</span>
+            By continuing, I accept the <Link to="/terms-and-conditions" className="bold-text" style={{textDecoration: 'none', color: 'inherit'}}>Terms & Conditions</Link> & <Link to="/privacy-policy" className="bold-text" style={{textDecoration: 'none', color: 'inherit'}}>Privacy Policy</Link>
           </p>
         )}
       </div>

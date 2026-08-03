@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 
 
 export default function VerifyEmail() {
@@ -164,7 +164,7 @@ export default function VerifyEmail() {
 
         {/* Footer info text */}
         <p className="swiggy-auth-footer-text">
-          By clicking on Verify OTP, I accept the <span className="bold-text">Terms & Conditions</span> & <span className="bold-text">Privacy Policy</span>
+          By clicking on Verify OTP, I accept the <Link to="/terms-and-conditions" className="bold-text" style={{textDecoration: 'none', color: 'inherit'}}>Terms & Conditions</Link> & <Link to="/privacy-policy" className="bold-text" style={{textDecoration: 'none', color: 'inherit'}}>Privacy Policy</Link>
         </p>
       </div>
 
