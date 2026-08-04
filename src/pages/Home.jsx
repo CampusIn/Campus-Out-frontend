@@ -136,8 +136,8 @@ export default function Home() {
         <div ref={heroContentRef} className="hero-content-wrapper">
           <h1 className="hero-title animate-slide-up">
             Cravings called. <br></br>We answered.<br />
-            Craving It?
-            <span className="highlight-yellow"> CampusIn</span> It!
+            Craving It?<br />
+            <span style={{ whiteSpace: 'nowrap' }}><span className="highlight-yellow">CampusIn</span> It!</span>
           </h1>
           <p className="hero-subtitle animate-slide-up delay-1">
             Your campus favourites, delivered hot and fresh to your hostel.          </p>
@@ -1298,15 +1298,17 @@ export default function Home() {
 
           /* Hero Actions Mobile Styling */
           .hero-actions {
-            flex-direction: column;
-            gap: 16px;
+            flex-direction: row;
+            gap: 12px;
             width: 100%;
-            max-width: 320px;
+            max-width: 340px;
             margin: 32px auto 0;
           }
 
           .btn-signin-hero, .btn-register-hero {
-            width: 100%;
+            flex: 1;
+            padding: 14px 10px;
+            font-size: 1rem;
             text-align: center;
             box-sizing: border-box;
           }
