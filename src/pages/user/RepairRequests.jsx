@@ -178,7 +178,7 @@ export default function RepairRequests() {
     if (!cleanPhone) {
       errors.customerPhone = 'Contact phone number is required';
     } else if (!phoneRegex.test(cleanPhone)) {
-      errors.customerPhone = 'Enter a valid 10-digit Indian phone number (e.g. 9876543210)';
+      errors.customerPhone = 'Enter a valid 10-digit Indian phone number (e.g. 9999999999)';
     }
 
     if (!formData.pickupLocation.trim()) {
@@ -652,7 +652,7 @@ export default function RepairRequests() {
                   confirmedLabel="Request Submitted!"
                   threshold={0.7}
                 >
-                  Slide to Submit Repair Request
+                  Slide to Submit
                 </SlideConfirmButton>
               </div>
             </form>

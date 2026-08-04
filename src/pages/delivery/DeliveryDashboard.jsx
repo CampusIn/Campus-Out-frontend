@@ -354,7 +354,7 @@ export default function DeliveryDashboard() {
                 <Phone size={18} className="input-icon" />
                 <input 
                   type="text" 
-                  placeholder="e.g. 9876543210" 
+                  placeholder="e.g. 9999999999" 
                   value={profileForm.phoneNumber}
                   onChange={(e) => setProfileForm({ ...profileForm, phoneNumber: e.target.value })}
                   required

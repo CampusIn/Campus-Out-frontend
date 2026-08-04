@@ -1404,7 +1404,7 @@ export default function AdminMarketplace() {
                       className={`input-pill ${errors.sellerPhoneNumber ? 'error-border' : ''}`}
                       value={prodForm.sellerPhoneNumber}
                       onChange={(e) => setProdForm(prev => ({ ...prev, sellerPhoneNumber: e.target.value }))}
-                      placeholder="E.g. 9876543210"
+                      placeholder="E.g. 9999999999"
                     />
                     {errors.sellerPhoneNumber && <span className="input-error-msg">{errors.sellerPhoneNumber}</span>}
                   </div>

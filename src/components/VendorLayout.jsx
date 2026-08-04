@@ -192,7 +192,7 @@ export default function VendorLayout() {
                 <input 
                   className="input-pill" 
                   style={{ paddingLeft: '20px' }} 
-                  placeholder="e.g. +91 9876543210" 
+                  placeholder="e.g. +91 9999999999" 
                   value={restaurantForm.phone} 
                   onChange={(e) => setRestaurantForm({ ...restaurantForm, phone: e.target.value })} 
                   required 
