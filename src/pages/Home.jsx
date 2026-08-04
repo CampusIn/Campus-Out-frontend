@@ -3,32 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
 
 import { Flame, ChefHat, Percent, Gift, CreditCard, Search, BookOpen, ShoppingBag, Wand2, Home as HomeIcon } from 'lucide-react';
-import { getMenuSuggestions } from '../api/menu.api';
+
 import BlueprintGrid from '../components/BlueprintGrid';
 
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Suggestions state
-  const [suggestions, setSuggestions] = useState([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const suggestionsRef = useRef(null);
-
-  // Click outside to close search suggestions dropdown
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [suggestionsRef]);
 
   // Scroll triggered promo section visibility
   const [promoSectionVisible, setPromoSectionVisible] = useState(false);
@@ -127,44 +107,7 @@ export default function Home() {
 
 
 
-  // Fetch search suggestions with debounce
-  useEffect(() => {
-    const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      const timer = setTimeout(() => {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-
-    const delayDebounceFn = setTimeout(async () => {
-      setLoadingSuggestions(true);
-      setShowSuggestions(true);
-      try {
-        const res = await getMenuSuggestions(trimmed);
-        if (res.data?.success) {
-          setSuggestions(res.data.data || []);
-        } else {
-          setSuggestions([]);
-        }
-      } catch (err) {
-        console.error('Error fetching suggestions:', err);
-        setSuggestions([]);
-      } finally {
-        setLoadingSuggestions(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
-
   if (user) return null;
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    navigate('/login');
-  };
 
   return (
     <div className="landing-page-container">
@@ -182,10 +125,7 @@ export default function Home() {
 
 
 
-          <div className="header-actions">
-            <Link to="/login" className="btn-signin-nav">Sign In</Link>
-            <Link to="/register" className="btn-register-nav hide-mobile">Register</Link>
-          </div>
+
         </div>
       </header>
 
@@ -202,67 +142,11 @@ export default function Home() {
           <p className="hero-subtitle animate-slide-up delay-1">
             Your campus favourites, delivered hot and fresh to your hostel.          </p>
 
-          {/* Search bar Widget */}
-          <form onSubmit={handleSearchSubmit} className="hero-search-form animate-slide-up delay-2">
-            <div className="search-field-query" ref={suggestionsRef}>
-              <Search size={20} color="#718096" className="field-icon" />
-              <input
-                type="text"
-                placeholder="Search for restaurants, dishes or drinks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => {
-                  if (searchQuery.trim()) {
-                    setShowSuggestions(true);
-                  }
-                }}
-                className="query-text-input"
-              />
-
-              {showSuggestions && (
-                <div className="search-suggestions-dropdown">
-                  {loadingSuggestions ? (
-                    <div className="suggestion-loading">
-                      <div className="suggestion-spinner"></div>
-                      <span>Searching for dishes...</span>
-                    </div>
-                  ) : suggestions.length > 0 ? (
-                    suggestions.map((item) => (
-                      <div
-                        key={item._id}
-                        className="suggestion-item"
-                        onClick={() => navigate('/login')}
-                      >
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="suggestion-image" />
-                        ) : (
-                          <div className="suggestion-image-placeholder">
-                            <Search size={16} color="#a0aec0" />
-                          </div>
-                        )}
-                        <div className="suggestion-info">
-                          <span className="suggestion-name">{item.name}</span>
-                          <span className="suggestion-meta">
-                            {item.category && <span className="suggestion-category">{item.category}</span>}
-                            {item.category && item.price && <span className="suggestion-dot">&bull;</span>}
-                            {item.price && <span className="suggestion-price">₹{item.price}</span>}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="suggestion-empty">
-                      No dishes found matching "{searchQuery}"
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <button type="submit" className="search-submit-btn hover-scale">
-              Find Food
-            </button>
-          </form>
+          {/* Hero Actions */}
+          <div className="hero-actions animate-slide-up delay-2">
+            <Link to="/login" className="btn-signin-hero">Sign In</Link>
+            <Link to="/register" className="btn-register-hero">Register</Link>
+          </div>
         </div>
       </section>
 
@@ -664,190 +548,48 @@ export default function Home() {
           line-height: 1.65;
         }
 
-        /* Search Widget Form */
-        .hero-search-form {
-          background: #ffffff;
-          padding: 8px;
-          border-radius: 50px;
-          display: flex;
-          align-items: center;
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-          max-width: 820px;
-          margin: 0 auto;
-          position: relative;
-          overflow: visible;
-        }
-
-        .search-field-query {
-          display: flex;
-          align-items: center;
-          padding: 0 20px;
-          flex: 1;
-        }
-
-        .query-text-input {
-          width: 100%;
-          border: none;
-          outline: none;
-          background: transparent;
-          font-family: inherit;
-          font-size: 0.95rem;
-          font-weight: 500;
-          color: #1a1a1a;
-        }
-
-        .query-text-input::placeholder {
-          color: #a0aec0;
-        }
-
-        .search-submit-btn {
-          background: #111111;
-          color: #ffffff;
-          border: none;
-          padding: 16px 36px;
-          border-radius: 50px;
-          font-family: inherit;
-          font-size: 1rem;
-          font-weight: 750;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .search-submit-btn:hover {
-          background: #b31522;
-        }
-
-        /* Suggestions Dropdown Styling */
-        .search-field-query {
-          position: relative;
-        }
-
-        .search-suggestions-dropdown {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          background: #ffffff;
-          border-radius: 16px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-          margin-top: 14px;
-          z-index: 1000;
-          overflow: hidden;
-          border: 1px solid #edf2f7;
-          display: flex;
-          flex-direction: column;
-          animation: slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideDownFade {
-          from {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .suggestion-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-          border-bottom: 1px solid #f7fafc;
-          text-align: left;
-        }
-
-        .suggestion-item:last-child {
-          border-bottom: none;
-        }
-
-        .suggestion-item:hover {
-          background-color: #f7fafc;
-        }
-
-        .suggestion-image {
-          width: 44px;
-          height: 44px;
-          object-fit: cover;
-          border-radius: 8px;
-          background-color: #edf2f7;
-        }
-
-        .suggestion-image-placeholder {
-          width: 44px;
-          height: 44px;
+        /* Hero Actions Styling */
+        .hero-actions {
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 8px;
-          background-color: #edf2f7;
+          gap: 24px;
+          margin-top: 32px;
         }
 
-        .suggestion-info {
-          display: flex;
-          flex-grow: 1;
-          min-width: 0;
-          flex-direction: column;
-        }
-
-        .suggestion-name {
-          font-size: 0.95rem;
-          font-weight: 650;
-          color: #2d3748;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .suggestion-meta {
-          font-size: 0.8rem;
-          color: #718096;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-top: 2px;
-        }
-
-        .suggestion-category {
-          text-transform: capitalize;
-        }
-
-        .suggestion-dot {
-          color: #cbd5e0;
-        }
-
-        .suggestion-price {
-          font-weight: 700;
+        .btn-signin-hero {
+          background: #ffffff;
           color: #b31522;
+          padding: 16px 40px;
+          border-radius: 50px;
+          font-weight: 800;
+          font-size: 1.1rem;
+          text-decoration: none;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
-        .suggestion-loading, .suggestion-empty {
-          padding: 20px;
-          text-align: center;
-          font-size: 0.9rem;
-          color: #718096;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
+        .btn-signin-hero:hover {
+          background: #f7fafc;
+          transform: translateY(-3px);
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
         }
 
-        .suggestion-spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid #edf2f7;
-          border-top: 2px solid #b31522;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
+        .btn-register-hero {
+          background: transparent;
+          color: #ffffff;
+          border: 2px solid #ffffff;
+          padding: 14px 40px;
+          border-radius: 50px;
+          font-weight: 800;
+          font-size: 1.1rem;
+          text-decoration: none;
+          transition: transform 0.25s ease, background 0.25s ease;
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .btn-register-hero:hover {
+          background: rgba(255, 255, 255, 0.12);
+          transform: translateY(-3px);
         }
 
         /* 3. Zomato-style Promo Section */
@@ -1550,38 +1292,18 @@ export default function Home() {
             margin-right: auto;
           }
 
-          /* Search Widget Form Mobile Styling */
-          .hero-search-form {
+          /* Hero Actions Mobile Styling */
+          .hero-actions {
             flex-direction: column;
-            border-radius: 24px;
-            padding: 12px;
-            gap: 12px;
+            gap: 16px;
             width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            box-sizing: border-box;
+            max-width: 320px;
+            margin: 32px auto 0;
           }
 
-          .search-field-query {
-            padding: 10px 14px;
+          .btn-signin-hero, .btn-register-hero {
             width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #edf2f7;
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          .query-text-input {
-            font-size: 0.85rem;
-          }
-
-          .search-submit-btn {
-            width: 100%;
-            padding: 12px;
-            border-radius: 18px;
-            font-size: 0.95rem;
+            text-align: center;
             box-sizing: border-box;
           }
 
