@@ -219,7 +219,7 @@ export default function MarketplaceOrderDetail() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#718096', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> Placed On</span>
-              <span style={{ fontWeight: 700, color: '#111111' }}>{new Date(order.createdAt).toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 700, color: '#111111' }}>{new Date(order.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}</span>
             </div>
           </div>
 

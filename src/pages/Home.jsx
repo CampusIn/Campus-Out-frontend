@@ -504,7 +504,8 @@ export default function Home() {
         /* 2. Hero Section */
         .hero-section {
           background: linear-gradient(135deg, #b31522 0%, #800e16 50%, #61070d 100%);
-          height: 80vh;
+          min-height: 80vh;
+          height: auto;
           width: 100%;
           display: flex;
           align-items: center;
@@ -512,7 +513,7 @@ export default function Home() {
           position: sticky;
           top: 0;
           z-index: 1;
-          padding: 140px 24px 80px 24px;
+          padding: 140px 24px 100px 24px;
           overflow: visible;
           box-sizing: border-box;
         }
@@ -865,12 +866,13 @@ export default function Home() {
         /* 3x3 Feature Icons Grid */
         .features-icon-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 16px;
           width: 100%;
           padding: 0 10px;
           box-sizing: border-box;
           margin-bottom: 30px;
+          justify-items: center;
         }
 
         .feature-icon-card {
@@ -902,11 +904,12 @@ export default function Home() {
         }
 
         .card-label {
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           font-weight: 650;
           color: #2d3748;
           line-height: 1.25;
           text-align: center;
+          word-break: break-word;
         }
 
         /* Custom Toggle Switch for Veg Mode */
@@ -1034,7 +1037,7 @@ export default function Home() {
           }
 
           .features-icon-grid {
-            grid-template-columns: repeat(9, 1fr);
+            grid-template-columns: repeat(9, minmax(0, 1fr));
             gap: 16px;
             margin-bottom: 40px;
           }
@@ -1268,8 +1271,9 @@ export default function Home() {
           }
 
           .hero-section {
-            padding: 160px 24px 80px 24px;
-            height: 85vh;
+            padding: 160px 24px 140px 24px;
+            min-height: 85vh;
+            height: auto;
           }
 
           .hero-spacer {

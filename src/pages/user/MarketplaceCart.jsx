@@ -1204,7 +1204,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       <span style={{ marginLeft: '8px' }}>Placing Order...</span>
                     </>
                   ) : (
-                    <span>Slide to Place Order (&#8377;{pricing.finalAmount.toFixed(2)})</span>
+                    <span>Slide to Place Order</span>
                   )}
                 </SlideConfirmButton>
               </div>

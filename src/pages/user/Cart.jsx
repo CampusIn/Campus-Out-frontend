@@ -866,7 +866,7 @@ export default function Cart() {
                   confirmedLabel="Order Confirmed"
                   style={{ marginTop: '12px' }}
                 >
-                  Slide to Place Order (&#8377;{((pricingSummary || getDefaultPricing())?.finalAmount || 0).toFixed(2)})
+                  Slide to Place Order
                 </SlideConfirmButton>
               </div>
             </div>

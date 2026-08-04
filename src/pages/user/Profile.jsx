@@ -314,12 +314,11 @@ export default function Profile() {
                             {copiedCode === c.code ? 'COPIED' : 'COPY'}
                           </button>
                         </div>
-                        <div style={{ borderTop: '1px solid #edf2f7', paddingTop: '8px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#718096', fontWeight: 550 }}>
-                          <span>Min. Order: ₹{c.minimumPurchase}</span>
-                          {c.maximumDiscount && c.discountType === 'percentage' && (
+                        {c.maximumDiscount && c.discountType === 'percentage' && (
+                          <div style={{ borderTop: '1px solid #edf2f7', paddingTop: '8px', marginTop: '4px', display: 'flex', justifyContent: 'flex-end', fontSize: '0.75rem', color: '#718096', fontWeight: 550 }}>
                             <span>Max. Disc: ₹{c.maximumDiscount}</span>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </ProgressiveCardReveal.CardExpanded>
                   </ProgressiveCardReveal.Card>
