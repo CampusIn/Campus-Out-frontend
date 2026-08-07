@@ -7,6 +7,7 @@ import { MarketCartProvider } from './context/MarketCartContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import RouteTitleUpdater from './components/RouteTitleUpdater';
 import BottomNav from './components/BottomNav';
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
@@ -83,6 +84,7 @@ const RefundPolicy = lazyWithRetry(() => import('./pages/RefundPolicy'));
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteTitleUpdater />
       <ToastProvider>
         <ConfirmProvider>
           <AuthProvider>
