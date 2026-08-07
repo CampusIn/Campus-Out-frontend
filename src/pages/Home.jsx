@@ -119,7 +119,7 @@ export default function Home() {
               <Flame size={22} color="#b31522" className="logo-flame-animation" />
             </div>
             <span className="brand-name">
-              CAMPUS<span className="brand-name-sub">IN</span>
+              Campus<span className="brand-name-sub">In</span>
             </span>
           </Link>
 
@@ -316,7 +316,7 @@ export default function Home() {
                 <Flame size={20} color="#ffffff" />
               </div>
               <span className="brand-name" style={{ color: '#ffffff' }}>
-                CAMPUS<span className="brand-name-sub" style={{ color: '#ffc700' }}>IN</span>
+                Campus<span className="brand-name-sub" style={{ color: '#ffc700' }}>In</span>
               </span>
             </div>
           </div>
