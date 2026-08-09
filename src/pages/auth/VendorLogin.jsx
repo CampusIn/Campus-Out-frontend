@@ -31,8 +31,8 @@ export default function VendorLogin() {
       if (user.role === 'vendor') {
         navigate('/vendor', { replace: true });
       } else {
-        logout('vendor');
-        setError('Access Denied. This portal is strictly for Vendor Partners.');
+        logout('vendor', false);
+        setError('Access Denied. Please use the correct portal to login.');
       }
     }
   }, [user, navigate, logout]);
@@ -52,8 +52,8 @@ export default function VendorLogin() {
         if (payload.role === 'vendor') {
           navigate('/vendor', { replace: true });
         } else {
-          setError('Access Denied. This portal is strictly for Vendor Partners.');
-          await logout('vendor');
+          setError('Access Denied. Please use the correct portal to login.');
+          await logout('vendor', false);
         }
       }
     } else {

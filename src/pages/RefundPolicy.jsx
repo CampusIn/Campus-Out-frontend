@@ -19,7 +19,7 @@ export default function RefundPolicy() {
             <Flame size={16} color="#ffffff" />
           </div>
           <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111111' }}>
-            CAMPUS<span style={{ color: '#b31522' }}>IN</span>
+            Campus<span style={{ color: '#b31522' }}>In</span>
           </span>
         </Link>
       </header>

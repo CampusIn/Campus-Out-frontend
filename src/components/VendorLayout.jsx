@@ -135,7 +135,7 @@ export default function VendorLayout() {
                 <Flame size={20} color="#ffffff" />
               </div>
               <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#1e293b' }}>
-                CAMPUS<span style={{ color: '#06c169' }}>IN</span>
+                Campus<span style={{ color: '#06c169' }}>In</span>
               </span>
             </div>
             <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 16px', borderRadius: '10px' }} onClick={() => logout('vendor')}>
@@ -278,7 +278,7 @@ export default function VendorLayout() {
             <Flame size={20} color="#ffffff" />
           </div>
           <span className="vendor-brand-text">
-            CAMPUS<span style={{ color: '#06c169' }}>IN</span>
+            Campus<span style={{ color: '#06c169' }}>In</span>
           </span>
         </Link>
       </div>

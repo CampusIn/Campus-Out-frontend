@@ -31,7 +31,7 @@ export default function AdminLogin() {
       if (user.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
-        logout('admin');
+        logout('admin', false);
         setError('Access Denied. This portal is strictly for Administrators.');
       }
     }
@@ -53,7 +53,7 @@ export default function AdminLogin() {
           navigate('/admin', { replace: true });
         } else {
           setError('Access Denied. This portal is strictly for Administrators.');
-          await logout('admin');
+          await logout('admin', false);
         }
       }
     } else {

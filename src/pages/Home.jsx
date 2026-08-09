@@ -251,12 +251,12 @@ export default function Home() {
               <span className="card-label">Campus Resale</span>
             </div>
 
-            {/* Card 4: Smart Recommendations */}
+            {/* Card 4: Top Picks */}
             <div className="feature-icon-card">
               <div className="card-icon-container">
                 <Wand2 size={32} className="feature-icon-svg green-tint-2" />
               </div>
-              <span className="card-label">Smart Recommendations</span>
+              <span className="card-label">Top Picks</span>
             </div>
 
             {/* Card 5: Student Deals */}

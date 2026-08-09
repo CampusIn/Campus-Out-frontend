@@ -31,7 +31,7 @@ export default function Login() {
         navigate('/restaurants', { replace: true });
       } else {
         // Block non-user roles from the main login page
-        logout();
+        logout(undefined, false);
         setError('Access Denied. Please use the correct portal to login.');
       }
     }
@@ -58,7 +58,7 @@ export default function Login() {
           navigate('/restaurants', { replace: true });
         } else {
           setError('Access Denied. Please use the correct portal to login.');
-          await logout();
+          await logout(undefined, false);
         }
       }
     } else {

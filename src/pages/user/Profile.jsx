@@ -72,7 +72,6 @@ export default function Profile() {
   const handleLogoutAll = async () => {
     if (!await confirm('Log out of all devices?')) return;
     await logoutAll();
-    navigate('/login');
   };
 
   const handleOpenPromotions = async () => {

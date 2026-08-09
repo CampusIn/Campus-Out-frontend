@@ -171,97 +171,11 @@ export default function Navbar() {
               <Flame size={20} color="#ffffff" style={{ animation: 'pulseSoft 2s infinite' }} />
             </div>
             <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#111111' }}>
-              CAMPUS<span style={{ color: '#b31522' }}>IN</span>
+              Campus<span style={{ color: '#b31522' }}>In</span>
             </span>
           </Link>
 
-          {isHomepage && (
-            <>
-              <div className="nav-vertical-separator"></div>
 
-              {/* Location Selector */}
-              <div className="location-selector-wrapper" ref={locationRef} style={{ position: 'relative' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="location-display-btn-nav"
-                >
-                  <Navigation size={16} color="#b31522" style={{ fill: '#b31522', transform: 'rotate(45deg)', flexShrink: 0 }} />
-                  <div className="location-info-text-nav">
-                    <span className="location-title-main-nav">Others</span>
-                    <span className="location-desc-sub-nav">
-                      {activeLocation ? savedAddresses.find(a => a.name === activeLocation)?.name || activeLocation : 'Select Location'}
-                    </span>
-                    <ChevronDown size={14} color="#b31522" strokeWidth={3} style={{ flexShrink: 0 }} />
-                  </div>
-                </button>
-
-                {dropdownOpen && (
-                  <div className="swiggy-location-popover animate-scale-in" style={{ top: '45px', left: 0 }}>
-                    <div style={{ padding: '0 16px 12px 16px' }}>
-                      <input 
-                        type="text" 
-                        placeholder="Type other hostel / address..." 
-                        style={{ 
-                          width: '100%', 
-                          padding: '8px 12px', 
-                          border: '1.5px solid #e2e8f0', 
-                          borderRadius: '8px', 
-                          fontSize: '0.85rem',
-                          outline: 'none',
-                          boxSizing: 'border-box'
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleCustomAddressSubmit(e.target.value);
-                          }
-                        }}
-                      />
-                    </div>
-
-                    <button 
-                      type="button" 
-                      onClick={handleUseCurrentLocation}
-                      className="swiggy-location-popover-item current-loc-item"
-                    >
-                      <Navigation size={18} color="#b31522" className="popover-item-icon" />
-                      <div className="popover-item-details">
-                        <span className="current-loc-title">Use my current location</span>
-                      </div>
-                    </button>
-
-                    <div className="swiggy-popover-divider"></div>
-                    <span className="swiggy-popover-header">SAVED ADDRESSES</span>
-
-                    {savedAddresses.map((addr) => (
-                      <button 
-                        key={addr.id}
-                        type="button"
-                        onClick={() => {
-                          setActiveLocation(addr.name);
-                          setDropdownOpen(false);
-                          const newParams = new URLSearchParams(searchParams);
-                          newParams.set('hostel', addr.name);
-                          const targetPath = location.pathname.startsWith('/marketplace') ? '/marketplace' : '/restaurants';
-                          navigate(`${targetPath}?${newParams.toString()}`);
-                        }}
-                        className="swiggy-location-popover-item address-item"
-                      >
-                        <Navigation size={18} color="#718096" className="popover-item-icon" style={{ transform: 'rotate(45deg)' }} />
-                        <div className="popover-item-details">
-                          <span className="address-name">{addr.name}</span>
-                          <span 
-                            className="address-desc" 
-                            dangerouslySetInnerHTML={{ __html: addr.detail }}
-                          />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

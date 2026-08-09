@@ -48,7 +48,7 @@ export default function DeliveryLogin() {
         if (payload.role !== 'delivery_partner') {
           // Block non-delivery partners and clear their session immediately
           setError('Access Denied. This portal is strictly for registered Delivery Partners.');
-          await logout();
+          await logout(undefined, false);
         } else {
           navigate('/delivery/dashboard', { replace: true });
         }

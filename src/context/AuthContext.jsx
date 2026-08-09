@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   loginUser,
   registerUser,
@@ -76,6 +77,7 @@ const getRefreshFn = (role) => {
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem('accessToken');
     const saved = localStorage.getItem('user');
@@ -404,7 +406,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = async (role) => {
+  const logout = async (role, shouldNavigate = true) => {
     try {
       const logoutFn = getLogoutFn(role || user?.role);
       await logoutFn();
@@ -414,9 +416,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('accessToken');
     sessionStorage.removeItem('dismissedAnnouncements');
     setUser(null);
+    if (shouldNavigate) navigate('/');
   };
 
-  const logoutAll = async (role) => {
+  const logoutAll = async (role, shouldNavigate = true) => {
     try {
       const logoutAllFn = getLogoutAllFn(role || user?.role);
       await logoutAllFn();
@@ -426,6 +429,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('accessToken');
     sessionStorage.removeItem('dismissedAnnouncements');
     setUser(null);
+    if (shouldNavigate) navigate('/');
   };
 
   return (
