@@ -31,21 +31,12 @@ export default function BottomNav() {
   useEffect(() => {
     if (!showTutorial) return;
 
-    const dismissTutorial = () => {
-      setShowTutorial(false);
-    };
-
-    // Add listeners with a small delay so current click doesn't dismiss it immediately
+    // Automatically dismiss the tutorial after 5 seconds
     const timer = setTimeout(() => {
-      document.addEventListener('click', dismissTutorial);
-      document.addEventListener('touchstart', dismissTutorial);
-    }, 100);
+      setShowTutorial(false);
+    }, 5000);
 
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('click', dismissTutorial);
-      document.removeEventListener('touchstart', dismissTutorial);
-    };
+    return () => clearTimeout(timer);
   }, [showTutorial]);
 
   // Determine if we should show the nav
