@@ -279,48 +279,7 @@ export default function Restaurants() {
   };
 
   const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          setActiveLocation("Locating...");
-          setDropdownOpen(false);
-          
-          try {
-            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-            const data = await res.json();
-            const locationName = data.locality || data.city || data.principalSubdivision;
-            const resolvedName = locationName || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-            
-            setActiveLocation(resolvedName);
-            const newParams = new URLSearchParams(searchParams);
-            newParams.set('hostel', resolvedName);
-            setSearchParams(newParams);
-          } catch (error) {
-            console.error("Reverse geocoding failed, using fallback:", error);
-            const fallbackName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-            setActiveLocation(fallbackName);
-            const newParams = new URLSearchParams(searchParams);
-            newParams.set('hostel', fallbackName);
-            setSearchParams(newParams);
-          }
-        },
-        () => {
-          // Default fallback on error
-          setActiveLocation('Hostel A');
-          setDropdownOpen(false);
-          const newParams = new URLSearchParams(searchParams);
-          newParams.set('hostel', 'Hostel A');
-          setSearchParams(newParams);
-        }
-      );
-    } else {
-      setActiveLocation('Hostel A');
-      setDropdownOpen(false);
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set('hostel', 'Hostel A');
-      setSearchParams(newParams);
-    }
+    alert("Location access has been disabled. Please manually enter your address.");
   };
 
   const fetchRestaurants = async (currentSearch = search) => {

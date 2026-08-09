@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -12,6 +13,40 @@ export default function BottomNav() {
   const { cartTotalQty: marketCartTotalQty } = useMarketCart();
   const location = useLocation();
   const reduceMotion = useReducedMotion();
+
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    // Show tutorial if user is logged in (shows on every login / page load)
+    if (user) {
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    } else {
+      setShowTutorial(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!showTutorial) return;
+
+    const dismissTutorial = () => {
+      setShowTutorial(false);
+    };
+
+    // Add listeners with a small delay so current click doesn't dismiss it immediately
+    const timer = setTimeout(() => {
+      document.addEventListener('click', dismissTutorial);
+      document.addEventListener('touchstart', dismissTutorial);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', dismissTutorial);
+      document.removeEventListener('touchstart', dismissTutorial);
+    };
+  }, [showTutorial]);
 
   // Determine if we should show the nav
   const showNavRoutes = ['/restaurants', '/marketplace', '/orders', '/cart', '/profile', '/repair-requests'];
@@ -55,7 +90,52 @@ export default function BottomNav() {
               key={tab.value}
               to={tab.path}
               className={`godui-tab-item ${active ? 'active' : ''}`}
+              style={{ position: tab.value === 'marketplace' ? 'relative' : undefined }}
             >
+              {tab.value === 'marketplace' && showTutorial && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 'calc(100% + 15px)',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 1000,
+                  pointerEvents: 'none',
+                }}>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: [0, -8, 0] }}
+                    transition={{ 
+                      opacity: { duration: 0.3 },
+                      y: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                    }}
+                    style={{
+                      background: 'var(--primary)',
+                      color: 'white',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      width: 'max-content',
+                      maxWidth: '220px',
+                      textAlign: 'center',
+                      fontSize: '0.85rem',
+                      fontWeight: '700',
+                      boxShadow: '0 8px 24px rgba(179, 21, 34, 0.4)',
+                      lineHeight: '1.3',
+                      position: 'relative'
+                    }}
+                  >
+                    Marketplace: Get mattresses, pillows & more!
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '-4px',
+                      left: '50%',
+                      transform: 'translateX(-50%) rotate(45deg)',
+                      width: '10px',
+                      height: '10px',
+                      background: 'var(--primary)',
+                    }}></div>
+                  </motion.div>
+                </div>
+              )}
               {active && (
                 <motion.span
                   layoutId="bottom-nav-blob"

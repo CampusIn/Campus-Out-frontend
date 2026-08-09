@@ -109,41 +109,7 @@ export default function Navbar() {
   };
 
   const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          setActiveLocation("Locating...");
-          setDropdownOpen(false);
-          
-          const targetPath = location.pathname.startsWith('/marketplace') ? '/marketplace' : '/restaurants';
-          try {
-            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-            const data = await res.json();
-            const locationName = data.locality || data.city || data.principalSubdivision;
-            const resolvedName = locationName || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-            
-            setActiveLocation(resolvedName);
-            const newParams = new URLSearchParams(searchParams);
-            newParams.set('hostel', resolvedName);
-            navigate(`${targetPath}?${newParams.toString()}`);
-          } catch (error) {
-            console.error("Reverse geocoding failed, using fallback:", error);
-            const fallbackName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-            setActiveLocation(fallbackName);
-            const newParams = new URLSearchParams(searchParams);
-            newParams.set('hostel', fallbackName);
-            navigate(`${targetPath}?${newParams.toString()}`);
-          }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          alert("Could not retrieve current location. Please select one of the saved addresses or type a custom one.");
-        }
-      );
-    } else {
-      alert("Geolocation is not supported by your browser.");
-    }
+    alert("Location access has been disabled. Please manually enter your address.");
   };
 
   // Hide main customer navbar on homepage, vendor portal, admin dashboard, delivery partner routes, and static pages

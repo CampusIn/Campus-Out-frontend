@@ -24,28 +24,7 @@ export default function Marketplace() {
   const [location, setLocation] = useState('Locating...');
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-            const data = await res.json();
-            const locationName = data.locality || data.city || data.principalSubdivision || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
-            setLocation(locationName);
-          } catch (error) {
-            console.error("Reverse geocoding failed:", error);
-            setLocation(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
-          }
-        },
-        (error) => {
-          console.error("Geolocation failed:", error);
-          setLocation('Kochi');
-        }
-      );
-    } else {
-      setLocation('Kochi');
-    }
+    setLocation('Kochi');
   }, []);
 
   // Query states
