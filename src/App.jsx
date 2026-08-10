@@ -88,7 +88,6 @@ const PrintingOrderDetail = lazyWithRetry(() => import('./pages/user/printing/Pr
 
 const AdminPrintingOrders = lazyWithRetry(() => import('./pages/admin/printing/AdminPrintingOrders'));
 const AdminPrintingOrderDetail = lazyWithRetry(() => import('./pages/admin/printing/AdminPrintingOrderDetail'));
-const AdminPrintingConfig = lazyWithRetry(() => import('./pages/admin/printing/AdminPrintingConfig'));
 export default function App() {
   return (
     <BrowserRouter>
@@ -308,7 +307,6 @@ export default function App() {
                       <Route path="inventory" element={<AdminInventory />} />
                       <Route path="printing/orders" element={<AdminPrintingOrders />} />
                       <Route path="printing/orders/:orderId" element={<AdminPrintingOrderDetail />} />
-                      <Route path="printing/config" element={<AdminPrintingConfig />} />
                     </Route>
                     <Route path="/delivery/login" element={<DeliveryLogin />} />
                     <Route path="/delivery/register" element={<DeliveryRegister />} />

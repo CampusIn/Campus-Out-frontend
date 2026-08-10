@@ -1,10 +1,6 @@
 import api from './axios';
 
-// Get admin printing config
-export const getAdminPrintingConfig = () => api.get('/admin/printing/config');
 
-// Update admin printing config
-export const updateAdminPrintingConfig = (data) => api.patch('/admin/printing/config', data);
 
 // Get admin printing orders
 export const getAdminPrintOrders = (params) => api.get('/admin/printing/orders', { params });

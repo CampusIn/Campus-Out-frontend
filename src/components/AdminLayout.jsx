@@ -69,7 +69,6 @@ export default function AdminLayout() {
     { path: '/admin/repair-partners', label: 'Repair Partners', icon: <Wrench size={18} /> },
     { path: '/admin/repair-requests', label: 'Repair Requests', icon: <ClipboardList size={18} /> },
     { path: '/admin/printing/orders', label: 'Print Orders', icon: <Printer size={18} /> },
-    { path: '/admin/printing/config', label: 'Print Config', icon: <Settings size={18} /> },
     { path: '/admin/abandoned-carts', label: 'Abandoned Carts', icon: <ShoppingBag size={18} /> },
     { path: '/admin/inventory', label: 'Inventory Tracker', icon: <ClipboardList size={18} /> },
   ];
@@ -190,13 +189,6 @@ export default function AdminLayout() {
               <span>Print Orders</span>
             </NavLink>
 
-            <NavLink
-              to="/admin/printing/config"
-              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
-            >
-              <Settings size={20} />
-              <span>Print Config</span>
-            </NavLink>
 
             <NavLink
               to="/admin/abandoned-carts"

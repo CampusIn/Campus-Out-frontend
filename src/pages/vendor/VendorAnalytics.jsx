@@ -115,7 +115,7 @@ export default function VendorAnalytics() {
             </div>
           </div>
           <div className="vendor-card-value" style={{ color: 'var(--vendor-primary)', fontSize: '2.1rem' }}>
-            ₹{aov.averageValue.toLocaleString()}
+            ₹{(aov.averageValue || 0).toLocaleString()}
           </div>
           <div className="vendor-card-footer">
             <span>Formula: Total Revenue / Order Count</span>
@@ -131,7 +131,7 @@ export default function VendorAnalytics() {
             </div>
           </div>
           <div className="vendor-card-value">
-            ₹{aov.totalRevenue.toLocaleString()}
+            ₹{(aov.totalRevenue || 0).toLocaleString()}
           </div>
           <div className="vendor-card-footer">
             <span>Delivered orders sum value</span>
@@ -188,7 +188,7 @@ export default function VendorAnalytics() {
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #eef0eb', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontFamily: 'Outfit' }}
-                  formatter={(value) => [`₹${value.toLocaleString()}`, 'Daily Revenue']}
+                  formatter={(value) => [`₹${(value || 0).toLocaleString()}`, 'Daily Revenue']}
                 />
                 <Legend 
                   verticalAlign="top" 
