@@ -21,5 +21,7 @@ export const updatePrintOrderNotes = (orderId, data) => api.patch(`/admin/printi
 // Update payment status
 export const updatePrintOrderPaymentStatus = (orderId, data) => api.patch(`/admin/printing/orders/${orderId}/payment-status`, data);
 
-// Get signed URL for file access (admin)
-export const getAdminFileAccessUrl = (orderId, fileId) => api.get(`/admin/printing/orders/${orderId}/files/${fileId}/access`);
+// Download admin file directly
+export const downloadAdminPrintFile = (orderId, fileId) => api.get(`/admin/printing/orders/${orderId}/files/${fileId}/download`, {
+  responseType: 'blob',
+});

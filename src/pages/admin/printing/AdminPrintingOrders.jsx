@@ -81,73 +81,69 @@ export default function AdminPrintingOrders() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-            <tr>
-              <th style={{ padding: '16px', fontWeight: 700, color: '#475569' }}>Order ID</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: '#475569' }}>User</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: '#475569' }}>Files/Copies</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: '#475569' }}>Amount</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: '#475569' }}>Status</th>
-              <th style={{ padding: '16px', fontWeight: 700, color: '#475569' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
-                  <div className="spinner" style={{ margin: '0 auto' }}></div>
-                </td>
-              </tr>
-            ) : orders.length === 0 ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  No orders found.
-                </td>
-              </tr>
-            ) : (
-              orders.map((order) => (
-                <tr key={order._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '16px', fontWeight: 600, color: '#0f172a' }}>{order.orderNumber || order._id.substring(0, 8)}</td>
-                  <td style={{ padding: '16px' }}>
-                    <p style={{ fontWeight: 600, color: '#0f172a', margin: 0 }}>{order.user?.username || order.user?.name || 'Unknown User'}</p>
-                    <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>{order.user?.email}</p>
-                  </td>
-                  <td style={{ padding: '16px', color: '#475569', fontWeight: 500 }}>
-                    {order.files?.length || 0} files, {order.printingOptions?.copies || order.totalCopies || 1} copies
-                  </td>
-                  <td style={{ padding: '16px', fontWeight: 700, color: 'var(--primary)' }}>
-                    ₹{order.pricingSnapshot?.finalAmount || order.totalAmount || 0}
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    <span style={{ 
-                      padding: '6px 12px', 
-                      borderRadius: '50px', 
-                      fontSize: '0.75rem', 
-                      fontWeight: 700,
-                      whiteSpace: 'nowrap',
-                      display: 'inline-block',
-                      background: order.orderStatus === 'COMPLETED' ? '#d1fae5' : order.orderStatus === 'PENDING' ? '#fef3c7' : '#f1f5f9',
-                      color: order.orderStatus === 'COMPLETED' ? '#047857' : order.orderStatus === 'PENDING' ? '#d97706' : '#475569'
-                    }}>
-                      {order.orderStatus.replace(/_/g, ' ')}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    <Link 
-                      to={`/admin/printing/orders/${order._id}`}
-                      style={{ background: '#f1f5f9', padding: '8px 12px', borderRadius: '8px', color: '#0f172a', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <Eye size={16} /> View
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      {/* Orders List (Mobile Friendly Card Layout) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div className="spinner" style={{ margin: '0 auto' }}></div>
+          </div>
+        ) : orders.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b', background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            No orders found.
+          </div>
+        ) : (
+          orders.map((order) => {
+            const pagesCount = order.totals?.basePages || 0;
+            const copiesCount = pagesCount ? Math.round((order.totals?.totalPagesToPrint || 1) / pagesCount) : 1;
+
+            return (
+              <div key={order._id} style={{ background: 'white', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{new Date(order.createdAt).toLocaleDateString()}</span>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '4px 0', color: '#0f172a' }}>
+                      #{order.orderNumber || order._id.substring(0, 8)}
+                    </h3>
+                    <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 500 }}>
+                      <span style={{ fontWeight: 700, color: '#334155' }}>{order.user?.username || order.user?.name || 'Unknown User'}</span> <br />
+                      {order.user?.email}
+                    </div>
+                  </div>
+                  <span style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '50px', 
+                    fontSize: '0.75rem', 
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    background: order.orderStatus === 'COMPLETED' ? '#d1fae5' : order.orderStatus === 'PENDING' ? '#fef3c7' : '#f1f5f9',
+                    color: order.orderStatus === 'COMPLETED' ? '#047857' : order.orderStatus === 'PENDING' ? '#d97706' : '#475569'
+                  }}>
+                    {order.orderStatus.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <p style={{ margin: '0 0 4px 0', fontWeight: 700, color: '#334155', fontSize: '0.95rem' }}>
+                      {pagesCount} Page{pagesCount !== 1 ? 's' : ''} • {copiesCount} Cop{copiesCount === 1 ? 'y' : 'ies'}
+                    </p>
+                    <p style={{ margin: 0, fontWeight: 800, color: 'var(--primary)', fontSize: '1.2rem' }}>
+                      ₹{order.pricingSnapshot?.finalAmount || order.totalAmount || 0}
+                    </p>
+                  </div>
+                  <Link 
+                    to={`/admin/printing/orders/${order._id}`}
+                    style={{ background: '#f1f5f9', padding: '10px 16px', borderRadius: '12px', color: '#0f172a', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                  >
+                    <Eye size={18} /> View Details
+                  </Link>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

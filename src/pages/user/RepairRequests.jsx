@@ -525,7 +525,7 @@ export default function RepairRequests() {
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="Provide details about what is wrong (e.g., Cracked screen, battery draining fast, fan making noisy sound)..."
+                  placeholder="Explain the issue in detail (please include the company and model of the device)..."
                   value={formData.description}
                   onChange={(e) => {
                     setFormData((prev) => ({ ...prev, description: e.target.value }));

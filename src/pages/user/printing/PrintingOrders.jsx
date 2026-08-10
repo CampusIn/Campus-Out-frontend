@@ -97,7 +97,7 @@ export default function PrintingOrders() {
                         #{order.orderNumber || order._id.substring(0, 8)}
                       </span>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginTop: '4px', color: '#0f172a' }}>
-                        {order.files?.length || 0} File{(order.files?.length || 0) !== 1 ? 's' : ''} • {order.printingOptions?.copies || order.totalCopies || 1} Copies
+                        {order.totals?.basePages || 0} Page{(order.totals?.basePages || 0) !== 1 ? 's' : ''} • {order.totals?.basePages ? Math.round(order.totals.totalPagesToPrint / order.totals.basePages) : 1} Cop{(order.totals?.basePages ? Math.round(order.totals.totalPagesToPrint / order.totals.basePages) : 1) === 1 ? 'y' : 'ies'}
                       </h3>
                     </div>
                     <span style={{ 

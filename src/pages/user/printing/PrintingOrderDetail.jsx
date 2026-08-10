@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
-import { getPrintOrderById, cancelPrintOrder, getFileAccessUrl } from '../../../api/printing.api';
+import { getPrintOrderById, cancelPrintOrder, downloadPrintFile } from '../../../api/printing.api';
 import { ArrowLeft, Printer, FileText, Download, XCircle, Clock, CheckCircle, IndianRupee } from 'lucide-react';
 
 export default function PrintingOrderDetail() {
@@ -73,22 +73,35 @@ export default function PrintingOrderDetail() {
     }
 
     try {
-      const { data } = await getFileAccessUrl(orderId, fileId);
-      const urlToOpen = data?.data?.signedUrl || data?.data?.url || (typeof data?.data === 'string' ? data?.data : null);
+      const response = await downloadPrintFile(orderId, fileId);
       
-      if (data.success && urlToOpen && typeof urlToOpen === 'string') {
-        const a = document.createElement('a');
-        a.href = urlToOpen;
-        a.target = '_blank';
-        a.download = fileName || 'download';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
-        toast.error('Invalid download link received.');
+      // Get filename from Content-Disposition header if available
+      const contentDisposition = response.headers['content-disposition'];
+      let downloadedFileName = fileName || 'printing-file';
+      
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (fileNameMatch && fileNameMatch.length === 2) {
+          downloadedFileName = fileNameMatch[1];
+        }
       }
+
+      // Create a blob from the response data
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const url = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadedFileName;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error('Failed to access file. It may be unavailable.');
+      console.error(err);
+      toast.error('Failed to download file. It may be unavailable.');
     }
   };
 

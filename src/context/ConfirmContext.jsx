@@ -5,10 +5,16 @@ const ConfirmContext = createContext(null);
 export function ConfirmProvider({ children }) {
   const [modal, setModal] = useState(null);
 
-  const showConfirm = useCallback((message) => {
+  const showConfirm = useCallback((options) => {
+    const isObject = typeof options === 'object' && options !== null && !(options.$$typeof); // ensure it's not a React element
+    
     return new Promise((resolve) => {
       setModal({
-        message,
+        title: isObject ? options.title : null,
+        message: isObject ? options.message : options,
+        confirmText: isObject ? options.confirmText : 'Confirm',
+        cancelText: isObject ? options.cancelText : 'Cancel',
+        type: isObject ? options.type : 'primary',
         onConfirm: () => {
           setModal(null);
           resolve(true);
@@ -50,10 +56,21 @@ export function ConfirmProvider({ children }) {
             gap: '20px',
             animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
           }}>
+            {modal.title && (
+              <h3 style={{
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                color: modal.type === 'danger' ? '#dc2626' : '#111111',
+                margin: '0 0 -8px 0',
+                textAlign: 'center'
+              }}>
+                {modal.title}
+              </h3>
+            )}
             <p style={{
-              fontSize: '1rem',
-              fontWeight: 700,
-              color: '#111111',
+              fontSize: modal.title ? '0.95rem' : '1rem',
+              fontWeight: modal.title ? 500 : 700,
+              color: modal.title ? '#475569' : '#111111',
               lineHeight: 1.5,
               margin: 0,
               textAlign: 'center'
@@ -86,7 +103,7 @@ export function ConfirmProvider({ children }) {
                   e.target.style.transform = 'translateY(0)';
                 }}
               >
-                Cancel
+                {modal.cancelText || 'Cancel'}
               </button>
               <button
                 type="button"
@@ -96,7 +113,7 @@ export function ConfirmProvider({ children }) {
                   padding: '12px 16px',
                   borderRadius: '12px',
                   border: 'none',
-                  background: '#b31522',
+                  background: modal.type === 'danger' ? '#dc2626' : '#b31522',
                   color: '#ffffff',
                   fontWeight: 700,
                   fontSize: '0.9rem',
@@ -105,15 +122,15 @@ export function ConfirmProvider({ children }) {
                   outline: 'none'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = '#960f1a';
+                  e.target.style.background = modal.type === 'danger' ? '#b91c1c' : '#960f1a';
                   e.target.style.transform = 'translateY(-1px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = '#b31522';
+                  e.target.style.background = modal.type === 'danger' ? '#dc2626' : '#b31522';
                   e.target.style.transform = 'translateY(0)';
                 }}
               >
-                Confirm
+                {modal.confirmText || 'Confirm'}
               </button>
             </div>
           </div>

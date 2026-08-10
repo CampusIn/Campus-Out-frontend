@@ -28,5 +28,7 @@ export const getPrintOrderById = (orderId) => api.get(`/printing/orders/${orderI
 // Cancel an order
 export const cancelPrintOrder = (orderId) => api.patch(`/printing/orders/${orderId}/cancel`);
 
-// Get signed URL for file access
-export const getFileAccessUrl = (orderId, fileId) => api.get(`/printing/orders/${orderId}/files/${fileId}/access`);
+// Download file directly
+export const downloadPrintFile = (orderId, fileId) => api.get(`/printing/orders/${orderId}/files/${fileId}/download`, {
+  responseType: 'blob',
+});
