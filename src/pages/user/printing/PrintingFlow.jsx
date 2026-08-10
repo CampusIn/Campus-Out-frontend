@@ -60,8 +60,8 @@ export default function PrintingFlow() {
         rejectedCount++;
         return;
       }
-      if (f.type.startsWith('image/') && f.size > 100 * 1024) {
-        toast.error(`Image ${f.name} exceeds the 100KB limit.`);
+      if (f.size > 100 * 1024) {
+        toast.error(`File ${f.name} exceeds the 100KB limit.`);
         return;
       }
       validFiles.push(f);
@@ -246,7 +246,7 @@ export default function PrintingFlow() {
                     <UploadCloud size={28} color="#4338ca" />
                   </div>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Tap to Upload</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Supports PDF (up to {config?.maxFileSizeMB || 10}MB), JPG, PNG (Max 100KB)</p>
+                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Supports PDF, JPG, PNG (Max 100KB)</p>
                 </div>
               )}
             </div>
