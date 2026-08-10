@@ -35,11 +35,7 @@ export const updateStock = (menuId, stockQty) =>
 
 // Page 9: Bulk Upload Menu Items (multipart/form-data)
 export const bulkUploadMenu = (formData) => 
-  api.post('/vendor/menu/bulk-upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  api.post('/vendor/menu/bulk-upload', formData);
 
 // Invoice Download
 export const downloadVendorOrderInvoice = (orderId) => 
