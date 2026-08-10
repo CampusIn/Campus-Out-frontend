@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useMarketCart } from '../context/MarketCartContext';
 
-import { ShoppingCart, Home, ClipboardList, User, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Home, ClipboardList, User, ShoppingBag, Printer } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 export default function BottomNav() {
@@ -40,7 +40,7 @@ export default function BottomNav() {
   }, [showTutorial]);
 
   // Determine if we should show the nav
-  const showNavRoutes = ['/restaurants', '/marketplace', '/orders', '/cart', '/profile', '/repair-requests'];
+  const showNavRoutes = ['/restaurants', '/marketplace', '/orders', '/cart', '/profile', '/repair-requests', '/printing'];
   const shouldShowNav = Boolean(user) && showNavRoutes.some(route => location.pathname.startsWith(route));
 
   // Determine active tab
@@ -49,6 +49,7 @@ export default function BottomNav() {
   else if (location.pathname.startsWith('/orders')) activeTab = 'orders';
   else if (location.pathname.startsWith('/cart')) activeTab = 'cart';
   else if (location.pathname.startsWith('/profile')) activeTab = 'profile';
+  else if (location.pathname.startsWith('/printing')) activeTab = 'printing';
 
   // Show marketplace cart count when on any marketplace-related page
   const searchParams = new URLSearchParams(location.search);

@@ -81,6 +81,14 @@ const TermsAndConditions = lazyWithRetry(() => import('./pages/TermsAndCondition
 const PrivacyPolicy = lazyWithRetry(() => import('./pages/LegalPolicy'));
 const RefundPolicy = lazyWithRetry(() => import('./pages/RefundPolicy'));
 
+// Printing Lazy Pages
+const PrintingFlow = lazyWithRetry(() => import('./pages/user/printing/PrintingFlow'));
+const PrintingOrders = lazyWithRetry(() => import('./pages/user/printing/PrintingOrders'));
+const PrintingOrderDetail = lazyWithRetry(() => import('./pages/user/printing/PrintingOrderDetail'));
+
+const AdminPrintingOrders = lazyWithRetry(() => import('./pages/admin/printing/AdminPrintingOrders'));
+const AdminPrintingOrderDetail = lazyWithRetry(() => import('./pages/admin/printing/AdminPrintingOrderDetail'));
+const AdminPrintingConfig = lazyWithRetry(() => import('./pages/admin/printing/AdminPrintingConfig'));
 export default function App() {
   return (
     <BrowserRouter>
@@ -121,6 +129,51 @@ export default function App() {
                     <Route path="/cart" element={<ProtectedRoute allowedRoles={['user']}><Cart /></ProtectedRoute>} />
                     <Route path="/orders" element={<ProtectedRoute allowedRoles={['user']}><Orders /></ProtectedRoute>} />
                     <Route path="/orders/:orderId" element={<ProtectedRoute allowedRoles={['user']}><OrderDetail /></ProtectedRoute>} />
+                    <Route 
+                      path="/printing" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Printing...</p>
+                            </div>
+                          }>
+                            <PrintingFlow />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/printing/orders" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Orders...</p>
+                            </div>
+                          }>
+                            <PrintingOrders />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/printing/orders/:orderId" 
+                      element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                          <Suspense fallback={
+                            <div className="loading-container" style={{ minHeight: '80vh' }}>
+                              <div className="spinner"></div>
+                              <p style={{ fontWeight: 650, color: '#64748b' }}>Loading Order...</p>
+                            </div>
+                          }>
+                            <PrintingOrderDetail />
+                          </Suspense>
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route 
                       path="/marketplace/orders/:orderId" 
                       element={
@@ -253,6 +306,9 @@ export default function App() {
                       <Route path="repair-requests" element={<AdminRepairRequests />} />
                       <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
                       <Route path="inventory" element={<AdminInventory />} />
+                      <Route path="printing/orders" element={<AdminPrintingOrders />} />
+                      <Route path="printing/orders/:orderId" element={<AdminPrintingOrderDetail />} />
+                      <Route path="printing/config" element={<AdminPrintingConfig />} />
                     </Route>
                     <Route path="/delivery/login" element={<DeliveryLogin />} />
                     <Route path="/delivery/register" element={<DeliveryRegister />} />

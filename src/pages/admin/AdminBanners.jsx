@@ -178,6 +178,12 @@ export default function AdminBanners() {
       return;
     }
 
+    if (file.size > 100 * 1024) {
+      toast.error('Image exceeds 100KB size limit');
+      e.target.value = '';
+      return;
+    }
+
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
     setErrors((prev) => ({ ...prev, image: null }));
@@ -201,6 +207,11 @@ export default function AdminBanners() {
 
     if (!file.type.startsWith('image/')) {
       toast.error('Only image files (JPEG, PNG, WEBP) are allowed.');
+      return;
+    }
+
+    if (file.size > 100 * 1024) {
+      toast.error('Image exceeds 100KB size limit');
       return;
     }
 
@@ -988,7 +999,7 @@ export default function AdminBanners() {
               {/* Drag and Drop Image Upload Area */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>
-                  Banner Graphic Image {modalMode === 'create' ? '*' : '(Optional)'}
+                  Banner Graphic Image (Max 100KB) {modalMode === 'create' ? '*' : '(Optional)'}
                 </label>
 
                 <div

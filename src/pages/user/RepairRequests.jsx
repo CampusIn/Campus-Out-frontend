@@ -143,8 +143,8 @@ export default function RepairRequests() {
         toast.error(`File ${file.name} is not a valid image`);
         continue;
       }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File ${file.name} exceeds 10MB size limit`);
+      if (file.size > 100 * 1024) {
+        toast.error(`File ${file.name} exceeds 100KB size limit`);
         continue;
       }
       validFiles.push(file);
@@ -553,7 +553,7 @@ export default function RepairRequests() {
               {/* Photo Upload Section */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 750, color: '#334155', marginBottom: '6px' }}>
-                  Upload Photos of the Damaged Item <span style={{ color: '#dc2626' }}>*</span> (1 to 5 images)
+                  Upload Photos of the Damaged Item <span style={{ color: '#dc2626' }}>*</span> (1 to 5 images, Max 100KB each)
                 </label>
 
                 <input

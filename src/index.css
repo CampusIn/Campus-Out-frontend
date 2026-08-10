@@ -4328,4 +4328,9 @@ input:checked + .switch-slider:before {
   font-weight: 500;
 }
 
-
+/* Ensure sticky bottom actions clear the BottomNav on mobile */
+@media (max-width: 768px) {
+  .printing-bottom-action {
+    padding-bottom: calc(16px + 80px + env(safe-area-inset-bottom)) !important;
+  }
+}

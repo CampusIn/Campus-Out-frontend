@@ -567,6 +567,11 @@ export default function AdminMarketplace() {
   const handleCatFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 100 * 1024) {
+        toast.error('Image exceeds 100KB size limit');
+        e.target.value = '';
+        return;
+      }
       setCatImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -581,19 +586,27 @@ export default function AdminMarketplace() {
     const validFiles = [];
     const previews = [];
 
+    // Filter files by size (max 100KB)
+    const sizeValidFiles = files.filter(f => f.size <= 100 * 1024);
+    if (sizeValidFiles.length < files.length) {
+      toast.error(`${files.length - sizeValidFiles.length} file(s) exceeded the 100KB limit and were removed.`);
+    }
+
     // Max 5 files
-    const totalFiles = prodImages.length + files.length;
+    const totalFiles = prodImages.length + sizeValidFiles.length;
     if (totalFiles > 5) {
       toast.error('You can upload a maximum of 5 images');
       return;
     }
 
-    files.forEach((file) => {
+    if (sizeValidFiles.length === 0) return;
+
+    sizeValidFiles.forEach((file) => {
       validFiles.push(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         previews.push(reader.result);
-        if (previews.length === files.length) {
+        if (previews.length === sizeValidFiles.length) {
           setProdImages((prev) => [...prev, ...validFiles]);
           setProdImagePreviews((prev) => modalMode === 'edit' ? previews : [...prev, ...previews]);
         }
@@ -1280,7 +1293,7 @@ export default function AdminMarketplace() {
                     }}>
                       <Upload size={20} style={{ color: '#64748b', marginBottom: '4px' }} />
                       <span style={{ fontSize: '0.78rem', fontWeight: 750, color: '#475569' }}>
-                        {catImage ? catImage.name : 'Upload Category Image'}
+                        {catImage ? catImage.name : 'Upload Category Image (Max 100KB)'}
                       </span>
                       <input type="file" onChange={handleCatFileChange} accept="image/*" style={{ display: 'none' }} />
                     </label>
@@ -1466,7 +1479,7 @@ export default function AdminMarketplace() {
                     }}>
                       <Upload size={20} style={{ color: '#64748b', marginBottom: '4px' }} />
                       <span style={{ fontSize: '0.78rem', fontWeight: 750, color: '#475569' }}>
-                        {modalMode === 'edit' ? 'Upload New Set of Images' : 'Upload Images (1-5 files)'}
+                        {modalMode === 'edit' ? 'Upload New Set of Images (Max 100KB each)' : 'Upload Images (1-5 files, Max 100KB each)'}
                       </span>
                       <input type="file" multiple onChange={handleProdFilesChange} accept="image/*" style={{ display: 'none' }} />
                     </label>

@@ -310,14 +310,22 @@ export default function VendorMenuManagement() {
               </div>
 
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Item Photo</label>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Item Photo (Max 100KB)</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <input 
                     type="file"
                     accept="image/*"
                     id="menu-img-upload"
                     style={{ display: 'none' }}
-                    onChange={(e) => setImage(e.target.files[0])}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file && file.size > 100 * 1024) {
+                        toast.error('Image exceeds 100KB size limit');
+                        e.target.value = '';
+                        return;
+                      }
+                      setImage(file);
+                    }}
                   />
                   <label 
                     htmlFor="menu-img-upload"

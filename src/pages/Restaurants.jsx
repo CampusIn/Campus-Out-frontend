@@ -6,7 +6,7 @@ import { getActiveBanners, getActiveAnnouncements } from '../api/homepageCMS.api
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar, Wrench, ChevronRight } from 'lucide-react';
+import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar, Wrench, ChevronRight, Printer } from 'lucide-react';
 
 import { DynamicIsland } from '../components/DynamicIsland';
 import { motion } from 'framer-motion';
@@ -622,6 +622,45 @@ export default function Restaurants() {
           <h3 className="carousel-section-heading">Featured Offers For You</h3>
           <div className="banners-carousel-scrollable" ref={carouselRef}>
             
+            {/* Permanent Campus Printing Banner Card */}
+            <div 
+              className="carousel-banner-card repair-banner-card hover-lift"
+              onClick={() => navigate('/printing')}
+              style={{
+                background: 'linear-gradient(135deg, #4338ca 0%, #312e81 100%)',
+                color: '#ffffff',
+                padding: '12px 14px',
+                borderRadius: '18px',
+                height: '125px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 4px 12px rgba(49,46,129,0.15)',
+                boxSizing: 'border-box'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '5px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Printer size={16} color="#c7d2fe" />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 850, color: '#ffffff' }}>Print Desk</span>
+                </div>
+                <span style={{ background: '#4f46e5', color: '#ffffff', fontSize: '0.6rem', fontWeight: 850, padding: '2px 6px', borderRadius: '6px' }}>NEW</span>
+              </div>
+
+              <div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.74rem', color: '#e0e7ff', fontWeight: 500, lineHeight: 1.25 }}>
+                  Print documents online & pickup from campus seamlessly.
+                </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#a5b4fc', fontSize: '0.75rem', fontWeight: 800 }}>
+                  Start Printing <ChevronRight size={13} />
+                </div>
+              </div>
+            </div>
+
             {/* Permanent Campus Repair Desk Banner Card */}
             <div 
               className="carousel-banner-card repair-banner-card hover-lift"

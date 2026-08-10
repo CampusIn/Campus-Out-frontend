@@ -23,8 +23,15 @@ export default function VendorBulkUpload() {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
+    // Filter files by size (max 100KB)
+    const validFiles = files.filter(file => file.size <= 100 * 1024);
+    if (validFiles.length < files.length) {
+      toast.error(`${files.length - validFiles.length} file(s) exceeded the 100KB limit and were removed.`);
+    }
+    if (validFiles.length === 0) return;
+
     // Convert files to item structures
-    const newItems = files.map((file, idx) => {
+    const newItems = validFiles.map((file, idx) => {
       const uniqueId = `${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`;
       return {
         id: uniqueId,
@@ -233,7 +240,7 @@ export default function VendorBulkUpload() {
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '6px' }}>Select multiple item images</h3>
             <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
-              Drag and drop product photos, or click to browse files (JPEG, PNG).
+              Drag and drop product photos, or click to browse files (JPEG, PNG, Max 100KB each).
             </p>
           </div>
         </div>

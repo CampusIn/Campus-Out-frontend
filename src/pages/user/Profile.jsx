@@ -8,7 +8,7 @@ import { updateMe } from '../../api/auth.api';
 import { getActiveAnnouncements } from '../../api/homepageCMS.api';
 import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 
-import { ShieldAlert, Tag, Megaphone, Heart, HelpCircle, Bell, LogOut, ChevronRight, User, Copy, Check, Volume2, Calendar, Wrench, Phone, Mail, MessageCircle } from 'lucide-react';
+import { ShieldAlert, Tag, Megaphone, Heart, HelpCircle, Bell, LogOut, ChevronRight, User, Copy, Check, Volume2, Calendar, Wrench, Phone, Mail, MessageCircle, Printer } from 'lucide-react';
 
 export default function Profile() {
   const { user, logout, logoutAll, setUser } = useAuth();
@@ -114,6 +114,7 @@ export default function Profile() {
   if (!user) return null;
 
   const settingsItems = [
+    { label: 'Campus Printing', desc: 'Print documents & track orders', icon: <Printer size={20} />, color: '#4338ca', action: () => navigate('/printing/orders') },
     { label: 'Repair Requests', desc: 'Fix phones, laptops & appliances', icon: <Wrench size={20} />, color: '#b31522', action: () => navigate('/repair-requests') },
     { label: 'Promotions', icon: <Tag size={20} />, color: '#dd6b20', action: handleOpenPromotions },
     { label: 'Notification', icon: <Bell size={20} />, color: '#d69e2e', action: handleOpenAnnouncements },
