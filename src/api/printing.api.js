@@ -13,6 +13,12 @@ export const uploadPrintFiles = (formData, onUploadProgress) =>
 // Delete an uploaded file
 export const deletePrintUpload = (uploadId) => api.delete(`/printing/uploads/${uploadId}`);
 
+// Get upload session status
+export const getPrintUploadSession = (uploadSessionId) => api.get(`/printing/uploads/session/${uploadSessionId}`);
+
+// Get single upload status
+export const getPrintUpload = (uploadId) => api.get(`/printing/uploads/${uploadId}`);
+
 // Create an order
 export const createPrintOrder = (data, idempotencyKey) => 
   api.post('/printing/orders', data, {

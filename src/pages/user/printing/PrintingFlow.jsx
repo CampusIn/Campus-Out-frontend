@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../../../context/ToastContext';
-import { getPrintingConfig, uploadPrintFiles, createPrintOrder, deletePrintUpload } from '../../../api/printing.api';
-import { UploadCloud, X, FileText, CheckCircle, ChevronRight, Loader2, ArrowLeft, Printer, Info, CreditCard, ChevronDown } from 'lucide-react';
+import { getPrintingConfig, uploadPrintFiles, createPrintOrder, deletePrintUpload, getPrintUploadSession } from '../../../api/printing.api';
+import { UploadCloud, X, FileText, CheckCircle, ChevronRight, Loader2, ArrowLeft, Printer, Info, RefreshCw, AlertCircle, Clock, ChevronDown, CreditCard } from 'lucide-react';
 
 export default function PrintingFlow() {
   const navigate = useNavigate();
   const toast = useToast();
   const fileInputRef = useRef(null);
+  const pollingIntervalsRef = useRef({});
 
   const [step, setStep] = useState(1);
   const [config, setConfig] = useState(null);
@@ -16,6 +17,10 @@ export default function PrintingFlow() {
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // State for polling
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [sessionProgress, setSessionProgress] = useState({});
 
   // State for options
   const [options, setOptions] = useState({
@@ -33,6 +38,10 @@ export default function PrintingFlow() {
 
   useEffect(() => {
     fetchConfig();
+    return () => {
+      // Cleanup intervals on unmount
+      Object.values(pollingIntervalsRef.current).forEach(clearInterval);
+    };
   }, []);
 
   const fetchConfig = async () => {
@@ -45,6 +54,68 @@ export default function PrintingFlow() {
       toast.error('Failed to load printing configuration');
     }
   };
+
+  useEffect(() => {
+    activeSessions.forEach(sessionId => {
+      if (!pollingIntervalsRef.current[sessionId]) {
+        pollingIntervalsRef.current[sessionId] = setInterval(async () => {
+          try {
+            const { data } = await getPrintUploadSession(sessionId);
+            if (data.success || data.uploadSessionId) {
+              const sessionData = data.data || data;
+              
+              if (sessionData.progress) {
+                setSessionProgress(prev => ({ ...prev, [sessionId]: sessionData.progress }));
+              }
+              
+              let hasNonTerminal = false;
+
+              if (sessionData.uploads) {
+                setFiles(prevFiles => {
+                  const newFiles = [...prevFiles];
+                  let changed = false;
+                  
+                  sessionData.uploads.forEach(updatedUpload => {
+                    const idx = newFiles.findIndex(f => f._id === updatedUpload._id);
+                    if (idx !== -1) {
+                      if (
+                        newFiles[idx].uploadStatus !== updatedUpload.uploadStatus || 
+                        newFiles[idx].failureReason !== updatedUpload.failureReason
+                      ) {
+                        newFiles[idx] = { 
+                          ...newFiles[idx], 
+                          ...updatedUpload,
+                          originalFileObject: newFiles[idx].originalFileObject 
+                        };
+                        changed = true;
+                      }
+                    }
+                    if (!['UPLOADED', 'FAILED', 'DELETED'].includes(updatedUpload.uploadStatus)) {
+                      hasNonTerminal = true;
+                    }
+                  });
+                  return changed ? newFiles : prevFiles;
+                });
+              }
+
+              if (!hasNonTerminal) {
+                clearInterval(pollingIntervalsRef.current[sessionId]);
+                delete pollingIntervalsRef.current[sessionId];
+                setActiveSessions(prev => prev.filter(id => id !== sessionId));
+              }
+            }
+          } catch (err) {
+            if (err.response?.status === 404) {
+              toast.error('Upload session expired or not found.');
+              clearInterval(pollingIntervalsRef.current[sessionId]);
+              delete pollingIntervalsRef.current[sessionId];
+              setActiveSessions(prev => prev.filter(id => id !== sessionId));
+            }
+          }
+        }, 2000);
+      }
+    });
+  }, [activeSessions, toast]);
 
   const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -73,7 +144,9 @@ export default function PrintingFlow() {
 
     if (!validFiles.length) return;
 
-    if (config && files.length + validFiles.length > config.maxFilesPerOrder) {
+    // Filter out deleted/failed files before counting against max limit
+    const activeFileCount = files.filter(f => f.uploadStatus !== 'DELETED' && f.uploadStatus !== 'FAILED').length;
+    if (config && activeFileCount + validFiles.length > config.maxFilesPerOrder) {
       toast.error(`You can only upload up to ${config.maxFilesPerOrder} files per order.`);
       return;
     }
@@ -92,31 +165,36 @@ export default function PrintingFlow() {
         setUploadProgress(percentCompleted);
       });
 
-      if (data.success) {
-        console.log('Upload API response:', data);
-        // The backend returns { uploads: [...] }
-        const uploadedFiles = Array.isArray(data.data) 
-          ? data.data 
-          : (data.data?.uploads || data.data?.files || data.data?.uploadedFiles || [data.data]);
+      if (data.success || data.statusCode === 202 || data.uploadSessionId || data.data?.uploadSessionId) {
+        // The backend returns { uploadSessionId, uploads: [...] }
+        const sessionData = data.data || data;
+        const uploadedFiles = sessionData.uploads || [];
           
-        if (Array.isArray(uploadedFiles)) {
-          // Fallback to original file size if backend omits it, and default pages to 1
-          const enrichedFiles = uploadedFiles.map((u) => {
-            const originalFile = validFiles.find(vf => vf.name === (u.originalName || u.originalname || u.name));
-            return {
-              ...u,
-              size: u.size || u.fileSize || u.sizeBytes || originalFile?.size || 0,
-              pages: u.pages || u.pageCount || 1,
-            };
+        const enrichedFiles = uploadedFiles.map((u) => {
+          const originalFile = validFiles.find(vf => vf.name === (u.originalName || u.originalname || u.name));
+          return {
+            ...u,
+            size: u.size || u.fileSize || u.sizeBytes || originalFile?.size || 0,
+            pages: u.pages || u.pageCount || 1,
+            originalFileObject: originalFile,
+            uploadSessionId: sessionData.uploadSessionId,
+            uploadStatus: u.uploadStatus || 'QUEUED'
+          };
+        });
+        setFiles(prev => [...prev, ...enrichedFiles]);
+        if (sessionData.uploadSessionId) {
+          setActiveSessions(prev => {
+            if (!prev.includes(sessionData.uploadSessionId)) {
+              return [...prev, sessionData.uploadSessionId];
+            }
+            return prev;
           });
-          setFiles(prev => [...prev, ...enrichedFiles]);
-          toast.success('Files uploaded successfully');
-        } else {
-          toast.error('Unexpected file upload response format');
         }
+      } else {
+        toast.error('Unexpected file upload response format');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error uploading files');
+      toast.error(err.response?.data?.message || 'Error queueing files');
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -124,17 +202,76 @@ export default function PrintingFlow() {
     }
   };
 
-  const handleRemoveFile = async (uploadId) => {
+  const handleRetry = async (fileToRetry) => {
+    if (!fileToRetry.originalFileObject) {
+      toast.error('Cannot retry: original file not found.');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('files', fileToRetry.originalFileObject);
+
+    // Remove the old failed one
+    setFiles(prev => prev.filter(f => f._id !== fileToRetry._id));
+
     try {
-      setFiles(prev => prev.filter(f => f._id !== uploadId));
-      await deletePrintUpload(uploadId);
+      const { data } = await uploadPrintFiles(formData);
+      if (data.success || data.statusCode === 202 || data.uploadSessionId || data.data?.uploadSessionId) {
+        const sessionData = data.data || data;
+        const uploadedFiles = sessionData.uploads || [];
+        const enrichedFiles = uploadedFiles.map((u) => ({
+          ...u,
+          size: u.size || u.fileSize || u.sizeBytes || fileToRetry.originalFileObject.size || 0,
+          pages: u.pages || u.pageCount || 1,
+          originalFileObject: fileToRetry.originalFileObject,
+          uploadSessionId: sessionData.uploadSessionId,
+          uploadStatus: u.uploadStatus || 'QUEUED'
+        }));
+        
+        setFiles(prev => [...prev, ...enrichedFiles]);
+        if (sessionData.uploadSessionId) {
+          setActiveSessions(prev => {
+            if (!prev.includes(sessionData.uploadSessionId)) {
+               return [...prev, sessionData.uploadSessionId];
+            }
+            return prev;
+          });
+        }
+      }
     } catch (err) {
-      console.error('Failed to delete file from server', err);
+      toast.error('Failed to retry upload.');
     }
   };
 
+  const handleRemoveFile = async (uploadId) => {
+    const file = files.find(f => f._id === uploadId);
+    if (!file) return;
+
+    if (file.uploadStatus === 'PROCESSING') {
+      toast.error('Upload is currently processing and cannot be removed right now.');
+      return;
+    }
+
+    try {
+      // Optimistic delete
+      setFiles(prev => prev.filter(f => f._id !== uploadId));
+      await deletePrintUpload(uploadId);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        toast.error('Upload is currently processing and cannot be removed right now.');
+        // Revert delete if backend conflicts
+        setFiles(prev => [...prev, file]);
+      } else {
+        console.error('Failed to delete file from server', err);
+      }
+    }
+  };
+
+  // Only calculate for files that are uploaded successfully
+  const getUploadedFiles = () => files.filter(f => f.uploadStatus === 'UPLOADED');
+  
   const calculateTotalPages = () => {
-    return files.reduce((acc, file) => acc + (file.pages || 1), 0);
+    return getUploadedFiles().reduce((acc, file) => acc + (file.pages || 1), 0);
   };
 
   const calculatePrice = () => {
@@ -147,6 +284,11 @@ export default function PrintingFlow() {
   const handleNext = () => {
     if (step === 1) {
       if (!files.length) return toast.error('Please upload at least one document.');
+      const hasUploaded = getUploadedFiles().length > 0;
+      if (!hasUploaded) {
+        toast.error('Please wait for at least one file to finish uploading successfully.');
+        return;
+      }
       setStep(2);
     } else if (step === 2) {
       setStep(3);
@@ -167,10 +309,16 @@ export default function PrintingFlow() {
       return;
     }
 
+    const uploadedIds = getUploadedFiles().map(f => f._id);
+    if (uploadedIds.length === 0) {
+      toast.error('No uploaded files available for order.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
-        uploadIds: files.map(f => f._id),
+        uploadIds: uploadedIds,
         printingOptions: options,
         contactMobile: phoneNumber,
         paymentMethod: 'COD'
@@ -186,6 +334,21 @@ export default function PrintingFlow() {
       setIsSubmitting(false);
       // Reset idempotency key on failure so they can retry if needed
       idempotencyKeyRef.current = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    }
+  };
+
+  const renderStatusChip = (status, failureReason) => {
+    switch(status) {
+      case 'QUEUED':
+        return <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', background: '#fef3c7', color: '#b45309', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600 }}><Clock size={14} /> Queued</div>;
+      case 'PROCESSING':
+        return <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', background: '#e0e7ff', color: '#4338ca', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600 }}><Loader2 size={14} className="spinner" /> Processing</div>;
+      case 'UPLOADED':
+        return <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', background: '#dcfce7', color: '#15803d', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600 }}><CheckCircle size={14} /> Ready</div>;
+      case 'FAILED':
+        return <div title={failureReason || 'Upload failed'} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', background: '#fee2e2', color: '#b91c1c', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600 }}><AlertCircle size={14} /> Failed</div>;
+      default:
+        return null;
     }
   };
 
@@ -238,7 +401,7 @@ export default function PrintingFlow() {
               {isUploading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                   <Loader2 size={32} color="var(--primary)" className="spinner" />
-                  <p style={{ fontWeight: 600 }}>Uploading... {uploadProgress}%</p>
+                  <p style={{ fontWeight: 600 }}>Queueing files... {uploadProgress}%</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -256,16 +419,27 @@ export default function PrintingFlow() {
                 <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Added Files ({files.length})</h3>
                 {files.map(f => (
                   <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden', flex: 1 }}>
                       <FileText size={24} color="#64748b" style={{ flexShrink: 0 }} />
-                      <div style={{ overflow: 'hidden' }}>
-                        <p style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.originalName}</p>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{f.pages} pages • {(f.size / 1024).toFixed(1)} KB</p>
+                      <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <p style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>{f.originalName}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>{f.pages} pages • {(f.size / 1024).toFixed(1)} KB</p>
+                          {renderStatusChip(f.uploadStatus, f.failureReason)}
+                        </div>
                       </div>
                     </div>
-                    <button onClick={() => handleRemoveFile(f._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
-                      <X size={20} color="#ef4444" />
-                    </button>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px' }}>
+                      {f.uploadStatus === 'FAILED' && (
+                        <button onClick={() => handleRetry(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: '#0f172a', display: 'flex', alignItems: 'center' }}>
+                          <RefreshCw size={18} />
+                        </button>
+                      )}
+                      <button onClick={() => handleRemoveFile(f._id)} disabled={f.uploadStatus === 'PROCESSING'} style={{ background: 'none', border: 'none', cursor: f.uploadStatus === 'PROCESSING' ? 'not-allowed' : 'pointer', padding: '8px', opacity: f.uploadStatus === 'PROCESSING' ? 0.5 : 1 }}>
+                        <X size={20} color="#ef4444" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -381,7 +555,7 @@ export default function PrintingFlow() {
             <div style={{ background: 'white', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#64748b', fontWeight: 600 }}>Total Documents</span>
-                <span style={{ fontWeight: 800 }}>{files.length}</span>
+                <span style={{ fontWeight: 800 }}>{getUploadedFiles().length}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#64748b', fontWeight: 600 }}>Total Pages</span>
@@ -415,16 +589,16 @@ export default function PrintingFlow() {
           {step < 3 ? (
             <button
               onClick={handleNext}
-              disabled={step === 1 && files.length === 0}
-              style={{ width: '100%', padding: '16px', borderRadius: '16px', background: (step === 1 && files.length === 0) ? '#cbd5e1' : 'var(--primary)', color: 'white', fontWeight: 700, fontSize: '1.1rem', border: 'none', cursor: (step === 1 && files.length === 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.3s' }}
+              disabled={step === 1 && (files.length === 0 || getUploadedFiles().length === 0)}
+              style={{ width: '100%', padding: '16px', borderRadius: '16px', background: (step === 1 && (files.length === 0 || getUploadedFiles().length === 0)) ? '#cbd5e1' : 'var(--primary)', color: 'white', fontWeight: 700, fontSize: '1.1rem', border: 'none', cursor: (step === 1 && (files.length === 0 || getUploadedFiles().length === 0)) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.3s' }}
             >
               Continue <ChevronRight size={20} />
             </button>
           ) : (
             <button
               onClick={handlePlaceOrder}
-              disabled={isSubmitting}
-              style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--primary)', color: 'white', fontWeight: 700, fontSize: '1.1rem', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 4px 12px rgba(179, 21, 34, 0.3)' }}
+              disabled={isSubmitting || getUploadedFiles().length === 0}
+              style={{ width: '100%', padding: '16px', borderRadius: '16px', background: (isSubmitting || getUploadedFiles().length === 0) ? '#cbd5e1' : 'var(--primary)', color: 'white', fontWeight: 700, fontSize: '1.1rem', border: 'none', cursor: (isSubmitting || getUploadedFiles().length === 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: (isSubmitting || getUploadedFiles().length === 0) ? 'none' : '0 4px 12px rgba(179, 21, 34, 0.3)' }}
             >
               {isSubmitting ? <Loader2 size={24} className="spinner" /> : <Printer size={24} />}
               Place Print Order
@@ -435,5 +609,4 @@ export default function PrintingFlow() {
 
     </div>
   );
-
 }
