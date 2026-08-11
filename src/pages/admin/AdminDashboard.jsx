@@ -1271,7 +1271,7 @@ export default function AdminDashboard() {
                 <div style={{ marginTop: '8px', borderTop: '1px solid #edf2f7', paddingTop: '8px' }}>
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Deliver To</span>
                   <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#1e293b', fontSize: '0.82rem' }}>
-                    {selectedOrder.deliveryAddressSnapShot || selectedOrder.address || selectedOrder.user?.address || 'Hostel Block 3, Room 204'}
+                    {selectedOrder.deliveryAddress || selectedOrder.deliveryAddressSnapShot || selectedOrder.address || selectedOrder.user?.address || 'Address not provided'}
                   </p>
                 </div>
               </div>
