@@ -20,6 +20,10 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    // Delete Content-Type so browser generates it with the correct boundary
+    delete config.headers['Content-Type'];
+  }
   const token = localStorage.getItem('accessToken');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;

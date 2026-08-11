@@ -6,9 +6,7 @@ export const getRestaurantMenu = (restaurantId) =>
 export const getMenuItemById = (id) => api.get(`/restaurants/menu/${id}`);
 
 export const createMenuItem = (restaurantId, formData) =>
-  api.post(`/restaurants/${restaurantId}/menu`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  api.post(`/restaurants/${restaurantId}/menu`, formData);
 
 export const updateMenuItem = (id, data) =>
   api.patch(`/restaurants/menu/${id}`, data);
