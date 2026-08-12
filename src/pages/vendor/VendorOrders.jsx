@@ -279,7 +279,7 @@ export default function VendorOrders() {
                             borderRadius: '6px',
                             borderWidth: '1px',
                             color: 'var(--vendor-primary)',
-                            borderColor: 'rgba(179, 21, 34, 0.2)',
+                            borderColor: 'rgba(74, 53, 232, 0.2)',
                             background: 'transparent'
                           }}
                         >

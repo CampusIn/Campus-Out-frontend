@@ -33,6 +33,7 @@ export default function PrintingFlow() {
 
   // State for submitting
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const idempotencyKeyRef = useRef(Math.random().toString(36).substring(2) + Date.now().toString(36));
 
@@ -309,6 +310,11 @@ export default function PrintingFlow() {
       return;
     }
 
+    if (!deliveryAddress.trim()) {
+      toast.error('Please enter a delivery address');
+      return;
+    }
+
     const uploadedIds = getUploadedFiles().map(f => f._id);
     if (uploadedIds.length === 0) {
       toast.error('No uploaded files available for order.');
@@ -321,7 +327,8 @@ export default function PrintingFlow() {
         uploadIds: uploadedIds,
         printingOptions: options,
         contactMobile: phoneNumber,
-        paymentMethod: 'COD'
+        paymentMethod: 'COD',
+        deliveryAddress: deliveryAddress.trim()
       };
 
       const { data } = await createPrintOrder(payload, idempotencyKeyRef.current);
@@ -550,6 +557,16 @@ export default function PrintingFlow() {
                   style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
                 />
               </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>Delivery Address *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Room 101, Boys Hostel 1"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+              </div>
             </div>
 
             <div style={{ background: 'white', borderRadius: '16px', padding: '20px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
@@ -598,7 +615,7 @@ export default function PrintingFlow() {
             <button
               onClick={handlePlaceOrder}
               disabled={isSubmitting || getUploadedFiles().length === 0}
-              style={{ width: '100%', padding: '16px', borderRadius: '16px', background: (isSubmitting || getUploadedFiles().length === 0) ? '#cbd5e1' : 'var(--primary)', color: 'white', fontWeight: 700, fontSize: '1.1rem', border: 'none', cursor: (isSubmitting || getUploadedFiles().length === 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: (isSubmitting || getUploadedFiles().length === 0) ? 'none' : '0 4px 12px rgba(179, 21, 34, 0.3)' }}
+              style={{ width: '100%', padding: '16px', borderRadius: '16px', background: (isSubmitting || getUploadedFiles().length === 0) ? '#cbd5e1' : 'var(--primary)', color: 'white', fontWeight: 700, fontSize: '1.1rem', border: 'none', cursor: (isSubmitting || getUploadedFiles().length === 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: (isSubmitting || getUploadedFiles().length === 0) ? 'none' : '0 4px 12px rgba(74, 53, 232, 0.3)' }}
             >
               {isSubmitting ? <Loader2 size={24} className="spinner" /> : <Printer size={24} />}
               Place Print Order

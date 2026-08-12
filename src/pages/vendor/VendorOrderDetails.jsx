@@ -277,7 +277,7 @@ export default function VendorOrderDetails() {
             fontWeight: 700,
             height: '40px',
             fontSize: '0.85rem',
-            borderColor: 'rgba(179, 21, 34, 0.2)',
+            borderColor: 'rgba(74, 53, 232, 0.2)',
             color: 'var(--vendor-primary)',
             background: 'transparent'
           }}

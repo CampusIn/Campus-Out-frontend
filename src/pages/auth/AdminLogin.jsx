@@ -126,7 +126,7 @@ export default function AdminLogin() {
                   style={{ 
                     background: 'none', 
                     border: 'none', 
-                    color: '#b31522', 
+                    color: '#4A35E8', 
                     textDecoration: 'underline', 
                     cursor: 'pointer', 
                     fontWeight: 'bold',
@@ -248,7 +248,7 @@ export default function AdminLogin() {
         }
 
         .swiggy-close-btn:hover {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .admin-portal-badge {
@@ -256,7 +256,7 @@ export default function AdminLogin() {
           align-items: center;
           gap: 8px;
           background: #fff5f5;
-          color: #b31522;
+          color: #4A35E8;
           padding: 8px 16px;
           border-radius: 50px;
           font-size: 0.8rem;
@@ -298,7 +298,7 @@ export default function AdminLogin() {
         }
 
         .admin-link {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-auth-link:hover {
@@ -313,7 +313,7 @@ export default function AdminLogin() {
         }
 
         .admin-line {
-          background: #b31522;
+          background: #4A35E8;
         }
 
         .swiggy-auth-form {
@@ -334,14 +334,14 @@ export default function AdminLogin() {
 
         .swiggy-auth-error-msg {
           background: #fff5f5;
-          color: #b31522;
+          color: #4A35E8;
           padding: 12px 16px;
           font-size: 0.85rem;
           font-weight: 600;
           margin-bottom: 20px;
           text-align: center;
           border-radius: 4px;
-          border: 1px solid rgba(179, 21, 34, 0.1);
+          border: 1px solid rgba(74, 53, 232, 0.1);
           display: flex;
           flex-direction: column;
           gap: 6px;
@@ -376,7 +376,7 @@ export default function AdminLogin() {
         }
 
         .swiggy-input-container:focus-within {
-          border-color: #b31522;
+          border-color: #4A35E8;
           box-shadow: 0 1px 10px rgba(0, 0, 0, 0.04);
           z-index: 10;
         }
@@ -427,7 +427,7 @@ export default function AdminLogin() {
         }
 
         .swiggy-password-toggle:hover {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-forgot-password {
@@ -453,13 +453,13 @@ export default function AdminLogin() {
         }
 
         .admin-accent-btn {
-          background: #b31522;
-          box-shadow: 0 4px 15px rgba(179, 21, 34, 0.2);
+          background: #4A35E8;
+          box-shadow: 0 4px 15px rgba(74, 53, 232, 0.2);
         }
 
         .admin-accent-btn:hover {
-          background: #960f1a;
-          box-shadow: 0 6px 20px rgba(179, 21, 34, 0.3);
+          background: #3220A8;
+          box-shadow: 0 6px 20px rgba(74, 53, 232, 0.3);
         }
 
         .swiggy-auth-submit-btn:disabled {
@@ -502,7 +502,7 @@ export default function AdminLogin() {
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(179, 21, 34, 0.04);
+          background: rgba(74, 53, 232, 0.04);
           backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
@@ -536,7 +536,7 @@ export default function AdminLogin() {
 
         .admin-accent-bg {
           background: #fff5f5;
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .session-expired-title {

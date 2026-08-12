@@ -165,7 +165,7 @@ export default function MarketplaceProductDetail() {
   // Pre-filled WhatsApp message
   const whatsappUrl = product.sellerPhoneNumber
     ? `https://wa.me/91${product.sellerPhoneNumber.trim()}?text=${encodeURIComponent(
-        `Hi, I saw your listing for "${product.name}" on Campus Out Marketplace. Is it still available?`
+        `Hi, I saw your listing for "${product.name}" on CampusIn Marketplace. Is it still available?`
       )}`
     : '';
 
@@ -417,9 +417,6 @@ export default function MarketplaceProductDetail() {
                       <Plus size={16} />
                     </button>
                   </div>
-                  <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 650 }}>
-                    {product.stock} units available
-                  </span>
                 </div>
               ) : (
                 <span style={{ color: '#dc2626', fontWeight: 750, fontSize: '0.9rem' }}>Out of Stock</span>
@@ -457,7 +454,7 @@ export default function MarketplaceProductDetail() {
                   gap: '12px'
                 }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>
-                    This is a peer-to-peer listing. Contact the seller directly to negotiate and complete your purchase.
+                    Contact the seller directly to negotiate and complete your purchase.
                   </p>
                   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     <a
@@ -539,7 +536,7 @@ export default function MarketplaceProductDetail() {
             disabled={addingToCart}
             className="marketplace-footer-btn hover-scale"
             style={{
-              background: '#b31522',
+              background: '#4A35E8',
               color: '#ffffff',
               border: 'none',
               cursor: 'pointer',

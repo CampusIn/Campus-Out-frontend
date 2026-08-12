@@ -147,7 +147,7 @@ export default function AuthSuccess() {
           width: 60px;
           height: 60px;
           border: 4px solid #f1f5f9;
-          border-top-color: #b31522;
+          border-top-color: #4A35E8;
           border-radius: 50%;
           animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
         }
@@ -157,7 +157,7 @@ export default function AuthSuccess() {
           width: 60px;
           height: 60px;
           border-radius: 50%;
-          box-shadow: 0 0 15px rgba(179, 21, 34, 0.2);
+          box-shadow: 0 0 15px rgba(74, 53, 232, 0.2);
           animation: pulse 2s infinite ease-in-out;
         }
 

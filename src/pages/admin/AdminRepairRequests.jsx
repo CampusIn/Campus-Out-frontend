@@ -200,7 +200,7 @@ export default function AdminRepairRequests() {
     }
 
     const message = 
-`🛠️ *CAMPUSOUT REPAIR DISPATCH ORDER* 🛠️
+`🛠️ *CAMPUSIN REPAIR DISPATCH ORDER* 🛠️
 
 📋 *Request No:* ${reqNum}
 📱 *Service Type:* ${serviceType}
@@ -220,7 +220,7 @@ ${photosText}
 ${remarks}
 
 ---
-_Sent via CampusOut Admin Portal_`;
+_Sent via CampusIn Admin Portal_`;
 
     const encodedText = encodeURIComponent(message);
     const waUrl = `https://api.whatsapp.com/send?phone=${rawPhone}&text=${encodedText}`;

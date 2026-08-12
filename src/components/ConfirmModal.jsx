@@ -92,7 +92,7 @@ export const ConfirmModal = ({
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
               <div style={{
-                background: 'rgba(179, 21, 34, 0.1)',
+                background: 'rgba(74, 53, 232, 0.1)',
                 color: '#b31522',
                 width: '64px',
                 height: '64px',

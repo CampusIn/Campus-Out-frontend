@@ -132,12 +132,10 @@ export default function Navbar() {
     <nav className="navbar" style={{ position: 'sticky', top: 0, zIndex: 10000 }}>
       <ContentWrapper className="navbar-flex-row">
         <div className="navbar-left-content">
-          <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <div style={{ background: '#b31522', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Flame size={20} color="#ffffff" style={{ animation: 'pulseSoft 2s infinite' }} />
-            </div>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#111111' }}>
-              Campus<span style={{ color: '#b31522' }}>In</span>
+          <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px', marginRight: '0px', marginLeft: '0px' }} />
+            <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#4A35E8' }}>
+              Campus<span style={{ color: '#20C7C9' }}>In</span>
             </span>
           </Link>
 
@@ -309,7 +307,7 @@ export default function Navbar() {
                   to="/login" 
                   className="nav-link"
                   style={{ 
-                    color: isActive('/login') ? '#b31522' : '#718096', 
+                    color: isActive('/login') ? '#4A35E8' : '#718096', 
                     fontWeight: 700, 
                     fontSize: '0.9rem' 
                   }}
@@ -320,7 +318,7 @@ export default function Navbar() {
                   to="/register" 
                   className="btn btn-primary animate-pulse-soft"
                   style={{ 
-                    background: '#b31522', 
+                    background: '#4A35E8', 
                     color: '#ffffff', 
                     padding: '8px 16px', 
                     borderRadius: '8px', 

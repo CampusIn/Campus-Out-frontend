@@ -116,9 +116,7 @@ export default function VendorLayout() {
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', gap: '16px', background: '#f8faf9' }}>
-        <div style={{ background: '#06c169', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Flame size={32} color="#ffffff" style={{ animation: 'pulseSoft 2s infinite' }} />
-        </div>
+        <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '64px', animation: 'pulseSoft 2s infinite' }} />
         <p style={{ fontFamily: 'Outfit', fontWeight: 650, color: '#64748b' }}>Loading Vendor Workspace...</p>
       </div>
     );
@@ -130,12 +128,10 @@ export default function VendorLayout() {
       <div style={{ background: '#f8faf9', minHeight: '100vh', padding: '40px 20px', fontFamily: 'Outfit, sans-serif' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ background: '#06c169', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Flame size={20} color="#ffffff" />
-              </div>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#1e293b' }}>
-                Campus<span style={{ color: '#06c169' }}>In</span>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px', marginRight: '0px', marginLeft: '0px' }} />
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#4A35E8' }}>
+                Campus<span style={{ color: '#20C7C9' }}>In</span>
               </span>
             </div>
             <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 16px', borderRadius: '10px' }} onClick={() => logout('vendor')}>
@@ -273,12 +269,10 @@ export default function VendorLayout() {
   const sidebarContent = (
     <>
       <div className="vendor-sidebar-header">
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <div className="vendor-brand-logo">
-            <Flame size={20} color="#ffffff" />
-          </div>
-          <span className="vendor-brand-text">
-            Campus<span style={{ color: '#06c169' }}>In</span>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px', marginRight: '0px', marginLeft: '0px' }} />
+          <span className="vendor-brand-text" style={{ color: '#4A35E8' }}>
+            Campus<span style={{ color: '#20C7C9' }}>In</span>
           </span>
         </Link>
       </div>

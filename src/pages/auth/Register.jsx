@@ -238,7 +238,7 @@ export default function Register() {
         }
 
         .swiggy-close-btn:hover {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-auth-header-row {
@@ -267,7 +267,7 @@ export default function Register() {
         }
 
         .swiggy-auth-link {
-          color: #b31522;
+          color: #4A35E8;
           text-decoration: none;
           font-weight: 750;
           transition: opacity 0.2s;
@@ -315,14 +315,14 @@ export default function Register() {
 
         .swiggy-auth-error-msg {
           background: #fff5f5;
-          color: #b31522;
+          color: #4A35E8;
           padding: 12px 16px;
           font-size: 0.85rem;
           font-weight: 600;
           margin-bottom: 20px;
           text-align: center;
           border-radius: 4px;
-          border: 1px solid rgba(179, 21, 34, 0.1);
+          border: 1px solid rgba(74, 53, 232, 0.1);
         }
 
         .swiggy-auth-error-msg.success-style {
@@ -363,8 +363,8 @@ export default function Register() {
 
         .swiggy-role-btn.active {
           background: #fff5f5;
-          color: #b31522;
-          border-bottom: 2px solid #b31522;
+          color: #4A35E8;
+          border-bottom: 2px solid #4A35E8;
         }
 
         .swiggy-input-container {
@@ -389,7 +389,7 @@ export default function Register() {
         }
 
         .swiggy-input-container:focus-within {
-          border-color: #b31522;
+          border-color: #4A35E8;
           box-shadow: 0 1px 10px rgba(0, 0, 0, 0.04);
           z-index: 10;
         }
@@ -441,12 +441,12 @@ export default function Register() {
         }
 
         .swiggy-password-toggle:hover {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-auth-submit-btn {
           width: 100%;
-          background: #b31522;
+          background: #4A35E8;
           color: #ffffff;
           border: none;
           padding: 16px;
@@ -456,13 +456,13 @@ export default function Register() {
           letter-spacing: 0.5px;
           cursor: pointer;
           transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(179, 21, 34, 0.2);
+          box-shadow: 0 4px 15px rgba(74, 53, 232, 0.2);
           text-align: center;
         }
 
         .swiggy-auth-submit-btn:hover {
-          background: #960f1a;
-          box-shadow: 0 6px 20px rgba(179, 21, 34, 0.3);
+          background: #3220A8;
+          box-shadow: 0 6px 20px rgba(74, 53, 232, 0.3);
         }
 
         .swiggy-auth-submit-btn:disabled {

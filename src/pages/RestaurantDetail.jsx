@@ -482,7 +482,7 @@ export default function RestaurantDetail() {
             paddingTop: '12px', 
             marginTop: '12px' 
           }}>
-            <span style={{ background: '#fff5f5', border: '1px dashed #b31522', color: '#b31522', padding: '2px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 850 }}>
+            <span style={{ background: '#f2efff', border: '1px dashed #4A35E8', color: '#4A35E8', padding: '2px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 850 }}>
               {bestCoupon.code}
             </span>
             <span style={{ fontSize: '0.78rem', color: '#4a5568', fontWeight: 700 }}>
@@ -507,8 +507,8 @@ export default function RestaurantDetail() {
               background: 'none',
               fontSize: '0.9rem',
               fontWeight: 800,
-              color: activeTab === tab ? '#b31522' : '#718096',
-              borderBottom: activeTab === tab ? '3px solid #b31522' : '3px solid transparent',
+              color: activeTab === tab ? '#4A35E8' : '#718096',
+              borderBottom: activeTab === tab ? '3px solid #4A35E8' : '3px solid transparent',
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
@@ -582,7 +582,7 @@ export default function RestaurantDetail() {
                 padding: '6px 12px',
                 borderRadius: '20px',
                 border: '1px solid',
-                background: nonVegOnly ? '#fff5f5' : '#ffffff',
+                background: nonVegOnly ? '#f2efff' : '#ffffff',
                 color: nonVegOnly ? '#e53e3e' : '#718096',
                 borderColor: nonVegOnly ? '#e53e3e' : '#e2e8f0',
                 fontSize: '0.8rem',
@@ -627,7 +627,7 @@ export default function RestaurantDetail() {
                               type="button" 
                               onClick={() => handleDecrement(item._id, qty)} 
                               disabled={updatingItems[item._id]}
-                              style={{ border: 'none', background: 'none', color: updatingItems[item._id] ? '#cbd5e0' : '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer' }}
+                              style={{ border: 'none', background: 'none', color: updatingItems[item._id] ? '#cbd5e0' : '#4A35E8', fontWeight: 900, fontSize: '0.8rem', cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer' }}
                             >
                               -
                             </button>
@@ -636,7 +636,7 @@ export default function RestaurantDetail() {
                               type="button" 
                               onClick={() => handleIncrement(item._id, qty)} 
                               disabled={updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)}
-                              style={{ border: 'none', background: 'none', color: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? '#cbd5e0' : '#b31522', fontWeight: 900, fontSize: '0.8rem', cursor: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? 'not-allowed' : 'pointer' }}
+                              style={{ border: 'none', background: 'none', color: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? '#cbd5e0' : '#4A35E8', fontWeight: 900, fontSize: '0.8rem', cursor: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? 'not-allowed' : 'pointer' }}
                             >
                               +
                             </button>
@@ -763,7 +763,7 @@ export default function RestaurantDetail() {
                                         type="button" 
                                         onClick={() => handleDecrement(item._id, qty)} 
                                         disabled={updatingItems[item._id]}
-                                        style={{ border: 'none', background: 'none', color: updatingItems[item._id] ? '#cbd5e0' : '#b31522', fontWeight: 900, cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer', fontSize: '0.9rem' }}
+                                        style={{ border: 'none', background: 'none', color: updatingItems[item._id] ? '#cbd5e0' : '#4A35E8', fontWeight: 900, cursor: updatingItems[item._id] ? 'not-allowed' : 'pointer', fontSize: '0.9rem' }}
                                       >
                                         -
                                       </button>
@@ -775,7 +775,7 @@ export default function RestaurantDetail() {
                                         style={{ 
                                           border: 'none', 
                                           background: 'none', 
-                                          color: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? '#cbd5e0' : '#b31522', 
+                                          color: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? '#cbd5e0' : '#4A35E8', 
                                           fontWeight: 900, 
                                           cursor: (updatingItems[item._id] || qty >= (item.stockQty ?? Infinity)) ? 'not-allowed' : 'pointer', 
                                           fontSize: '0.9rem' 
@@ -845,8 +845,8 @@ export default function RestaurantDetail() {
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: '#fff5f5',
-                  color: '#b31522',
+                  background: '#f2efff',
+                  color: '#4A35E8',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -879,15 +879,15 @@ export default function RestaurantDetail() {
       {activeTab === 'Info' && (
         <div style={{ padding: '20px 16px', fontSize: '0.9rem', color: '#718096', lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <p style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-            <MapPin size={18} color="#b31522" />
+            <MapPin size={18} color="#4A35E8" />
             <span><strong style={{ color: '#111111' }}>Address:</strong> {restaurant.location || 'N/A'}</span>
           </p>
           <p style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-            <Clock size={18} color="#b31522" />
+            <Clock size={18} color="#4A35E8" />
             <span><strong style={{ color: '#111111' }}>Delivery Time:</strong> {restaurant.deliveryTime || 30} minutes</span>
           </p>
           <p style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: 0 }}>
-            <Info size={18} color="#b31522" style={{ marginTop: '3px' }} />
+            <Info size={18} color="#4A35E8" style={{ marginTop: '3px' }} />
             <span><strong style={{ color: '#111111' }}>Description:</strong> {restaurant.description || 'No description available.'}</span>
           </p>
         </div>
@@ -1010,7 +1010,7 @@ export default function RestaurantDetail() {
                 to="/cart"
                 style={{
                   display: 'block',
-                  background: '#b31522',
+                  background: '#4A35E8',
                   color: '#ffffff',
                   textDecoration: 'none',
                   borderRadius: '12px',
@@ -1033,14 +1033,14 @@ export default function RestaurantDetail() {
               width: '58px',
               height: '58px',
               borderRadius: '50%',
-              background: '#b31522',
+              background: '#4A35E8',
               border: 'none',
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'grab',
-              boxShadow: '0 4px 16px rgba(179, 21, 34, 0.35)',
+              boxShadow: '0 4px 16px rgba(74, 53, 232, 0.35)',
               position: 'relative',
               flexShrink: 0
             }}
@@ -1051,7 +1051,7 @@ export default function RestaurantDetail() {
               top: '-4px',
               right: '-4px',
               background: '#ffffff',
-              color: '#b31522',
+              color: '#4A35E8',
               borderRadius: '50%',
               width: '20px',
               height: '20px',
@@ -1060,7 +1060,7 @@ export default function RestaurantDetail() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1.5px solid #b31522'
+              border: '1.5px solid #4A35E8'
             }}>
               {cartTotalQty}
             </span>

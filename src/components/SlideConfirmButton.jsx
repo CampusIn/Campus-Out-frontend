@@ -127,12 +127,12 @@ const SlideConfirmButton = React.forwardRef(
     const isDestructive = variant === "destructive";
     
     // Use solid colors to match the old HoldConfirmButton
-    const trackBg = isDestructive ? "#b31522" : "#111111";
+    const trackBg = isDestructive ? "#e53e3e" : "#4A35E8";
     const trackBorder = "transparent";
     const fillBg = "rgba(0, 0, 0, 0.25)"; // Darker fill trailing the thumb
     const textCol = "#ffffff";
     const thumbBg = "#ffffff";
-    const thumbColor = isDestructive ? "#b31522" : "#111111";
+    const thumbColor = isDestructive ? "#e53e3e" : "#4A35E8";
 
     return (
       <div

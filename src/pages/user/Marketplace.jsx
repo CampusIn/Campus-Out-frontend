@@ -147,10 +147,8 @@ export default function Marketplace() {
         <div className="dashboard-location-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', position: 'relative', width: '100%' }}>
           
           {/* Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#b31522', letterSpacing: '-0.5px' }}>
-              CampusIn
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Link 
@@ -162,9 +160,9 @@ export default function Marketplace() {
                 justifyContent: 'center',
                 width: '40px',
                 height: '40px',
-                background: '#fff5f5',
+                background: '#f2efff',
                 borderRadius: '50%',
-                color: '#b31522',
+                color: '#4A35E8',
                 border: '1px solid #ffe4e6',
                 position: 'relative'
               }}
@@ -201,9 +199,9 @@ export default function Marketplace() {
                 justifyContent: 'center', 
                 width: '40px', 
                 height: '40px', 
-                background: '#fff5f5', 
+                background: '#f2efff', 
                 borderRadius: '50%', 
-                color: '#b31522',
+                color: '#4A35E8',
                 border: '1px solid #ffe4e6'
               }}
             >

@@ -160,7 +160,7 @@ export default function FoodDetail() {
         <div className="food-detail-split" style={{ display: 'flex', flexDirection: 'column' }}>
           
           {/* Left panel: Food image and back nav */}
-          <div className="food-detail-image-panel" style={{ position: 'relative', background: '#fff5f5', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', minHeight: '260px' }}>
+          <div className="food-detail-image-panel" style={{ position: 'relative', background: '#f2efff', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', minHeight: '260px' }}>
             {/* Top Floating Nav */}
             <div style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', display: 'flex', justifyContent: 'space-between', width: 'calc(100% - 32px)', zIndex: 5 }}>
               <button 
@@ -194,13 +194,13 @@ export default function FoodDetail() {
               <button 
                 className="hover-scale"
                 onClick={() => setIsFavorite(!isFavorite)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? '#b31522' : '#a0aec0', display: 'flex', alignItems: 'center', padding: '4px' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite ? '#4A35E8' : '#a0aec0', display: 'flex', alignItems: 'center', padding: '4px' }}
               >
-                <Heart size={24} fill={isFavorite ? '#b31522' : 'none'} />
+                <Heart size={24} fill={isFavorite ? '#4A35E8' : 'none'} />
               </button>
             </div>
 
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#b31522', marginBottom: '20px' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#4A35E8', marginBottom: '20px' }}>
               ₹{(item.price * 12).toFixed(2)}
             </div>
 
@@ -217,7 +217,7 @@ export default function FoodDetail() {
               </div>
               <div style={{ width: '1px', height: '16px', background: '#e2e8f0' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', fontWeight: 700, color: '#718096' }}>
-                <FireIcon size={14} color="#b31522" />
+                <FireIcon size={14} color="#4A35E8" />
                 <span>{item.kcal}</span>
               </div>
             </div>

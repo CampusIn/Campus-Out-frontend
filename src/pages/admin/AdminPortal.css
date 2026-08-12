@@ -132,7 +132,7 @@
   border-radius: 12px;
   color: var(--primary);
   background: #fff5f5;
-  border-color: rgba(179, 21, 34, 0.1);
+  border-color: rgba(74, 53, 232, 0.1);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -694,7 +694,7 @@ select.input-pill {
 
 .danger-btn {
   color: var(--primary) !important;
-  border-color: rgba(179, 21, 34, 0.2) !important;
+  border-color: rgba(74, 53, 232, 0.2) !important;
   background: #fff5f5 !important;
 }
 .danger-btn:hover {
@@ -1064,7 +1064,7 @@ input:checked + .slider:before {
   }
   .admin-mobile-nav-select-trigger:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(179, 21, 34, 0.1);
+    box-shadow: 0 0 0 3px rgba(74, 53, 232, 0.1);
   }
   .admin-sidebar-footer {
     width: 100%;
@@ -1226,7 +1226,7 @@ input:checked + .slider:before {
 .status-mobile-select:focus {
   border-color: var(--primary);
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(179, 21, 34, 0.1);
+  box-shadow: 0 0 0 3px rgba(74, 53, 232, 0.1);
 }
 
 /* Custom Styled Dropdown Menu */
@@ -1257,7 +1257,7 @@ input:checked + .slider:before {
 .custom-dropdown-trigger:focus,
 .custom-dropdown-trigger:hover {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(179, 21, 34, 0.1);
+  box-shadow: 0 0 0 3px rgba(74, 53, 232, 0.1);
 }
 
 .dropdown-arrow {

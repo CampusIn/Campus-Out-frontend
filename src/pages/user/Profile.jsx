@@ -115,7 +115,7 @@ export default function Profile() {
 
   const settingsItems = [
     { label: 'Campus Printing', desc: 'Print documents & track orders', icon: <Printer size={20} />, color: '#4338ca', action: () => navigate('/printing/orders') },
-    { label: 'Repair Requests', desc: 'Fix phones, laptops & appliances', icon: <Wrench size={20} />, color: '#b31522', action: () => navigate('/repair-requests') },
+    { label: 'Repair Requests', desc: 'Fix phones, laptops & appliances', icon: <Wrench size={20} />, color: '#4A35E8', action: () => navigate('/repair-requests') },
     { label: 'Promotions', icon: <Tag size={20} />, color: '#dd6b20', action: handleOpenPromotions },
     { label: 'Notification', icon: <Bell size={20} />, color: '#d69e2e', action: handleOpenAnnouncements },
     { label: 'Help', icon: <HelpCircle size={20} />, color: '#319795', action: () => setIsHelpOpen(true) },
@@ -128,14 +128,14 @@ export default function Profile() {
       
       {/* Profile Header Block */}
       <div className="profile-header-container card animate-scale-in" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px', marginBottom: '24px', background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.01)' }}>
-        <div className="profile-avatar-large" style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#fff5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b31522', border: '1.5px solid #edf2f7' }}>
+        <div className="profile-avatar-large" style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#f2efff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4A35E8', border: '1.5px solid #edf2f7' }}>
           <User size={28} />
         </div>
         <div>
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111' }}>{user.username}</h2>
           <p style={{ margin: '2px 0 6px 0', fontSize: '0.85rem', color: '#718096' }}>{user.email} &middot; <strong style={{ textTransform: 'capitalize' }}>{user.role}</strong></p>
           <span 
-            style={{ fontSize: '0.85rem', color: '#b31522', fontWeight: 700, cursor: 'pointer' }} 
+            style={{ fontSize: '0.85rem', color: '#4A35E8', fontWeight: 700, cursor: 'pointer' }} 
             className="hover-scale"
             onClick={handleOpenEditProfile}
           >
@@ -181,7 +181,7 @@ export default function Profile() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {item.badge && (
-                <span style={{ background: '#fff5f5', color: '#b31522', padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800 }}>
+                <span style={{ background: '#f2efff', color: '#4A35E8', padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800 }}>
                   {item.badge}
                 </span>
               )}
@@ -239,7 +239,7 @@ export default function Profile() {
 
             {isFetchingCoupons ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '40px 0' }}>
-                <div className="spinner" style={{ borderTopColor: '#b31522' }}></div>
+                <div className="spinner" style={{ borderTopColor: '#4A35E8' }}></div>
                 <p style={{ color: '#718096', fontSize: '0.9rem', fontWeight: 550 }}>Loading available promotions...</p>
               </div>
             ) : coupons.length === 0 ? (
@@ -261,7 +261,7 @@ export default function Profile() {
                         <span style={{ fontWeight: 800, color: '#1a202c', fontSize: '0.9rem' }}>
                           {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `Flat ₹${c.discountValue} OFF`}
                         </span>
-                        <span style={{ background: '#fff1f2', color: '#b31522', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #ffe4e6' }}>
+                        <span style={{ background: '#fff1f2', color: '#4A35E8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #ffe4e6' }}>
                           {c.code}
                         </span>
                       </div>
@@ -272,7 +272,7 @@ export default function Profile() {
                           <div>
                             <span style={{ 
                               background: '#fff1f2', 
-                              color: '#b31522', 
+                              color: '#4A35E8', 
                               border: '1px solid #ffe4e6',
                               borderRadius: '8px', 
                               padding: '4px 10px', 
@@ -296,7 +296,7 @@ export default function Profile() {
                             }}
                             style={{ 
                               background: copiedCode === c.code ? '#48bb78' : '#ffffff', 
-                              color: copiedCode === c.code ? '#ffffff' : '#b31522',
+                              color: copiedCode === c.code ? '#ffffff' : '#4A35E8',
                               border: copiedCode === c.code ? 'none' : '1px solid #ffe4e6',
                               borderRadius: '10px',
                               padding: '6px 12px',
@@ -365,7 +365,7 @@ export default function Profile() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Megaphone size={22} color="#b31522" />
+                <Megaphone size={22} color="#4A35E8" />
                 Announcements
               </h3>
               <button 
@@ -378,7 +378,7 @@ export default function Profile() {
 
             {isFetchingAnnouncements ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '40px 0' }}>
-                <div className="spinner" style={{ borderTopColor: '#b31522' }}></div>
+                <div className="spinner" style={{ borderTopColor: '#4A35E8' }}></div>
                 <p style={{ color: '#718096', fontSize: '0.9rem', fontWeight: 550 }}>Loading announcements...</p>
               </div>
             ) : announcements.length === 0 ? (
@@ -503,7 +503,7 @@ export default function Profile() {
               
               <a href="mailto:contact.campusin@gmail.com" style={{ textDecoration: 'none' }}>
                 <div className="hover-lift" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1.5px solid #edf2f7', transition: 'all 0.2s' }}>
-                  <div style={{ color: '#e53e3e', background: '#fff5f5', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={20} /></div>
+                  <div style={{ color: '#e53e3e', background: '#f2efff', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={20} /></div>
                   <div>
                     <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1a202c' }}>Email</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#718096' }}>contact.campusin@gmail.com</p>
@@ -640,7 +640,7 @@ export default function Profile() {
                     padding: '12px',
                     borderRadius: '50px',
                     border: 'none',
-                    background: '#b31522',
+                    background: '#4A35E8',
                     color: '#ffffff',
                     fontSize: '0.9rem',
                     fontWeight: 700,

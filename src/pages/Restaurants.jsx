@@ -426,14 +426,12 @@ export default function Restaurants() {
         <div className="dashboard-location-bar mobile-only-header animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 100, marginTop: '16px' }}>
           
           {/* Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#b31522', letterSpacing: '-0.5px' }}>
-              CampusIn
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px' }} />
           </div>
 
 
-          <Link to="/profile" className="profile-avatar-btn hover-scale" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', background: '#fff5f5', borderRadius: '50%', color: '#b31522' }}>
+          <Link to="/profile" className="profile-avatar-btn hover-scale" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', background: '#f2efff', borderRadius: '50%', color: '#4A35E8' }}>
             <User size={20} />
           </Link>
         </div>
@@ -515,7 +513,7 @@ export default function Restaurants() {
               >
                 {isAnnouncementExpanded ? (
                   <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', padding: '8px', justifyContent: 'center', position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#b31522' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#4A35E8' }}>
                       <Volume2 size={20} />
                       <strong style={{ fontSize: '1.1rem' }}>{currentAnn.title}</strong>
                     </div>
@@ -540,9 +538,9 @@ export default function Restaurants() {
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                      <Volume2 size={18} color="#b31522" style={{ flexShrink: 0 }} />
+                      <Volume2 size={18} color="#4A35E8" style={{ flexShrink: 0 }} />
                       <span style={{ fontSize: '0.95rem', color: '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <strong style={{ color: '#b31522' }}>{currentAnn.title}</strong>: {currentAnn.description}
+                        <strong style={{ color: '#4A35E8' }}>{currentAnn.title}</strong>: {currentAnn.description}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -593,7 +591,7 @@ export default function Restaurants() {
             />
           </div>
         ) : (
-          <div className="premium-promo-banner animate-scale-in delay-2" style={{ display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(135deg, #b31522, #5f080f)', borderRadius: '20px', padding: '24px', color: '#ffffff', marginBottom: '28px', overflow: 'hidden', position: 'relative' }}>
+          <div className="premium-promo-banner animate-scale-in delay-2" style={{ display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(135deg, #4A35E8, #3220A8)', borderRadius: '20px', padding: '24px', color: '#ffffff', marginBottom: '28px', overflow: 'hidden', position: 'relative' }}>
             <div className="premium-promo-text" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
               <span className="premium-promo-title" style={{ fontSize: '1.75rem', fontWeight: 950, lineHeight: 1.1 }}>Flat<br />40% OFF</span>
               <span className="premium-promo-desc" style={{ fontSize: '0.9rem', opacity: 0.9 }}>On your first order</span>
@@ -601,7 +599,7 @@ export default function Restaurants() {
                 className="premium-promo-btn hover-lift" 
                 type="button" 
                 onClick={() => { setActiveCategory('Fast Food'); setPage(1); }}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ffffff', color: '#b31522', fontWeight: 700, cursor: 'pointer', marginTop: '8px', fontSize: '0.85rem' }}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ffffff', color: '#4A35E8', fontWeight: 700, cursor: 'pointer', marginTop: '8px', fontSize: '0.85rem' }}
               >
                 ORDER NOW
               </button>
@@ -682,12 +680,12 @@ export default function Restaurants() {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ background: 'rgba(179, 21, 34, 0.3)', padding: '5px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ background: 'rgba(74, 53, 232, 0.3)', padding: '5px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Wrench size={16} color="#f87171" />
                   </div>
                   <span style={{ fontSize: '0.85rem', fontWeight: 850, color: '#ffffff' }}>Repair Desk</span>
                 </div>
-                <span style={{ background: '#b31522', color: '#ffffff', fontSize: '0.6rem', fontWeight: 850, padding: '2px 6px', borderRadius: '6px' }}>NEW</span>
+                <span style={{ background: '#4A35E8', color: '#ffffff', fontSize: '0.6rem', fontWeight: 850, padding: '2px 6px', borderRadius: '6px' }}>NEW</span>
               </div>
 
               <div>
@@ -803,7 +801,7 @@ export default function Restaurants() {
                 flexShrink: 0,
                 borderRadius: '16px',
                 border: activeCategory === cat.id ? 'none' : '1px solid #e2e8f0',
-                background: activeCategory === cat.id ? '#b31522' : '#ffffff',
+                background: activeCategory === cat.id ? '#4A35E8' : '#ffffff',
                 color: activeCategory === cat.id ? '#ffffff' : '#4a5568',
                 cursor: 'pointer',
                 fontWeight: 600,
@@ -868,7 +866,7 @@ export default function Restaurants() {
                         <span className="top-pick-rating" style={{ fontWeight: 700, color: '#111111', display: 'flex', alignItems: 'center', gap: '3px' }}>
                           <Star size={14} color="#ffc700" fill="#ffc700" /> {pick.averageRating > 0 ? pick.averageRating.toFixed(1) : '4.5'}
                         </span>
-                        <span className="top-pick-price" style={{ fontWeight: 850, color: '#b31522' }}>
+                        <span className="top-pick-price" style={{ fontWeight: 850, color: '#4A35E8' }}>
                           ₹{pick.price}
                         </span>
                       </div>
@@ -881,7 +879,7 @@ export default function Restaurants() {
                     onClick={() => setShowAllPicks(true)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e0', cursor: 'pointer', padding: '16px', minWidth: '140px', minHeight: '230px' }}
                   >
-                    <div style={{ background: '#fff5f5', color: '#b31522', padding: '12px', borderRadius: '50%', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#f2efff', color: '#4A35E8', padding: '12px', borderRadius: '50%', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ChevronRight size={24} />
                     </div>
                     <span style={{ fontWeight: 700, color: '#4a5568', fontSize: '0.9rem' }}>View All</span>
@@ -1028,7 +1026,7 @@ export default function Restaurants() {
         .current-loc-title {
           font-size: 0.95rem;
           font-weight: 750;
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-popover-divider {
@@ -1148,7 +1146,7 @@ export default function Restaurants() {
           position: absolute;
           top: -2px;
           right: -2px;
-          background: #b31522;
+          background: #4A35E8;
           color: #fff;
           font-size: 0.65rem;
           font-weight: 700;
@@ -2163,7 +2161,7 @@ export default function Restaurants() {
 
         .suggestion-price {
           font-weight: 700;
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .suggestion-loading, .suggestion-empty {
@@ -2181,7 +2179,7 @@ export default function Restaurants() {
           width: 20px;
           height: 20px;
           border: 2px solid #edf2f7;
-          border-top: 2px solid #b31522;
+          border-top: 2px solid #4A35E8;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

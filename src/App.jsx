@@ -80,6 +80,7 @@ const RepairRequests = lazyWithRetry(() => import('./pages/user/RepairRequests')
 const TermsAndConditions = lazyWithRetry(() => import('./pages/TermsAndConditions'));
 const PrivacyPolicy = lazyWithRetry(() => import('./pages/LegalPolicy'));
 const RefundPolicy = lazyWithRetry(() => import('./pages/RefundPolicy'));
+const WhoWeAre = lazyWithRetry(() => import('./pages/WhoWeAre'));
 
 // Printing Lazy Pages
 const PrintingFlow = lazyWithRetry(() => import('./pages/user/printing/PrintingFlow'));
@@ -115,6 +116,11 @@ export default function App() {
                     <Route path="/privacy-policy" element={
                       <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
                         <PrivacyPolicy />
+                      </Suspense>
+                    } />
+                    <Route path="/who-we-are" element={
+                      <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
+                        <WhoWeAre />
                       </Suspense>
                     } />
                     <Route path="/refund-policy" element={

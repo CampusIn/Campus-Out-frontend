@@ -326,7 +326,7 @@ export default function RepairRequests() {
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 850, color: '#111111', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <Wrench size={22} color="#b31522" style={{ flexShrink: 0 }} />
+              <Wrench size={22} color="#4A35E8" style={{ flexShrink: 0 }} />
               Campus Repair Desk
             </h1>
             <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#64748b', fontWeight: 550, lineHeight: 1.3 }}>
@@ -348,7 +348,7 @@ export default function RepairRequests() {
               borderRadius: '12px',
               border: 'none',
               background: activeTab === 'list' ? '#ffffff' : 'transparent',
-              color: activeTab === 'list' ? '#b31522' : '#64748b',
+              color: activeTab === 'list' ? '#4A35E8' : '#64748b',
               fontWeight: 800,
               fontSize: '0.9rem',
               cursor: 'pointer',
@@ -374,7 +374,7 @@ export default function RepairRequests() {
               padding: '10px 16px',
               borderRadius: '12px',
               border: 'none',
-              background: activeTab === 'new' ? '#b31522' : 'transparent',
+              background: activeTab === 'new' ? '#4A35E8' : 'transparent',
               color: activeTab === 'new' ? '#ffffff' : '#64748b',
               fontWeight: 800,
               fontSize: '0.9rem',
@@ -419,8 +419,8 @@ export default function RepairRequests() {
                         style={{
                           padding: '12px',
                           borderRadius: '16px',
-                          border: isSelected ? '2px solid #b31522' : '1.5px solid #e2e8f0',
-                          background: isSelected ? '#fff5f5' : '#ffffff',
+                          border: isSelected ? '2px solid #4A35E8' : '1.5px solid #e2e8f0',
+                          background: isSelected ? '#f2efff' : '#ffffff',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           display: 'flex',
@@ -429,10 +429,10 @@ export default function RepairRequests() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ color: isSelected ? '#b31522' : '#64748b' }}>{st.icon}</span>
-                          {isSelected && <CheckCircle2 size={18} color="#b31522" />}
+                          <span style={{ color: isSelected ? '#4A35E8' : '#64748b' }}>{st.icon}</span>
+                          {isSelected && <CheckCircle2 size={18} color="#4A35E8" />}
                         </div>
-                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: isSelected ? '#b31522' : '#1e293b' }}>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: isSelected ? '#4A35E8' : '#1e293b' }}>
                           {st.label}
                         </span>
                         <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500, lineHeight: 1.2 }}>
@@ -645,7 +645,7 @@ export default function RepairRequests() {
               {/* Submit Action with SlideConfirmButton */}
               <div style={{ borderTop: '1px solid #edf2f7', paddingTop: '20px', marginTop: '8px' }}>
                 <SlideConfirmButton
-                  variant="destructive"
+                  variant="primary"
                   disabled={isSubmitting}
                   onConfirm={handleSlideSubmit}
                   processingLabel="Submitting Repair Request..."
@@ -778,7 +778,7 @@ export default function RepairRequests() {
                     padding: '10px 20px',
                     borderRadius: '50px',
                     border: 'none',
-                    background: '#b31522',
+                    background: '#4A35E8',
                     color: '#ffffff',
                     fontWeight: 700,
                     fontSize: '0.85rem',

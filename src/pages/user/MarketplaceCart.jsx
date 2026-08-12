@@ -338,13 +338,13 @@ export default function MarketplaceCart({ isEmbedded = false }) {
           <div>
             <div style={{
               display: 'inline-block',
-              background: '#fff5f5',
-              color: '#b31522',
+              background: '#f2efff',
+              color: '#4A35E8',
               fontWeight: 800,
               fontSize: '0.85rem',
               padding: '4px 10px',
               borderRadius: '8px',
-              border: '1px dashed #b31522',
+              border: '1px dashed #4A35E8',
               letterSpacing: '0.5px',
               marginBottom: '6px'
             }}>
@@ -391,7 +391,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
             width: '100%',
             padding: '10px',
             borderRadius: '10px',
-            background: isApplied ? '#06c169' : '#b31522',
+            background: isApplied ? '#06c169' : '#4A35E8',
             color: '#ffffff',
             fontWeight: 700,
             fontSize: '0.85rem',
@@ -419,7 +419,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     if (isEmbedded) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '40vh', gap: '12px' }}>
-          <Loader className="animate-spin" size={28} color="#b31522" />
+          <Loader className="animate-spin" size={28} color="#4A35E8" />
           <p style={{ fontWeight: 650, color: '#64748b', fontSize: '0.9rem' }}>Loading marketplace cart...</p>
         </div>
       );
@@ -427,7 +427,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     return (
       <div className="main-content-scrollable animate-fade-in" style={{ background: '#f8fafc', minHeight: '85vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <Loader className="animate-spin" size={32} color="#b31522" style={{ margin: '0 auto 16px auto' }} />
+          <Loader className="animate-spin" size={32} color="#4A35E8" style={{ margin: '0 auto 16px auto' }} />
           <p style={{ fontWeight: 650, color: '#64748b' }}>Loading your marketplace cart...</p>
         </div>
               </div>
@@ -491,13 +491,13 @@ export default function MarketplaceCart({ isEmbedded = false }) {
   const getSelectStyle = (isHostelSelected) => ({
     padding: '10px 36px 10px 34px',
     borderRadius: '20px',
-    border: isHostelSelected ? '2px solid #b31522' : '1px solid #edf2f7',
-    backgroundColor: isHostelSelected ? '#fff5f5' : '#ffffff',
+    border: isHostelSelected ? '2px solid #4A35E8' : '1px solid #edf2f7',
+    backgroundColor: isHostelSelected ? '#f2efff' : '#ffffff',
     backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'right 12px center',
     backgroundSize: '16px',
-    color: isHostelSelected ? '#b31522' : '#4a5568',
+    color: isHostelSelected ? '#4A35E8' : '#4a5568',
     cursor: 'pointer',
     fontWeight: 700,
     fontSize: '0.85rem',
@@ -513,14 +513,14 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     if (!cart || !cart.items || cart.items.length === 0) {
       return (
         <div style={{ background: '#ffffff', border: '1px solid #edf2f7', borderRadius: '24px', textAlign: 'center', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-          <div style={{ background: '#fff5f5', color: '#b31522', borderRadius: '50%', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#f2efff', color: '#4A35E8', borderRadius: '50%', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShoppingBag size={36} />
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111111', margin: 0 }}>Your marketplace cart is empty</h2>
           <p style={{ fontSize: '0.9rem', color: '#718096', maxWidth: '320px', margin: 0, lineHeight: 1.5 }}>
             Add text books, electronics, coolers, or cycles from peer students.
           </p>
-          <Link to="/marketplace" className="hover-lift" style={{ textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', background: '#b31522', color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', marginTop: '8px', display: 'inline-block' }}>
+          <Link to="/marketplace" className="hover-lift" style={{ textDecoration: 'none', padding: '12px 24px', borderRadius: '12px', background: '#4A35E8', color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', marginTop: '8px', display: 'inline-block' }}>
             Browse Marketplace
           </Link>
         </div>
@@ -534,8 +534,8 @@ export default function MarketplaceCart({ isEmbedded = false }) {
         
         <div className="animate-fade-in" style={{ display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'center' }}>
           <div style={{ 
-            background: '#fff5f5', 
-            color: '#b31522', 
+            background: '#f2efff', 
+            color: '#4A35E8', 
             padding: '14px 18px', 
             borderRadius: '16px', 
             fontSize: '0.95rem',
@@ -543,7 +543,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '10px',
-            border: '1px solid rgba(179, 21, 34, 0.05)',
+            border: '1px solid rgba(74, 53, 232, 0.05)',
             width: 'fit-content'
           }}>
             <Store size={18} />
@@ -587,7 +587,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       {product.name}
                     </h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#b31522' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4A35E8' }}>
                         &#8377;{product.price}
                       </span>
                       
@@ -797,7 +797,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                 }}
               >
                 <label htmlFor="customerPhone" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#111111' }}>
-                  Mobile Number <span style={{ color: '#b31522' }}>*</span>
+                  Mobile Number <span style={{ color: '#4A35E8' }}>*</span>
                 </label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <Phone size={18} style={{ position: 'absolute', left: '16px', color: '#718096' }} />
@@ -813,7 +813,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       width: '100%',
                       padding: '16px 16px 16px 46px',
                       borderRadius: '16px',
-                      border: customerPhone && !/^[6-9]\d{9}$/.test(customerPhone) ? '1.5px solid #b31522' : '1.5px solid #edf2f7',
+                      border: customerPhone && !/^[6-9]\d{9}$/.test(customerPhone) ? '1.5px solid #4A35E8' : '1.5px solid #edf2f7',
                       fontSize: '0.95rem',
                       outline: 'none',
                       background: '#f8fafc',
@@ -852,15 +852,15 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                     style={{
                       flex: 1,
                       background: '#ffffff',
-                      border: paymentMethod === 'COD' ? '2px solid #b31522' : '1px solid #edf2f7',
+                      border: paymentMethod === 'COD' ? '2px solid #4A35E8' : '1px solid #edf2f7',
                       borderRadius: '12px',
                       padding: '16px',
                       fontWeight: 700,
                       fontSize: '0.9rem',
-                      color: paymentMethod === 'COD' ? '#b31522' : '#4a5568',
+                      color: paymentMethod === 'COD' ? '#4A35E8' : '#4a5568',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      boxShadow: paymentMethod === 'COD' ? '0 4px 12px rgba(179, 21, 34, 0.03)' : 'none',
+                      boxShadow: paymentMethod === 'COD' ? '0 4px 12px rgba(74, 53, 232, 0.03)' : 'none',
                       whiteSpace: 'nowrap'
                     }}
                     className="hover-scale"
@@ -876,15 +876,15 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                     style={{
                       flex: 1,
                       background: '#ffffff',
-                      border: paymentMethod === 'PAY_ON_PICKUP' ? '2px solid #b31522' : '1px solid #edf2f7',
+                      border: paymentMethod === 'PAY_ON_PICKUP' ? '2px solid #4A35E8' : '1px solid #edf2f7',
                       borderRadius: '12px',
                       padding: '16px',
                       fontWeight: 700,
                       fontSize: '0.9rem',
-                      color: paymentMethod === 'PAY_ON_PICKUP' ? '#b31522' : '#4a5568',
+                      color: paymentMethod === 'PAY_ON_PICKUP' ? '#4A35E8' : '#4a5568',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      boxShadow: paymentMethod === 'PAY_ON_PICKUP' ? '0 4px 12px rgba(179, 21, 34, 0.03)' : 'none',
+                      boxShadow: paymentMethod === 'PAY_ON_PICKUP' ? '0 4px 12px rgba(74, 53, 232, 0.03)' : 'none',
                       whiteSpace: 'nowrap'
                     }}
                     className="hover-scale"
@@ -917,7 +917,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ background: '#fff5f5', color: '#b31522', padding: '8px', borderRadius: '8px', display: 'flex' }}>
+                    <div style={{ background: '#f2efff', color: '#4A35E8', padding: '8px', borderRadius: '8px', display: 'flex' }}>
                       <Tag size={18} />
                     </div>
                     <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#111111' }}>Coupons & Offers</span>
@@ -928,7 +928,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                     style={{ 
                       background: 'none', 
                       border: 'none', 
-                      color: '#b31522', 
+                      color: '#4A35E8', 
                       fontWeight: 800, 
                       fontSize: '0.85rem', 
                       cursor: 'pointer',
@@ -956,7 +956,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       type="button" 
                       onClick={fetchAndOpenCouponsModal}
                       style={{ 
-                        background: '#b31522', 
+                        background: '#4A35E8', 
                         color: '#ffffff', 
                         border: 'none', 
                         padding: '6px 14px', 
@@ -1091,7 +1091,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                   <button 
                     className="btn btn-primary hover-lift hover-darken" 
                     onClick={() => setCheckoutStep('address')}
-                    style={{ padding: '16px', background: '#b31522', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}
+                    style={{ padding: '16px', background: '#4A35E8', color: '#ffffff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}
                   >
                     Proceed to Select Address
                   </button>
@@ -1123,7 +1123,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       <strong>Delivering to:</strong>
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <MapPin size={16} style={{ color: '#b31522', flexShrink: 0 }} />
+                      <MapPin size={16} style={{ color: '#4A35E8', flexShrink: 0 }} />
                       <span style={{ fontWeight: 700, color: '#111111' }}>
                         {deliveryAddress || 'Please specify an address'}
                       </span>
@@ -1134,7 +1134,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                       <strong>Payment Mode:</strong>
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {paymentMethod === 'COD' ? <CreditCard size={16} style={{ color: '#b31522', flexShrink: 0 }} /> : <ShoppingBag size={16} style={{ color: '#b31522', flexShrink: 0 }} />}
+                      {paymentMethod === 'COD' ? <CreditCard size={16} style={{ color: '#4A35E8', flexShrink: 0 }} /> : <ShoppingBag size={16} style={{ color: '#4A35E8', flexShrink: 0 }} />}
                       <span style={{ fontWeight: 700, color: '#111111' }}>
                         {paymentMethod === 'COD' ? 'Cash on Delivery' : 'Pay on Pickup'}
                       </span>
@@ -1146,7 +1146,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                         <strong>Contact Number:</strong>
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Phone size={16} style={{ color: '#b31522', flexShrink: 0 }} />
+                        <Phone size={16} style={{ color: '#4A35E8', flexShrink: 0 }} />
                         <span style={{ fontWeight: 700, color: '#111111' }}>{customerPhone}</span>
                       </div>
                     </div>
@@ -1192,7 +1192,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
 
                 {/* Confirm & Place Order trigger */}
                 <SlideConfirmButton 
-                  variant="destructive"
+                  variant="primary"
                   onConfirm={handleCheckout}
                   disabled={isPlacingOrder}
                   confirmedLabel="Order Confirmed"
@@ -1387,7 +1387,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                           <span style={{ fontWeight: 800, color: '#111111', fontSize: '0.9rem' }}>
                             {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
                           </span>
-                          <span style={{ background: '#fff5f5', color: '#b31522', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px dashed #b31522' }}>
+                          <span style={{ background: '#f2efff', color: '#4A35E8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px dashed #4A35E8' }}>
                             {coupon.code}
                           </span>
                         </div>
@@ -1398,13 +1398,13 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                             <div>
                               <div style={{
                                 display: 'inline-block',
-                                background: '#fff5f5',
-                                color: '#b31522',
+                                background: '#f2efff',
+                                color: '#4A35E8',
                                 fontWeight: 800,
                                 fontSize: '0.85rem',
                                 padding: '4px 10px',
                                 borderRadius: '8px',
-                                border: '1px dashed #b31522',
+                                border: '1px dashed #4A35E8',
                                 letterSpacing: '0.5px',
                                 marginBottom: '6px'
                               }}>
@@ -1449,7 +1449,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                               width: '100%',
                               padding: '10px',
                               borderRadius: '10px',
-                              background: isApplied ? '#06c169' : '#b31522',
+                              background: isApplied ? '#06c169' : '#4A35E8',
                               color: '#ffffff',
                               fontWeight: 700,
                               fontSize: '0.85rem',

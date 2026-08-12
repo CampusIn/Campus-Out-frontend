@@ -55,7 +55,7 @@ const statusDetails = {
   OUT_FOR_DELIVERY: {
     icon: Bike,
     color: '#c53030', // red
-    bgColor: '#fff5f5',
+    bgColor: '#f2efff',
     borderColor: '#fed7d7',
     animation: 'pulseGlow 2s infinite',
     title: 'Out for Delivery',
@@ -73,7 +73,7 @@ const statusDetails = {
   CANCELLED: {
     icon: XCircle,
     color: '#e53e3e', // red
-    bgColor: '#fff5f5',
+    bgColor: '#f2efff',
     borderColor: '#fed7d7',
     animation: 'none',
     title: 'Order Cancelled',
@@ -82,7 +82,7 @@ const statusDetails = {
   REJECTED: {
     icon: XCircle,
     color: '#e53e3e', // red
-    bgColor: '#fff5f5',
+    bgColor: '#f2efff',
     borderColor: '#fed7d7',
     animation: 'none',
     title: 'Order Rejected',
@@ -130,7 +130,7 @@ const marketplaceStatusDetails = {
   OUT_FOR_DELIVERY: {
     icon: Bike,
     color: '#c53030', // red
-    bgColor: '#fff5f5',
+    bgColor: '#f2efff',
     borderColor: '#fed7d7',
     animation: 'pulseGlow 2s infinite',
     title: 'Out for Delivery',
@@ -148,7 +148,7 @@ const marketplaceStatusDetails = {
   CANCELLED: {
     icon: XCircle,
     color: '#e53e3e', // red
-    bgColor: '#fff5f5',
+    bgColor: '#f2efff',
     borderColor: '#fed7d7',
     animation: 'none',
     title: 'Order Cancelled',
@@ -157,7 +157,7 @@ const marketplaceStatusDetails = {
   REJECTED: {
     icon: XCircle,
     color: '#e53e3e', // red
-    bgColor: '#fff5f5',
+    bgColor: '#f2efff',
     borderColor: '#fed7d7',
     animation: 'none',
     title: 'Order Rejected',
@@ -245,9 +245,9 @@ export default function Orders() {
           style={{
             padding: '10px 20px',
             borderRadius: '20px',
-            border: activeTab === 'restaurant' ? '2px solid #b31522' : '1px solid #edf2f7',
-            background: activeTab === 'restaurant' ? '#fff5f5' : '#ffffff',
-            color: activeTab === 'restaurant' ? '#b31522' : '#4a5568',
+            border: activeTab === 'restaurant' ? '2px solid #4A35E8' : '1px solid #edf2f7',
+            background: activeTab === 'restaurant' ? '#f2efff' : '#ffffff',
+            color: activeTab === 'restaurant' ? '#4A35E8' : '#4a5568',
             fontWeight: 800,
             fontSize: '0.9rem',
             cursor: 'pointer',
@@ -262,9 +262,9 @@ export default function Orders() {
           style={{
             padding: '10px 20px',
             borderRadius: '20px',
-            border: activeTab === 'marketplace' ? '2px solid #b31522' : '1px solid #edf2f7',
-            background: activeTab === 'marketplace' ? '#fff5f5' : '#ffffff',
-            color: activeTab === 'marketplace' ? '#b31522' : '#4a5568',
+            border: activeTab === 'marketplace' ? '2px solid #4A35E8' : '1px solid #edf2f7',
+            background: activeTab === 'marketplace' ? '#f2efff' : '#ffffff',
+            color: activeTab === 'marketplace' ? '#4A35E8' : '#4a5568',
             fontWeight: 800,
             fontSize: '0.9rem',
             cursor: 'pointer',
@@ -373,14 +373,14 @@ export default function Orders() {
                   >
                     {/* Top row with emoji, title and price */}
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
-                      <div style={{ flexShrink: 0, background: '#fff5f5', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                      <div style={{ flexShrink: 0, background: '#f2efff', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
                         <span style={{ fontSize: '18px' }}>{emoji}</span>
                       </div>
                       <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                         <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#111111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {o.restaurantName || o.categoryName}
                         </div>
-                        <div style={{ fontWeight: 850, fontSize: '0.85rem', color: '#b31522', marginTop: '2px' }}>
+                        <div style={{ fontWeight: 850, fontSize: '0.85rem', color: '#4A35E8', marginTop: '2px' }}>
                           ₹{o.pricing?.finalAmount || o.totalAmount}
                         </div>
                       </div>
@@ -433,7 +433,7 @@ export default function Orders() {
                                   alt={name} 
                                   style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover', border: '1px solid #edf2f7' }} 
                                 />
-                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#b31522', color: '#ffffff', fontSize: '0.65rem', fontWeight: 800, borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #ffffff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#4A35E8', color: '#ffffff', fontSize: '0.65rem', fontWeight: 800, borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #ffffff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                                   {item.quantity}
                                 </span>
                               </div>
@@ -507,7 +507,7 @@ export default function Orders() {
                     </div>
 
                     {o.orderStatus === 'REJECTED' && o.rejectionMsg && (
-                      <div style={{ marginTop: '12px', width: '100%', padding: '10px 12px', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '10px', color: '#c53030', fontSize: '0.78rem', fontWeight: 600, boxSizing: 'border-box' }}>
+                      <div style={{ marginTop: '12px', width: '100%', padding: '10px 12px', background: '#f2efff', border: '1px solid #fed7d7', borderRadius: '10px', color: '#c53030', fontSize: '0.78rem', fontWeight: 600, boxSizing: 'border-box' }}>
                         <strong style={{ color: '#9b2c2c' }}>Rejection Reason:</strong> {o.rejectionMsg}
                       </div>
                     )}
@@ -594,14 +594,14 @@ export default function Orders() {
                     <ChevronRight size={16} color="#a0aec0" />
                   </h4>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#718096', fontWeight: 600 }}>
-                    <span style={{ color: '#b31522', fontWeight: 800 }}>&#8377;{o.pricing?.finalAmount || o.totalAmount}</span>
+                    <span style={{ color: '#4A35E8', fontWeight: 800 }}>&#8377;{o.pricing?.finalAmount || o.totalAmount}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Calendar size={12} />
                       <span>{new Date(o.createdAt).toLocaleDateString('en-IN')}</span>
                     </span>
                   </div>
                   {o.orderStatus === 'REJECTED' && o.rejectionMsg && (
-                    <div style={{ marginTop: '12px', padding: '10px 12px', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '10px', color: '#c53030', fontSize: '0.78rem', fontWeight: 600 }}>
+                    <div style={{ marginTop: '12px', padding: '10px 12px', background: '#f2efff', border: '1px solid #fed7d7', borderRadius: '10px', color: '#c53030', fontSize: '0.78rem', fontWeight: 600 }}>
                       <strong style={{ color: '#9b2c2c' }}>Rejection Reason:</strong> {o.rejectionMsg}
                     </div>
                   )}

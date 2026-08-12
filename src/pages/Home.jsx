@@ -115,12 +115,7 @@ export default function Home() {
       <header className="landing-header">
         <div className="header-content">
           <Link to="/" className="brand-logo">
-            <div className="logo-icon">
-              <Flame size={22} color="#b31522" className="logo-flame-animation" />
-            </div>
-            <span className="brand-name">
-              Campus<span className="brand-name-sub">In</span>
-            </span>
+            <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '36px', marginRight: '0px', marginLeft: '0px' }} />
           </Link>
 
 
@@ -131,13 +126,13 @@ export default function Home() {
 
       {/* 2. Hero Section (Red Background with Floating Food and Search Box) */}
       <section ref={heroSectionRef} className="hero-section" style={{ position: 'relative', overflow: 'hidden' }}>
-        <BlueprintGrid />
+        <BlueprintGrid color="rgba(74, 53, 232, 0.12)" />
 
         <div ref={heroContentRef} className="hero-content-wrapper">
           <h1 className="hero-title animate-slide-up">
             Cravings called. <br></br>We answered.<br />
             Craving It?<br />
-            <span style={{ whiteSpace: 'nowrap' }}><span className="highlight-yellow">CampusIn</span> It!</span>
+            <span style={{ whiteSpace: 'nowrap' }}><span style={{ color: '#4A35E8' }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> It!</span>
           </h1>
           <p className="hero-subtitle animate-slide-up delay-1">
             Your campus favourites, delivered hot and fresh to your hostel.          </p>
@@ -168,7 +163,7 @@ export default function Home() {
         <div ref={promoContentRef} className="section-container promo-content-wrapper">
           <h2 className="promo-heading">Better campus food, closer to you.</h2>
           <p className="promo-subtext">
-            From canteen favourites to late-night cravings, CampusIn brings the best food around your campus straight to your hostel.
+            From canteen favourites to late-night cravings, <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> brings the best food around your campus straight to your hostel.
           </p>
 
           <div className="promo-cards-container">
@@ -179,7 +174,7 @@ export default function Home() {
                 <span className="stat-label">all your favourites</span>
               </div>
               <div className="stat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b31522" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A35E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
@@ -193,7 +188,7 @@ export default function Home() {
                 <span className="stat-label">straight to your hostel</span>
               </div>
               <div className="stat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b31522" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A35E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
@@ -204,10 +199,10 @@ export default function Home() {
             <div className="promo-stat-card card-left-2">
               <div className="stat-info">
                 <span className="stat-number">Zero hassle</span>
-                <span className="stat-label">just CampusIn it</span>
+                <span className="stat-label">just <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> it</span>
               </div>
               <div className="stat-icon-wrapper">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b31522" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A35E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                   <line x1="3" y1="6" x2="21" y2="6"></line>
                   <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -223,14 +218,14 @@ export default function Home() {
         <div className="section-container app-features-wrapper">
           <h2 className="features-heading">More than food. It’s campus life, simplified.</h2>
           <p className="features-subtext">
-            From hostel cravings to college essentials, CampusIn brings everything students need into one place.
+            From hostel cravings to college essentials, <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> brings everything students need into one place.
           </p>
 
           <div className="features-icon-grid">
             {/* Card 1: Campus Food */}
             <div className="feature-icon-card">
               <div className="card-icon-container">
-                <ChefHat size={32} className="feature-icon-svg red-tint" />
+                <ChefHat size={32} className="feature-icon-svg purple-tint" />
               </div>
               <span className="card-label">Campus Food</span>
             </div>
@@ -262,7 +257,7 @@ export default function Home() {
             {/* Card 5: Student Deals */}
             <div className="feature-icon-card">
               <div className="card-icon-container">
-                <Percent size={32} className="feature-icon-svg yellow-tint" />
+                <Percent size={32} className="feature-icon-svg cyan-tint" />
               </div>
               <span className="card-label">Student Deals</span>
             </div>
@@ -294,7 +289,7 @@ export default function Home() {
             {/* Card 9: Hostel Delivery */}
             <div className="feature-icon-card">
               <div className="card-icon-container">
-                <HomeIcon size={32} className="feature-icon-svg red-tint" />
+                <HomeIcon size={32} className="feature-icon-svg blue-tint" />
               </div>
               <span className="card-label">Hostel Delivery</span>
             </div>
@@ -312,11 +307,9 @@ export default function Home() {
           {/* Top Row: Logo */}
           <div className="zomato-footer-top-row">
             <div className="brand-logo" style={{ cursor: 'default' }}>
-              <div className="logo-icon icon-white" style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 'none' }}>
-                <Flame size={20} color="#ffffff" />
-              </div>
+              <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px', marginRight: '0px', marginLeft: '0px' }} />
               <span className="brand-name" style={{ color: '#ffffff' }}>
-                Campus<span className="brand-name-sub" style={{ color: '#ffc700' }}>In</span>
+                Campus<span className="brand-name-sub" style={{ color: '#20C7C9' }}>In</span>
               </span>
             </div>
           </div>
@@ -327,34 +320,10 @@ export default function Home() {
             <div className="zomato-footer-col">
               <h6 className="zomato-footer-title">About CampusIn</h6>
               <nav className="zomato-footer-links">
-                <Link to="/restaurants">Who We Are</Link>
-                <Link to="/restaurants">Blog</Link>
-                <Link to="/restaurants">Contact Us</Link>
+                <Link to="/who-we-are">Who We Are</Link>
+                <a href="mailto:contact@campusin.store">Email: contact@campusin.store</a>
+                <a href="https://wa.me/917380193241" target="_blank" rel="noopener noreferrer">Phone: +91 7380193241</a>
               </nav>
-            </div>
-
-            {/* Column 2: For Restaurants, Delivery Partners & Admins */}
-            <div className="zomato-footer-col">
-              <div className="zomato-footer-subcol">
-                <h6 className="zomato-footer-title">For Restaurants</h6>
-                <nav className="zomato-footer-links">
-                  <Link to="/vendor/register">Partner With Us</Link>
-                  <Link to="/vendor/login">Vendor Login</Link>
-                </nav>
-              </div>
-              <div className="zomato-footer-subcol" style={{ marginTop: '24px' }}>
-                <h6 className="zomato-footer-title">For Delivery Partners</h6>
-                <nav className="zomato-footer-links">
-                  <Link to="/delivery/register">Partner With Us</Link>
-                  <Link to="/delivery/login">Delivery Portal</Link>
-                </nav>
-              </div>
-              <div className="zomato-footer-subcol" style={{ marginTop: '24px' }}>
-                <h6 className="zomato-footer-title">For Admins</h6>
-                <nav className="zomato-footer-links">
-                  <Link to="/admin/login">Admin Portal</Link>
-                </nav>
-              </div>
             </div>
 
             {/* Column 3: Learn More */}
@@ -434,7 +403,7 @@ export default function Home() {
         }
 
         .logo-icon {
-          background: #ffffff;
+          background: #4A35E8;
           border-radius: 12px;
           padding: 8px;
           display: flex;
@@ -450,12 +419,12 @@ export default function Home() {
         .brand-name {
           font-size: 1.5rem;
           font-weight: 800;
-          color: #ffffff;
+          color: #4A35E8;
           letter-spacing: -0.5px;
         }
 
         .brand-name-sub {
-          color: #ffc700;
+          color: #20C7C9;
         }
 
 
@@ -467,8 +436,8 @@ export default function Home() {
         }
 
         .btn-signin-nav {
-          background: #ffffff;
-          color: #b31522;
+          background: #4A35E8;
+          color: #ffffff;
           padding: 10px 24px;
           border-radius: 50px;
           font-weight: 700;
@@ -479,15 +448,15 @@ export default function Home() {
         }
 
         .btn-signin-nav:hover {
-          background: #f7fafc;
+          background: #3220A8;
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
         }
 
         .btn-register-nav {
           background: transparent;
-          color: #ffffff;
-          border: 2px solid #ffffff;
+          color: #4A35E8;
+          border: 2px solid #4A35E8;
           padding: 8px 24px;
           border-radius: 50px;
           font-weight: 700;
@@ -497,13 +466,13 @@ export default function Home() {
         }
 
         .btn-register-nav:hover {
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(74, 53, 232, 0.08);
           transform: translateY(-2px);
         }
 
         /* 2. Hero Section */
         .hero-section {
-          background: linear-gradient(135deg, #b31522 0%, #800e16 50%, #61070d 100%);
+          background: #f8faff;
           min-height: 80vh;
           height: auto;
           width: 100%;
@@ -530,18 +499,18 @@ export default function Home() {
           font-size: 3.5rem;
           font-weight: 800;
           line-height: 1.25;
-          color: #ffffff;
+          color: #0f172a;
           margin-bottom: 28px;
           letter-spacing: -0.5px;
         }
 
-        .highlight-yellow {
-          color: #ffc700;
+        .highlight-cyan {
+          color: #20C7C9;
         }
 
         .hero-subtitle {
           font-size: 1.25rem;
-          color: rgba(255, 255, 255, 0.95);
+          color: #475569;
           margin-bottom: 48px;
           max-width: 650px;
           margin-left: auto;
@@ -559,8 +528,8 @@ export default function Home() {
         }
 
         .btn-signin-hero {
-          background: #ffffff;
-          color: #b31522;
+          background: #4A35E8;
+          color: #ffffff;
           padding: 16px 40px;
           border-radius: 50px;
           font-weight: 800;
@@ -571,15 +540,15 @@ export default function Home() {
         }
 
         .btn-signin-hero:hover {
-          background: #f7fafc;
+          background: #3220A8;
           transform: translateY(-3px);
           box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
         }
 
         .btn-register-hero {
           background: transparent;
-          color: #ffffff;
-          border: 2px solid #ffffff;
+          color: #4A35E8;
+          border: 2px solid #4A35E8;
           padding: 14px 40px;
           border-radius: 50px;
           font-weight: 800;
@@ -589,7 +558,7 @@ export default function Home() {
         }
 
         .btn-register-hero:hover {
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(74, 53, 232, 0.08);
           transform: translateY(-3px);
         }
 
@@ -625,7 +594,7 @@ export default function Home() {
         .promo-heading {
           font-size: 2.2rem;
           font-weight: 800;
-          color: #b31522;
+          color: #4A35E8;
           margin-bottom: 16px;
           letter-spacing: -0.5px;
           line-height: 1.25;
@@ -663,8 +632,8 @@ export default function Home() {
         }
 
         .promo-stat-card:hover {
-          box-shadow: 0 15px 35px rgba(179, 21, 34, 0.08);
-          border-color: rgba(179, 21, 34, 0.1);
+          box-shadow: 0 15px 35px rgba(74, 53, 232, 0.08);
+          border-color: rgba(74, 53, 232, 0.1);
         }
 
         /* Staggered offsets matching Zomato's mobile page style */
@@ -704,7 +673,7 @@ export default function Home() {
         }
 
         .stat-icon-wrapper {
-          background: #fff5f5;
+          background: #f2efff;
           border-radius: 14px;
           padding: 10px;
           display: flex;
@@ -823,7 +792,7 @@ export default function Home() {
         /* 4. App Features Section */
         .app-features-section {
           padding: 80px 24px;
-          background: linear-gradient(180deg, #fff5f6 0%, #ffffff 100%);
+          background: linear-gradient(180deg, #f2efff 0%, #ffffff 100%);
           position: relative;
           z-index: 12;
           border-top-left-radius: 40px;
@@ -848,7 +817,7 @@ export default function Home() {
         .features-heading {
           font-size: 2.2rem;
           font-weight: 800;
-          color: #b31522;
+          color: #4A35E8;
           margin-bottom: 16px;
           line-height: 1.25;
           letter-spacing: -0.5px;
@@ -899,8 +868,8 @@ export default function Home() {
 
         .feature-icon-card:hover .card-icon-container {
           transform: translateY(-4px);
-          box-shadow: 0 12px 30px rgba(179, 21, 34, 0.08);
-          border-color: rgba(179, 21, 34, 0.1);
+          box-shadow: 0 12px 30px rgba(74, 53, 232, 0.08);
+          border-color: rgba(74, 53, 232, 0.1);
         }
 
         .card-label {
@@ -946,7 +915,7 @@ export default function Home() {
         .orange-tint { color: #dd6b20; }
         .blue-tint { color: #3182ce; }
         .green-tint-2 { color: #48bb78; }
-        .yellow-tint { color: #d69e2e; }
+        .cyan-tint { color: #20C7C9; }
         .red-tint { color: #e53e3e; }
         .purple-tint { color: #805ad5; }
         .blue-tint-2 { color: #2b6cb0; }
@@ -984,7 +953,7 @@ export default function Home() {
         }
 
         .promo-logo-icon {
-          background-color: #b31522;
+          background-color: #4A35E8;
           border-radius: 8px;
           padding: 6px;
           display: flex;

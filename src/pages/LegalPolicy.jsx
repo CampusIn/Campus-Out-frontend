@@ -14,12 +14,10 @@ export default function LegalPolicy() {
         >
           <ArrowLeft size={18} />
         </button>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <div style={{ background: '#b31522', borderRadius: '8px', padding: '4px', display: 'flex' }}>
-            <Flame size={16} color="#ffffff" />
-          </div>
-          <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#111111' }}>
-            Campus<span style={{ color: '#b31522' }}>In</span>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '28px', marginRight: '0px', marginLeft: '0px' }} />
+          <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4A35E8' }}>
+            Campus<span style={{ color: '#20C7C9' }}>In</span>
           </span>
         </Link>
       </header>

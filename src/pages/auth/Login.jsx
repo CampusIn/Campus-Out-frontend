@@ -125,7 +125,7 @@ export default function Login() {
                   style={{ 
                     background: 'none', 
                     border: 'none', 
-                    color: '#b31522', 
+                    color: '#4A35E8', 
                     textDecoration: 'underline', 
                     cursor: 'pointer', 
                     fontWeight: 'bold',
@@ -143,7 +143,7 @@ export default function Login() {
                   style={{ 
                     background: 'none', 
                     border: 'none', 
-                    color: '#b31522', 
+                    color: '#4A35E8', 
                     textDecoration: 'underline', 
                     cursor: 'pointer', 
                     fontWeight: 'bold',
@@ -282,7 +282,7 @@ export default function Login() {
         }
 
         .swiggy-close-btn:hover {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-auth-header-row {
@@ -311,7 +311,7 @@ export default function Login() {
         }
 
         .swiggy-auth-link {
-          color: #b31522;
+          color: #4A35E8;
           text-decoration: none;
           font-weight: 750;
           transition: opacity 0.2s;
@@ -369,14 +369,14 @@ export default function Login() {
 
         .swiggy-auth-error-msg {
           background: #fff5f5;
-          color: #b31522;
+          color: #4A35E8;
           padding: 12px 16px;
           font-size: 0.85rem;
           font-weight: 600;
           margin-bottom: 20px;
           text-align: center;
           border-radius: 4px;
-          border: 1px solid rgba(179, 21, 34, 0.1);
+          border: 1px solid rgba(74, 53, 232, 0.1);
           display: flex;
           flex-direction: column;
           gap: 6px;
@@ -412,7 +412,7 @@ export default function Login() {
         }
 
         .swiggy-input-container:focus-within {
-          border-color: #b31522;
+          border-color: #4A35E8;
           box-shadow: 0 1px 10px rgba(0, 0, 0, 0.04);
           z-index: 10;
         }
@@ -464,12 +464,12 @@ export default function Login() {
         }
 
         .swiggy-password-toggle:hover {
-          color: #b31522;
+          color: #4A35E8;
         }
 
         .swiggy-forgot-password {
           align-self: flex-end;
-          color: #b31522;
+          color: #4A35E8;
           font-size: 0.85rem;
           font-weight: 750;
           text-decoration: none;
@@ -478,7 +478,7 @@ export default function Login() {
 
         .swiggy-auth-submit-btn {
           width: 100%;
-          background: #b31522;
+          background: #4A35E8;
           color: #ffffff;
           border: none;
           padding: 16px;
@@ -488,13 +488,13 @@ export default function Login() {
           letter-spacing: 0.5px;
           cursor: pointer;
           transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(179, 21, 34, 0.2);
+          box-shadow: 0 4px 15px rgba(74, 53, 232, 0.2);
           text-align: center;
         }
 
         .swiggy-auth-submit-btn:hover {
-          background: #960f1a;
-          box-shadow: 0 6px 20px rgba(179, 21, 34, 0.3);
+          background: #3220A8;
+          box-shadow: 0 6px 20px rgba(74, 53, 232, 0.3);
         }
 
         .swiggy-auth-submit-btn:disabled {
@@ -589,7 +589,7 @@ export default function Login() {
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(179, 21, 34, 0.04);
+          background: rgba(74, 53, 232, 0.04);
           backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
@@ -616,7 +616,7 @@ export default function Login() {
           height: 60px;
           border-radius: 50%;
           background: #fff5f5;
-          color: #b31522;
+          color: #4A35E8;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -639,7 +639,7 @@ export default function Login() {
 
         .session-expired-btn {
           width: 100%;
-          background: #b31522;
+          background: #4A35E8;
           color: #ffffff;
           border: none;
           padding: 14px;
@@ -648,12 +648,12 @@ export default function Login() {
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 4px 12px rgba(179, 21, 34, 0.2);
+          box-shadow: 0 4px 12px rgba(74, 53, 232, 0.2);
         }
 
         .session-expired-btn:hover {
-          background: #960f1a;
-          box-shadow: 0 6px 16px rgba(179, 21, 34, 0.3);
+          background: #3220A8;
+          box-shadow: 0 6px 16px rgba(74, 53, 232, 0.3);
           transform: translateY(-1px);
         }
       `}</style>

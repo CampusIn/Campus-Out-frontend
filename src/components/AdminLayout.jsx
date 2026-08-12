@@ -95,7 +95,7 @@ export default function AdminLayout() {
             </div>
             <div className="admin-profile-info">
               <h3>Administrator</h3>
-              <p>{user?.email || 'admin@campusout.com'}</p>
+              <p>{user?.email || 'admin@campusin.com'}</p>
             </div>
           </div>
 

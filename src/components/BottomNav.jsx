@@ -110,7 +110,7 @@ export default function BottomNav() {
                       textAlign: 'center',
                       fontSize: '0.85rem',
                       fontWeight: '700',
-                      boxShadow: '0 8px 24px rgba(179, 21, 34, 0.4)',
+                      boxShadow: '0 8px 24px rgba(74, 53, 232, 0.4)',
                       lineHeight: '1.3',
                       position: 'relative'
                     }}

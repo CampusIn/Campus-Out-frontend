@@ -24,10 +24,10 @@ export default function OrderDetail() {
       CONFIRMED: { color: '#2b6cb0', bgColor: '#ebf8ff', borderColor: '#bee3f8' },
       PREPARING: { color: '#2f855a', bgColor: '#f0fff4', borderColor: '#c6f6d5' },
       READY: { color: '#6b46c1', bgColor: '#faf5ff', borderColor: '#e9d8fd' },
-      OUT_FOR_DELIVERY: { color: '#c53030', bgColor: '#fff5f5', borderColor: '#fed7d7' },
+      OUT_FOR_DELIVERY: { color: '#c53030', bgColor: '#f2efff', borderColor: '#fed7d7' },
       DELIVERED: { color: '#2f855a', bgColor: '#f0fff4', borderColor: '#c6f6d5' },
-      CANCELLED: { color: '#e53e3e', bgColor: '#fff5f5', borderColor: '#fed7d7' },
-      REJECTED: { color: '#e53e3e', bgColor: '#fff5f5', borderColor: '#fed7d7' }
+      CANCELLED: { color: '#e53e3e', bgColor: '#f2efff', borderColor: '#fed7d7' },
+      REJECTED: { color: '#e53e3e', bgColor: '#f2efff', borderColor: '#fed7d7' }
     };
     return colors[status] || { color: '#4a5568', bgColor: '#f7fafc', borderColor: '#e2e8f0' };
   };
@@ -229,7 +229,7 @@ export default function OrderDetail() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid #edf2f7', paddingBottom: '16px' }}>
             <div>
               <h1 style={{ fontSize: '1.35rem', fontWeight: 850, color: '#111111', margin: 0 }}>Order #{order.orderNumber}</h1>
-              <p style={{ fontSize: '1rem', fontWeight: 700, color: '#b31522', marginTop: '4px', margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <p style={{ fontSize: '1rem', fontWeight: 700, color: '#4A35E8', marginTop: '4px', margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Store size={16} />
                 <span>{order.restaurantName}</span>
               </p>
@@ -255,7 +255,7 @@ export default function OrderDetail() {
           </div>
 
           {order.orderStatus === 'REJECTED' && order.rejectionMsg && (
-            <div className="animate-scale-in" style={{ padding: '16px', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '16px', color: '#c53030' }}>
+            <div className="animate-scale-in" style={{ padding: '16px', background: '#f2efff', border: '1px solid #fed7d7', borderRadius: '16px', color: '#c53030' }}>
               <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <AlertCircle size={16} style={{ color: '#dc2626' }} />
                 <span>Order Rejected</span>
@@ -293,7 +293,7 @@ export default function OrderDetail() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 800, borderTop: '1.5px dashed #e2e8f0', paddingTop: '12px', marginTop: '4px', color: '#111111' }}>
               <span>Total Paid</span>
-              <span style={{ color: '#b31522', fontWeight: 900 }}>&#8377;{order.totalAmount}</span>
+              <span style={{ color: '#4A35E8', fontWeight: 900 }}>&#8377;{order.totalAmount}</span>
             </div>
           </div>
 
@@ -320,7 +320,7 @@ export default function OrderDetail() {
                     />
                   )}
                   <span style={{ fontWeight: 600 }}>
-                    {item.itemName} <strong style={{ color: '#b31522' }}>x{item.quantity}</strong>
+                    {item.itemName} <strong style={{ color: '#4A35E8' }}>x{item.quantity}</strong>
                   </span>
                 </div>
                 <span style={{ fontWeight: 800, color: '#111111' }}>&#8377;{item.priceAtPurchase * item.quantity}</span>
@@ -405,7 +405,7 @@ export default function OrderDetail() {
                   type="submit" 
                   className="btn btn-primary hover-lift hover-darken" 
                   disabled={reviewLoading}
-                  style={{ padding: '16px', borderRadius: '12px', background: '#b31522', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', width: '100%' }}
+                  style={{ padding: '16px', borderRadius: '12px', background: '#4A35E8', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', width: '100%' }}
                 >
                   {reviewLoading 
                     ? (myReview ? 'Updating Review...' : 'Submitting Review...') 

@@ -265,7 +265,7 @@ export default function AdminRepairPartners() {
             justifyContent: 'center',
             gap: '8px',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 16px rgba(179, 21, 34, 0.3)',
+            boxShadow: '0 4px 16px rgba(74, 53, 232, 0.3)',
             transition: 'all 0.2s'
           }}
         >
