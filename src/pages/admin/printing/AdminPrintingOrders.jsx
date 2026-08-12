@@ -107,6 +107,7 @@ export default function AdminPrintingOrders() {
                     <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 500 }}>
                       <span style={{ fontWeight: 700, color: '#334155' }}>{order.user?.username || order.user?.name || 'Unknown User'}</span> <br />
                       {order.user?.email}
+                      {order.deliveryAddress && <><br />📍 {order.deliveryAddress}</>}
                     </div>
                   </div>
                   <span style={{ 

@@ -8,7 +8,7 @@ import {
   updatePrintOrderPaymentStatus, 
   downloadAdminPrintFile 
 } from '../../../api/adminPrinting.api';
-import { ArrowLeft, FileText, Download, Save, CreditCard, Clock, Printer, Phone, MessageCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Save, CreditCard, Clock, Printer, Phone, MessageCircle, MapPin } from 'lucide-react';
 
 export default function AdminPrintingOrderDetail() {
   const { orderId } = useParams();
@@ -205,6 +205,14 @@ export default function AdminPrintingOrderDetail() {
                   )}
                 </div>
               </div>
+              {order.deliveryAddress && (
+                <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Delivery Address</p>
+                  <p style={{ fontWeight: 700, color: '#0f172a', wordBreak: 'break-word', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                    <MapPin size={16} color="#4338ca" /> {order.deliveryAddress}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
