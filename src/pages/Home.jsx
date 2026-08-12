@@ -114,8 +114,9 @@ export default function Home() {
       {/* 1. Header (Transparent over Red Hero) */}
       <header className="landing-header">
         <div className="header-content">
-          <Link to="/" className="brand-logo">
+          <Link to="/" className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
             <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '36px', marginRight: '0px', marginLeft: '0px' }} />
+            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#4A35E8' }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span>
           </Link>
 
 
