@@ -131,8 +131,8 @@ export default function Home() {
 
         <div ref={heroContentRef} className="hero-content-wrapper">
           <h1 className="hero-title animate-slide-up">
-            College Needs?<br />
-            <span style={{ whiteSpace: 'nowrap' }}><span style={{ color: '#4A35E8' }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> It!</span>
+            Need It?<br />
+            <span style={{ whiteSpace: 'nowrap' }}><span style={{ color: '#4A35E8' }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> It?</span>
           </h1>
           <p className="hero-subtitle animate-slide-up delay-1">
             Food. Printing. Repairs. Essentials.<br />
