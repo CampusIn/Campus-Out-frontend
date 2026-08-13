@@ -147,8 +147,9 @@ export default function Marketplace() {
         <div className="dashboard-location-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', position: 'relative', width: '100%' }}>
           
           {/* Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <img src="/CampusIn_Logo_bg_removed.png" alt="CampusIn Logo" style={{ height: '32px' }} />
+            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#4A35E8' }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Link 

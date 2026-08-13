@@ -131,12 +131,13 @@ export default function Home() {
 
         <div ref={heroContentRef} className="hero-content-wrapper">
           <h1 className="hero-title animate-slide-up">
-            Cravings called. <br></br>We answered.<br />
-            Craving It?<br />
+            College Needs?<br />
             <span style={{ whiteSpace: 'nowrap' }}><span style={{ color: '#4A35E8' }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> It!</span>
           </h1>
           <p className="hero-subtitle animate-slide-up delay-1">
-            Your campus favourites, delivered hot and fresh to your hostel.          </p>
+            Food. Printing. Repairs. Essentials.<br />
+            Whatever college needs, <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span>’s got you covered.
+          </p>
 
           {/* Hero Actions */}
           <div className="hero-actions animate-slide-up delay-2">
@@ -162,9 +163,9 @@ export default function Home() {
         <span className="deco-item deco-leaf-2">🌿</span>
 
         <div ref={promoContentRef} className="section-container promo-content-wrapper">
-          <h2 className="promo-heading">Better campus food, closer to you.</h2>
+          <h2 className="promo-heading">Everything college needs, closer to you.</h2>
           <p className="promo-subtext">
-            From canteen favourites to late-night cravings, <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> brings the best food around your campus straight to your hostel.
+            From food and printing to repairs, stationery and everyday essentials, <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> brings everything you need right to your campus.
           </p>
 
           <div className="promo-cards-container">
@@ -172,7 +173,7 @@ export default function Home() {
             <div className="promo-stat-card card-left">
               <div className="stat-info">
                 <span className="stat-number">One Campus</span>
-                <span className="stat-label">all your favourites</span>
+                <span className="stat-label">Everything you need</span>
               </div>
               <div className="stat-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A35E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -185,8 +186,8 @@ export default function Home() {
             {/* Card 2: Cities */}
             <div className="promo-stat-card card-right">
               <div className="stat-info">
-                <span className="stat-number">Quick delivery</span>
-                <span className="stat-label">straight to your hostel</span>
+                <span className="stat-number">Quick access</span>
+                <span className="stat-label">Right when you need it</span>
               </div>
               <div className="stat-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A35E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -200,7 +201,7 @@ export default function Home() {
             <div className="promo-stat-card card-left-2">
               <div className="stat-info">
                 <span className="stat-number">Zero hassle</span>
-                <span className="stat-label">just <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> it</span>
+                <span className="stat-label">Just <span style={{ color: '#4A35E8', fontWeight: 600 }}>Campus<span style={{ color: '#20C7C9' }}>In</span></span> it</span>
               </div>
               <div className="stat-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A35E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
