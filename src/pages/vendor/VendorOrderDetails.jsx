@@ -8,7 +8,7 @@ import { useToast } from '../../context/ToastContext';
 
 import { Phone, CreditCard, UserPlus, Loader, Package, FileDown, ArrowLeft, Clock, User, MapPin, CheckCircle, ChevronRight, Copy, MessageSquare } from 'lucide-react';
 
-const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
+const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 const getWhatsAppLink = (phone) => {
   if (!phone) return '';
@@ -209,7 +209,7 @@ export default function VendorOrderDetails() {
   const getNextStatusLabel = (currentStatus) => {
     const idx = statusFlow.indexOf(currentStatus);
     if (idx === -1 || idx >= statusFlow.length - 1) return null;
-    return `Move to ${statusFlow[idx + 1]}`;
+    return `Move to ${statusFlow[idx + 1].replace(/_/g, ' ')}`;
   };
 
   if (loading || !order) {
@@ -333,10 +333,6 @@ export default function VendorOrderDetails() {
                     >
                       Reject Order
                     </button>
-                  </div>
-                ) : order.orderStatus === 'READY' ? (
-                  <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>Waiting for delivery partner to mark as delivered.</p>
                   </div>
                 ) : (
                   <button 

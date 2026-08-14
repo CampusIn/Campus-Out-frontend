@@ -8,7 +8,7 @@ import { useToast } from '../../context/ToastContext';
 
 import { CreditCard, UserPlus, Loader, Phone, FileDown, ShoppingBag, User, Clock, CheckCircle, ChevronRight, MapPin } from 'lucide-react';
 
-const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'];
+const statusFlow = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 export default function VendorOrders() {
   const { restaurant } = useOutletContext();
@@ -201,7 +201,7 @@ export default function VendorOrders() {
   const getNextStatusLabel = (currentStatus) => {
     const idx = statusFlow.indexOf(currentStatus);
     if (idx === -1 || idx >= statusFlow.length - 1) return null;
-    return `Move to ${statusFlow[idx + 1]}`;
+    return `Move to ${statusFlow[idx + 1].replace(/_/g, ' ')}`;
   };
 
   if (loading) {
@@ -502,10 +502,6 @@ export default function VendorOrders() {
                         >
                           Reject
                         </button>
-                      </div>
-                    ) : o.orderStatus === 'READY' ? (
-                      <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
-                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>Waiting for partner delivery</p>
                       </div>
                     ) : (
                       <button 
