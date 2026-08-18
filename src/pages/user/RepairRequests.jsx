@@ -71,6 +71,8 @@ export default function RepairRequests() {
   // Form states
   const [formData, setFormData] = useState({
     serviceType: '',
+    deviceCompany: '',
+    modelName: '',
     pickupLocation: '',
     customerPhone: user?.phoneNumber || user?.phone || '',
     description: '',
@@ -181,6 +183,14 @@ export default function RepairRequests() {
       errors.customerPhone = 'Enter a valid 10-digit Indian phone number (e.g. 9999999999)';
     }
 
+    if (!formData.deviceCompany.trim()) {
+      errors.deviceCompany = 'Device company is required';
+    }
+
+    if (!formData.modelName.trim()) {
+      errors.modelName = 'Device model is required';
+    }
+
     if (!formData.pickupLocation.trim()) {
       errors.pickupLocation = 'Pickup location / hostel room is required';
     }
@@ -191,9 +201,7 @@ export default function RepairRequests() {
       errors.description = 'Description should be at least 10 characters long';
     }
 
-    if (selectedFiles.length === 0) {
-      errors.images = 'At least 1 photo of the damaged item is required';
-    }
+    // Images are now optional
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -202,7 +210,7 @@ export default function RepairRequests() {
   // Submit Form via SlideConfirmButton
   const handleSlideSubmit = async () => {
     if (!validateForm()) {
-      toast.error('Please complete all required fields and upload at least 1 photo');
+      toast.error('Please complete all required fields');
       return false;
     }
 
@@ -210,6 +218,8 @@ export default function RepairRequests() {
     try {
       const data = new FormData();
       data.append('serviceType', formData.serviceType);
+      data.append('deviceCompany', formData.deviceCompany.trim());
+      data.append('modelName', formData.modelName.trim());
       data.append('pickupLocation', formData.pickupLocation.trim());
       data.append('customerPhone', formData.customerPhone.trim());
       data.append('description', formData.description.trim());
@@ -221,9 +231,10 @@ export default function RepairRequests() {
       const res = await createRepairRequest(data);
       toast.success(res.data?.message || 'Repair request submitted successfully!');
 
-      // Reset form
       setFormData({
         serviceType: '',
+        deviceCompany: '',
+        modelName: '',
         pickupLocation: '',
         customerPhone: user?.phoneNumber || user?.phone || '',
         description: '',
@@ -449,6 +460,69 @@ export default function RepairRequests() {
                 )}
               </div>
 
+              {/* Device Details Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+                {/* Device Company */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 750, color: '#334155', marginBottom: '6px' }}>
+                    Device Company / Brand <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Samsung, Apple, Dell, Bajaj"
+                    value={formData.deviceCompany}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, deviceCompany: e.target.value }));
+                      if (formErrors.deviceCompany) setFormErrors((prev) => ({ ...prev, deviceCompany: null }));
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      border: formErrors.deviceCompany ? '1.5px solid #dc2626' : '1.5px solid #cbd5e1',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {formErrors.deviceCompany && (
+                    <p style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '4px', fontWeight: 600 }}>
+                      {formErrors.deviceCompany}
+                    </p>
+                  )}
+                </div>
+
+                {/* Device Model */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 750, color: '#334155', marginBottom: '6px' }}>
+                    Model Name / Number <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Galaxy S21, XPS 13, etc."
+                    value={formData.modelName}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, modelName: e.target.value }));
+                      if (formErrors.modelName) setFormErrors((prev) => ({ ...prev, modelName: null }));
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      border: formErrors.modelName ? '1.5px solid #dc2626' : '1.5px solid #cbd5e1',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {formErrors.modelName && (
+                    <p style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '4px', fontWeight: 600 }}>
+                      {formErrors.modelName}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               {/* Pickup Location & Contact Phone Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
                 {/* Pickup Location */}
@@ -525,7 +599,7 @@ export default function RepairRequests() {
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="Explain the issue in detail (please include the company and model of the device)..."
+                  placeholder="Explain the issue in detail..."
                   value={formData.description}
                   onChange={(e) => {
                     setFormData((prev) => ({ ...prev, description: e.target.value }));
@@ -553,7 +627,7 @@ export default function RepairRequests() {
               {/* Photo Upload Section */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 750, color: '#334155', marginBottom: '6px' }}>
-                  Upload Photos of the Damaged Item <span style={{ color: '#dc2626' }}>*</span> (1 to 5 images, Max 100KB each)
+                  Upload Photos of the Damaged Item (Optional, 1 to 5 images, Max 100KB each)
                 </label>
 
                 <input
@@ -1141,6 +1215,13 @@ export default function RepairRequests() {
 
             {/* Details Fields */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.88rem' }}>
+              <div>
+                <span style={{ color: '#64748b', fontWeight: 700 }}>Device Details:</span>
+                <p style={{ margin: '2px 0 0 0', fontWeight: 650, color: '#1e293b' }}>
+                  {selectedRequest.deviceCompany} - {selectedRequest.modelName}
+                </p>
+              </div>
+
               <div>
                 <span style={{ color: '#64748b', fontWeight: 700 }}>Pickup Location:</span>
                 <p style={{ margin: '2px 0 0 0', fontWeight: 650, color: '#1e293b' }}>{selectedRequest.pickupLocation}</p>

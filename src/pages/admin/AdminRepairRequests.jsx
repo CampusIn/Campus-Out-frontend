@@ -187,6 +187,8 @@ export default function AdminRepairRequests() {
 
     const reqNum = req.requestNumber || `#${req._id?.substring(req._id.length - 6)}`;
     const serviceType = req.serviceType || 'N/A';
+    const deviceCompany = req.deviceCompany || 'N/A';
+    const modelName = req.modelName || 'N/A';
     const customerName = req.user?.username || 'Customer';
     const customerPhone = req.customerPhone || 'N/A';
     const pickupLocation = req.pickupLocation || 'N/A';
@@ -204,6 +206,7 @@ export default function AdminRepairRequests() {
 
 📋 *Request No:* ${reqNum}
 📱 *Service Type:* ${serviceType}
+🏢 *Device:* ${deviceCompany} - ${modelName}
 💵 *Estimated Price:* ${price}
 
 👤 *Customer Name:* ${customerName}
@@ -1065,6 +1068,19 @@ _Sent via CampusIn Admin Portal_`;
                     <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '6px', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                       <MapPin size={13} style={{ marginTop: '2px', flexShrink: 0, color: '#ef4444' }} />
                       <span>{selectedRequest.pickupLocation || 'No pickup location specified'}</span>
+                    </div>
+                  </div>
+
+                  {/* Device Details Card */}
+                  <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Smartphone size={14} /> Device Details
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
+                      <span>{selectedRequest.deviceCompany || 'N/A'}</span>
+                    </div>
+                    <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '4px', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                      <span>Model: {selectedRequest.modelName || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
