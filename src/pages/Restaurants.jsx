@@ -364,8 +364,8 @@ export default function Restaurants() {
               price: item.price,
               mrp: item.mrp,
               image: item.image || (idx % 2 === 0 
-                ? 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=300&q=80'
-                : 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80'),
+                ? 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=300&q=80' // Sandwich
+                : 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=300&q=80'), // Pasta
               restaurantName: restaurant.restaurantName,
               restaurantId: restaurant._id,
               category: item.category,
@@ -736,8 +736,8 @@ export default function Restaurants() {
                     <button className="college-deals-btn">VERIFY ID</button>
                   </div>
                   <img 
-                    src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=300&q=80" 
-                    alt="College Campus" 
+                    src="https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=300&q=80" 
+                    alt="College Campus Food" 
                     className="college-deals-img"
                   />
                 </div>
@@ -753,8 +753,8 @@ export default function Restaurants() {
                     <span className="late-night-badge">30% OFF</span>
                   </div>
                   <img 
-                    src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80" 
-                    alt="Midnight burgers" 
+                    src="https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=300&q=80" 
+                    alt="Midnight momos" 
                     className="late-night-img"
                   />
                 </div>
@@ -770,8 +770,8 @@ export default function Restaurants() {
                     <span className="student-badge">STUDENT SPECIAL</span>
                   </div>
                   <img 
-                    src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80" 
-                    alt="Student food" 
+                    src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=300&q=80" 
+                    alt="Student pasta" 
                     className="student-img"
                   />
                 </div>
