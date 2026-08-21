@@ -10,6 +10,7 @@ import {
 } from '../../api/admin.api';
 
 import { Ticket, ToggleLeft, ToggleRight, Loader, Search, ChevronLeft, ChevronRight, ChevronDown, Calendar, Plus, Edit, Eye, Info, X } from 'lucide-react';
+import { getAdminCategories } from '../../api/marketplace.api';
 import './AdminPortal.css';
 
 export default function AdminCoupons() {
@@ -43,8 +44,11 @@ export default function AdminCoupons() {
     maximumDiscount: '',
     expiryDate: '',
     usageLimit: '',
+    scopeType: 'ALL',
+    marketplaceCategory: '',
   });
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
 
   // Fetch Coupons list
   const fetchCoupons = useCallback(async () => {
@@ -67,9 +71,22 @@ export default function AdminCoupons() {
     }
   }, [search, isActiveFilter, page, toast]);
 
+  // Fetch Marketplace Categories
+  const fetchCategories = useCallback(async () => {
+    try {
+      const { data } = await getAdminCategories({ limit: 100 });
+      if (data.success) {
+        setCategories(data.data.categories || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCoupons();
-  }, [fetchCoupons]);
+    fetchCategories();
+  }, [fetchCoupons, fetchCategories]);
 
   // Handle Search change
   const handleSearchChange = (e) => {
@@ -101,6 +118,8 @@ export default function AdminCoupons() {
       maximumDiscount: '',
       expiryDate: '',
       usageLimit: '',
+      scopeType: 'ALL',
+      marketplaceCategory: '',
     });
     setErrors({});
     setModalOpen(true);
@@ -125,6 +144,8 @@ export default function AdminCoupons() {
           maximumDiscount: coupon.maximumDiscount || '',
           expiryDate: expDate,
           usageLimit: coupon.usageLimit || '',
+          scopeType: coupon.scopeType || 'ALL',
+          marketplaceCategory: coupon.marketplaceCategory?._id || coupon.marketplaceCategory || '',
         });
         setErrors({});
         setModalOpen(true);
@@ -200,6 +221,10 @@ export default function AdminCoupons() {
       newErrors.expiryDate = 'Expiry date must be in the future';
     }
 
+    if (form.scopeType === 'MARKETPLACE_CATEGORY' && !form.marketplaceCategory) {
+      newErrors.marketplaceCategory = 'Please select a marketplace category';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -222,6 +247,8 @@ export default function AdminCoupons() {
         maximumDiscount: form.discountType === 'PERCENTAGE' ? Number(form.maximumDiscount) : 0,
         expiryDate: new Date(form.expiryDate).toISOString(),
         usageLimit: Number(form.usageLimit),
+        scopeType: form.scopeType,
+        marketplaceCategory: form.scopeType === 'MARKETPLACE_CATEGORY' ? form.marketplaceCategory : null,
       };
 
       if (modalMode === 'create') {
@@ -355,6 +382,7 @@ export default function AdminCoupons() {
                   <th>Discount Type</th>
                   <th>Discount Value</th>
                   <th>Min. Order</th>
+                  <th>Scope</th>
                   <th>Max. Discount</th>
                   <th>Expiry Date</th>
                   <th>Usage (Used/Limit)</th>
@@ -375,6 +403,15 @@ export default function AdminCoupons() {
                       {c.discountType === 'PERCENTAGE' ? `${c.discountValue}%` : `₹${c.discountValue}`}
                     </td>
                     <td>₹{c.minimumOrderValue || 0}</td>
+                    <td>
+                      {(!c.scopeType || c.scopeType === 'ALL') && <span className="status-badge" style={{ background: '#f1f5f9', color: '#475569' }}>All Orders</span>}
+                      {c.scopeType === 'FOOD' && <span className="status-badge" style={{ background: '#e0f2fe', color: '#0369a1' }}>Food Only</span>}
+                      {c.scopeType === 'MARKETPLACE_CATEGORY' && (
+                        <span className="status-badge" style={{ background: '#fce7f3', color: '#be185d' }}>
+                          Marketplace: {c.marketplaceCategory?.name || 'Category'}
+                        </span>
+                      )}
+                    </td>
                     <td>{c.discountType === 'PERCENTAGE' ? `₹${c.maximumDiscount}` : 'N/A'}</td>
                     <td className="text-muted text-sm">
                       {new Date(c.expiryDate).toLocaleDateString('en-IN', {
@@ -579,6 +616,15 @@ export default function AdminCoupons() {
               </div>
 
               <div className="drawer-item">
+                <span className="drawer-label">Coupon Scope</span>
+                <span className="drawer-value">
+                  {(!selectedCoupon.scopeType || selectedCoupon.scopeType === 'ALL') && 'All Orders'}
+                  {selectedCoupon.scopeType === 'FOOD' && 'Food Orders Only'}
+                  {selectedCoupon.scopeType === 'MARKETPLACE_CATEGORY' && `Marketplace Category: ${selectedCoupon.marketplaceCategory?.name || selectedCoupon.marketplaceCategory || 'Unknown'}`}
+                </span>
+              </div>
+
+              <div className="drawer-item">
                 <span className="drawer-label">Expiry Date</span>
                 <span className="drawer-value">
                   {new Date(selectedCoupon.expiryDate).toLocaleString('en-IN', {
@@ -711,6 +757,43 @@ export default function AdminCoupons() {
                   />
                   {errors.maximumDiscount && <span className="input-error-msg">{errors.maximumDiscount}</span>}
                 </div>
+              </div>
+
+              <div className="modal-grid-cols-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Scope Type *</label>
+                  <select
+                    className="input-pill"
+                    style={{ paddingLeft: '16px', cursor: 'pointer' }}
+                    value={form.scopeType}
+                    onChange={(e) => {
+                      setForm({ ...form, scopeType: e.target.value, marketplaceCategory: '' });
+                    }}
+                  >
+                    <option value="ALL">ALL (Food & Marketplace)</option>
+                    <option value="FOOD">FOOD ONLY</option>
+                    <option value="MARKETPLACE_CATEGORY">MARKETPLACE CATEGORY</option>
+                  </select>
+                </div>
+
+                {form.scopeType === 'MARKETPLACE_CATEGORY' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Marketplace Category *</label>
+                    <select
+                      className={`input-pill ${errors.marketplaceCategory ? 'error-border' : ''}`}
+                      style={{ paddingLeft: '16px', cursor: 'pointer' }}
+                      value={form.marketplaceCategory}
+                      onChange={(e) => setForm({ ...form, marketplaceCategory: e.target.value })}
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    {errors.marketplaceCategory && <span className="input-error-msg">{errors.marketplaceCategory}</span>}
+                  </div>
+                )}
               </div>
 
               <div className="modal-grid-cols-2">

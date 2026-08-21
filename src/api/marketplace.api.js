@@ -13,6 +13,9 @@ export const updateMarketCartItemQty = (productId, quantity) => api.patch(`/mark
 export const deleteMarketCartItem = (productId) => api.delete(`/marketplace/cart/items/${productId}`);
 export const clearMarketCart = () => api.delete('/marketplace/cart');
 
+export const getMarketplaceCoupons = () => api.get('/marketplace/coupons/view');
+export const applyMarketplaceCoupon = (couponId) => api.post('/marketplace/coupons/apply', { couponId });
+
 export const getCategoryPlatformSettings = (categoryId) => api.get('/marketplace/settings', { params: { categoryId } });
 
 // User Marketplace Order APIs

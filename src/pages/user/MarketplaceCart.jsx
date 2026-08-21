@@ -7,7 +7,7 @@ import { getCoupons, getPlatformSettings } from '../../api/order.api';
 
 import { Tag, Loader, Store, Percent, Phone, CreditCard, Building2, GraduationCap, ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Layers, AlertTriangle, Check, X, MapPin } from 'lucide-react';
 
-import { createMarketplaceOrder, getCategoryPlatformSettings } from '../../api/marketplace.api';
+import { createMarketplaceOrder, getCategoryPlatformSettings, getMarketplaceCoupons, applyMarketplaceCoupon } from '../../api/marketplace.api';
 import { SlideConfirmButton } from '../../components/SlideConfirmButton';
 import { ProgressiveCardReveal } from '../../components/ProgressiveCardReveal';
 import { confetti } from '../../components/Confetti';
@@ -30,10 +30,12 @@ export default function MarketplaceCart({ isEmbedded = false }) {
 
   // Coupon states
   const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [pricingSummary, setPricingSummary] = useState(null);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [activeCouponIndex, setActiveCouponIndex] = useState(0);
   const [couponsList, setCouponsList] = useState([]);
   const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   
   // Checkout states
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'address'
@@ -117,15 +119,36 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Remove coupon if total drops below minimum required order value
+  // Re-apply active coupon when cart contents or amounts change
   useEffect(() => {
-    if (selectedCoupon && cart) {
-      if (cart.totalAmount < selectedCoupon.minimumOrderValue) {
+    const reapplyActiveCoupon = async () => {
+      if (!cart || cart.items?.length === 0) {
         setSelectedCoupon(null);
-        toast.error(`Coupon "${selectedCoupon.code}" removed because the total is below the minimum order value of ₹${selectedCoupon.minimumOrderValue}`);
+        setPricingSummary(null);
+        return;
       }
-    }
-  }, [cart?.totalAmount, selectedCoupon, toast]);
+
+      if (selectedCoupon?.couponId || selectedCoupon?._id) {
+        const cId = selectedCoupon.couponId || selectedCoupon._id;
+        try {
+          const { data } = await applyMarketplaceCoupon(cId);
+          if (data.success && data.data) {
+            setSelectedCoupon(data.data.coupon);
+            setPricingSummary(data.data.pricing);
+          } else {
+            setSelectedCoupon(null);
+            setPricingSummary(null);
+          }
+        } catch (err) {
+          setSelectedCoupon(null);
+          setPricingSummary(null);
+          toast.error(err.response?.data?.message || 'Selected coupon is no longer applicable.');
+        }
+      }
+    };
+
+    reapplyActiveCoupon();
+  }, [cart?.totalAmount, cart?.items?.length]);
 
   const handleQtyChange = async (productId, currentQty, stock, increment) => {
     const newQty = increment ? currentQty + 1 : currentQty - 1;
@@ -171,7 +194,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     setIsCouponModalOpen(true);
     setIsFetchingCoupons(true);
     try {
-      const { data } = await getCoupons();
+      const { data } = await getMarketplaceCoupons();
       if (data.success) {
         setCouponsList(data.data || []);
       } else {
@@ -185,18 +208,26 @@ export default function MarketplaceCart({ isEmbedded = false }) {
     }
   };
 
-  const handleApplyCouponLocal = (coupon) => {
-    if (cart.totalAmount < coupon.minimumOrderValue) {
-      toast.error(`Minimum order value of ₹${coupon.minimumOrderValue} required for this coupon`);
-      return;
+  const handleApplyCouponLocal = async (couponId) => {
+    setIsApplyingCoupon(true);
+    try {
+      const { data } = await applyMarketplaceCoupon(couponId);
+      if (data.success && data.data) {
+        setSelectedCoupon(data.data.coupon);
+        setPricingSummary(data.data.pricing);
+        toast.success('Coupon applied successfully.');
+        setIsCouponModalOpen(false);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to apply coupon');
+    } finally {
+      setIsApplyingCoupon(false);
     }
-    setSelectedCoupon(coupon);
-    toast.success(`Coupon "${coupon.code}" applied!`);
-    setIsCouponModalOpen(false);
   };
 
   const handleRemoveCouponLocal = () => {
     setSelectedCoupon(null);
+    setPricingSummary(null);
     toast.success('Coupon removed');
   };
 
@@ -220,7 +251,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
         paymentMethod,
         customerPhone,
         deliveryAddress,
-        couponId: selectedCoupon?._id || null
+        couponId: selectedCoupon?.couponId || selectedCoupon?._id || null
       };
       
       const { data } = await createMarketplaceOrder(payload);
@@ -262,28 +293,16 @@ export default function MarketplaceCart({ isEmbedded = false }) {
 
   // Calculate pricing values including discount and platform charges
   const getMarketplacePricing = () => {
+    if (pricingSummary) return pricingSummary;
     if (!cart) return null;
     const subTotal = cart.totalAmount;
     let couponDiscount = 0;
 
-    if (selectedCoupon) {
-      if (selectedCoupon.discountType === 'PERCENTAGE') {
-        couponDiscount = Math.round((subTotal * selectedCoupon.discountValue) / 100);
-        if (selectedCoupon.maximumDiscount && couponDiscount > selectedCoupon.maximumDiscount) {
-          couponDiscount = selectedCoupon.maximumDiscount;
-        }
-      } else if (selectedCoupon.discountType === 'FIXED') {
-        couponDiscount = selectedCoupon.discountValue;
-      }
-      couponDiscount = Math.min(couponDiscount, subTotal);
-    }
-
-    const subTotalAfterDiscount = subTotal - couponDiscount;
-    const gstAmount = Math.round((subTotalAfterDiscount * platformSettings.gstPercentage) / 100);
+    const gstAmount = Math.round((subTotal * platformSettings.gstPercentage) / 100);
     const packagingCharge = platformSettings.packagingCharge;
     const platformCharge = platformSettings.platformCharge;
-    const deliveryCharge = subTotalAfterDiscount >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge;
-    const finalAmount = subTotalAfterDiscount + gstAmount + packagingCharge + platformCharge + deliveryCharge;
+    const deliveryCharge = subTotal >= platformSettings.freeDeliveryAbove ? 0 : platformSettings.deliveryCharge;
+    const finalAmount = subTotal + gstAmount + packagingCharge + platformCharge + deliveryCharge;
 
     return {
       subTotal,
@@ -315,7 +334,7 @@ export default function MarketplaceCart({ isEmbedded = false }) {
   );
 
   const CouponCard = ({ coupon }) => {
-    const isApplied = selectedCoupon?._id === coupon._id;
+    const isApplied = (selectedCoupon?.couponId || selectedCoupon?._id) === coupon._id;
     const expiryStr = coupon.expiryDate 
       ? new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       : '';
@@ -384,8 +403,8 @@ export default function MarketplaceCart({ isEmbedded = false }) {
 
         <button
           type="button"
-          onClick={() => handleApplyCouponLocal(coupon)}
-          disabled={isApplied}
+          onClick={() => handleApplyCouponLocal(coupon._id)}
+          disabled={isApplyingCoupon || isApplied}
           style={{
             marginTop: '6px',
             width: '100%',
@@ -396,16 +415,22 @@ export default function MarketplaceCart({ isEmbedded = false }) {
             fontWeight: 700,
             fontSize: '0.85rem',
             border: 'none',
-            cursor: isApplied ? 'not-allowed' : 'pointer',
+            cursor: (isApplyingCoupon || isApplied) ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            opacity: (isApplyingCoupon && !isApplied) ? 0.7 : 1
           }}
           className="hover-lift"
         >
-          {isApplied ? (
+          {isApplyingCoupon && !isApplied ? (
+            <>
+              <Loader size={14} className="animate-spin" />
+              <span>Applying...</span>
+            </>
+          ) : isApplied ? (
             <span>Applied Successfully</span>
           ) : (
             <span>Apply Coupon</span>
@@ -1442,8 +1467,8 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                           </div>
                           <button
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); handleApplyCouponLocal(coupon); }}
-                            disabled={isApplied}
+                            onClick={(e) => { e.stopPropagation(); handleApplyCouponLocal(coupon._id); }}
+                            disabled={isApplyingCoupon || isApplied}
                             style={{
                               marginTop: '6px',
                               width: '100%',
@@ -1454,16 +1479,21 @@ export default function MarketplaceCart({ isEmbedded = false }) {
                               fontWeight: 700,
                               fontSize: '0.85rem',
                               border: 'none',
-                              cursor: isApplied ? 'not-allowed' : 'pointer',
+                              cursor: (isApplyingCoupon || isApplied) ? 'not-allowed' : 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               gap: '8px',
                               transition: 'all 0.2s',
-                              opacity: 1
+                              opacity: (isApplyingCoupon && !isApplied) ? 0.7 : 1
                             }}
                           >
-                            {isApplied ? (
+                            {isApplyingCoupon && !isApplied ? (
+                              <>
+                                <Loader size={14} className="animate-spin" />
+                                <span>Applying...</span>
+                              </>
+                            ) : isApplied ? (
                               <span>Applied Successfully</span>
                             ) : (
                               <span>Apply Coupon</span>
