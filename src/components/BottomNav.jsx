@@ -115,7 +115,7 @@ export default function BottomNav() {
                       position: 'relative'
                     }}
                   >
-                    Marketplace: Get mattresses, pillows & more!
+                    Marketplace: Get exclusive NITJ merchandise!
                     <div style={{
                       position: 'absolute',
                       bottom: '-4px',
