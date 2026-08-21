@@ -312,6 +312,7 @@ export default function Cart() {
               letterSpacing: '0.5px',
               marginBottom: '6px'
             }}>
+              {coupon.code.startsWith('CW-') && <span style={{ marginRight: '6px', color: '#dc2626' }}>🎁 Personal | </span>}
               {coupon.code}
             </div>
             <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111111' }}>
@@ -1334,6 +1335,7 @@ export default function Cart() {
                               {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
                             </span>
                             <span style={{ background: '#f2efff', color: '#4A35E8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px dashed #4A35E8' }}>
+                              {coupon.code.startsWith('CW-') && <span style={{ marginRight: '4px' }}>🎁</span>}
                               {coupon.code}
                             </span>
                           </div>
@@ -1354,6 +1356,7 @@ export default function Cart() {
                                   letterSpacing: '0.5px',
                                   marginBottom: '6px'
                                 }}>
+                                  {coupon.code.startsWith('CW-') && <span style={{ marginRight: '6px', color: '#dc2626' }}>🎁 Personal | </span>}
                                   {coupon.code}
                                 </div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111111' }}>

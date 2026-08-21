@@ -6,7 +6,7 @@ import { getActiveBanners, getActiveAnnouncements } from '../api/homepageCMS.api
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar, Wrench, ChevronRight, Printer } from 'lucide-react';
+import { MapPin, ChevronDown, User, Search, LayoutGrid, Flame, Pizza, Cake, Coffee, Star, Clock, Navigation, Megaphone, ShoppingBag, Utensils, Volume2, Bell, Calendar, Wrench, ChevronRight, Printer, Gift } from 'lucide-react';
 
 import { DynamicIsland } from '../components/DynamicIsland';
 import { motion } from 'framer-motion';
@@ -2189,7 +2189,75 @@ export default function Restaurants() {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+
+        @keyframes swooshIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.3) translateY(100px) rotate(-15deg);
+          }
+          60% {
+            opacity: 1;
+            transform: scale(1.1) translateY(-10px) rotate(5deg);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0) rotate(0deg);
+          }
+        }
+        
+        .lucky-orb-wrapper {
+          animation: swooshIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          position: fixed;
+          bottom: 100px;
+          right: 20px;
+          z-index: 100;
+        }
+
+        .lucky-orb {
+          width: 70px;
+          height: 70px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 30% 30%, #a291ff 0%, #4A35E8 50%, #1e1080 100%);
+          box-shadow: 0 10px 25px rgba(74, 53, 232, 0.5), inset 0 -5px 15px rgba(0,0,0,0.3), inset 0 5px 15px rgba(255,255,255,0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          position: relative;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .lucky-orb:hover {
+          transform: scale(1.05);
+          box-shadow: 0 15px 35px rgba(74, 53, 232, 0.6), inset 0 -5px 15px rgba(0,0,0,0.3), inset 0 5px 15px rgba(255,255,255,0.4);
+        }
+
+        .lucky-orb-badge {
+          position: absolute;
+          top: -8px;
+          right: -12px;
+          background: #ffc700;
+          color: #111;
+          font-size: 0.75rem;
+          font-weight: 900;
+          padding: 4px 8px;
+          border-radius: 8px;
+          transform: rotate(10deg);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          border: 2px solid #fff;
+        }
       `}</style>
+
+      {/* Lucky Wheel Popup */}
+      <div className="lucky-orb-wrapper">
+        <div 
+          className="lucky-orb"
+          onClick={() => navigate('/lucky-wheel')}
+        >
+          <div className="lucky-orb-badge">SPIN!</div>
+          <Gift size={28} color="#ffffff" strokeWidth={2.5} style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
+        </div>
+      </div>
     </div>
   );
 }

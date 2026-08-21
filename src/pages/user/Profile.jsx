@@ -262,6 +262,7 @@ export default function Profile() {
                           {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `Flat ₹${c.discountValue} OFF`}
                         </span>
                         <span style={{ background: '#fff1f2', color: '#4A35E8', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #ffe4e6' }}>
+                          {c.code.startsWith('CW-') && <span style={{ marginRight: '4px' }}>🎁</span>}
                           {c.code}
                         </span>
                       </div>
@@ -280,7 +281,7 @@ export default function Profile() {
                               fontWeight: 900,
                               letterSpacing: '0.5px'
                             }}>
-                              {c.code}
+                              {c.code.startsWith('CW-') && <span style={{ marginRight: '6px', color: '#dc2626' }}>🎁 Personal |</span>} {c.code}
                             </span>
                             <h4 style={{ margin: '8px 0 2px 0', fontSize: '0.95rem', fontWeight: 800, color: '#1a202c' }}>
                               {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `Flat ₹${c.discountValue} OFF`}
