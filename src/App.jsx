@@ -22,7 +22,7 @@ import Cart from './pages/user/Cart';
 import Orders from './pages/user/Orders';
 import OrderDetail from './pages/user/OrderDetail';
 import Profile from './pages/user/Profile';
-import LuckyWheel from './pages/user/LuckyWheel';
+
 import VendorLayout from './components/VendorLayout';
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorOrders from './pages/vendor/VendorOrders';
@@ -196,7 +196,7 @@ export default function App() {
                       } 
                     />
                     <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'vendor']}><Profile /></ProtectedRoute>} />
-                    <Route path="/lucky-wheel" element={<ProtectedRoute allowedRoles={['user']}><LuckyWheel /></ProtectedRoute>} />
+
                     <Route 
                       path="/repair-requests" 
                       element={
