@@ -323,6 +323,7 @@ export default function Home() {
               <h6 className="zomato-footer-title">About CampusIn</h6>
               <nav className="zomato-footer-links">
                 <Link to="/who-we-are">Who We Are</Link>
+                <Link to="/trips">CampusIn Trips</Link>
                 <a href="mailto:contact@campusin.store">Email: contact@campusin.store</a>
                 <a href="https://wa.me/917380193241" target="_blank" rel="noopener noreferrer">Phone: +91 7380193241</a>
               </nav>

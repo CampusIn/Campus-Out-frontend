@@ -82,6 +82,8 @@ const TermsAndConditions = lazyWithRetry(() => import('./pages/TermsAndCondition
 const PrivacyPolicy = lazyWithRetry(() => import('./pages/LegalPolicy'));
 const RefundPolicy = lazyWithRetry(() => import('./pages/RefundPolicy'));
 const WhoWeAre = lazyWithRetry(() => import('./pages/WhoWeAre'));
+const Trips = lazyWithRetry(() => import('./pages/Trips'));
+const UpcomingTrips = lazyWithRetry(() => import('./pages/UpcomingTrips'));
 
 // Printing Lazy Pages
 const PrintingFlow = lazyWithRetry(() => import('./pages/user/printing/PrintingFlow'));
@@ -127,6 +129,16 @@ export default function App() {
                     <Route path="/refund-policy" element={
                       <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
                         <RefundPolicy />
+                      </Suspense>
+                    } />
+                    <Route path="/trips" element={
+                      <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
+                        <Trips />
+                      </Suspense>
+                    } />
+                    <Route path="/trips/upcoming-trips" element={
+                      <Suspense fallback={<div className="loading-container"><div className="spinner"></div></div>}>
+                        <UpcomingTrips />
                       </Suspense>
                     } />
                     <Route path="/restaurants" element={<Restaurants />} />

@@ -17,6 +17,8 @@ export default function RouteTitleUpdater() {
     else if (path === '/terms-and-conditions') title = 'Terms & Conditions | CampusIn';
     else if (path === '/privacy-policy') title = 'Privacy Policy | CampusIn';
     else if (path === '/refund-policy') title = 'Refund Policy | CampusIn';
+    else if (path === '/who-we-are') title = 'Who We Are | CampusIn';
+    else if (path === '/trips') title = 'CampusIn Trips';
     else if (path === '/restaurants') title = 'Restaurants | CampusIn';
     else if (path.startsWith('/restaurants/')) title = 'Restaurant Details | CampusIn';
     else if (path.startsWith('/food/')) title = 'Food Details | CampusIn';

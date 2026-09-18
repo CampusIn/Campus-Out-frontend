@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-
 import { useAuth } from '../context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 
-import { ShoppingCart, Flame, Store, Shield, Bike, Navigation, ClipboardList, User, LogOut, ChevronDown, Search, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Flame, Store, Shield, Bike, Navigation, ClipboardList, User, LogOut, ChevronDown, Search, ShoppingBag, Compass } from 'lucide-react';
 import { getMenuSuggestions } from '../api/menu.api';
 
 const savedAddresses = [
@@ -112,9 +112,10 @@ export default function Navbar() {
     alert("Location access has been disabled. Please manually enter your address.");
   };
 
-  // Hide main customer navbar on homepage, vendor portal, admin dashboard, delivery partner routes, and static pages
+  // Hide main customer navbar on homepage, trips, vendor portal, admin dashboard, delivery partner routes, and static pages
   if (
     location.pathname === '/' || 
+    location.pathname.startsWith('/trips') || 
     location.pathname === '/terms-and-conditions' || 
     location.pathname === '/privacy-policy' || 
     location.pathname === '/refund-policy' || 
@@ -225,6 +226,13 @@ export default function Navbar() {
                       title="Marketplace"
                     >
                       <ShoppingBag size={18} />
+                    </NavLink>
+                    <NavLink 
+                      to="/trips" 
+                      className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`}
+                      title="Campus Trips"
+                    >
+                      <Compass size={18} />
                     </NavLink>
                     <NavLink 
                       to="/cart" 
