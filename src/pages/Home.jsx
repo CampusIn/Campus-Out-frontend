@@ -998,10 +998,68 @@ export default function Home() {
           transform: scale(1.02);
         }
 
-        /* Desktop Layout Overrides for App Features Section */
+        /* Desktop Layout Overrides */
         @media (min-width: 769px) {
+          /* Hero: keep content comfortably centered, add breathing room */
+          .hero-section {
+            min-height: 78vh;
+            padding: 150px 40px 110px 40px;
+          }
+
+          .hero-content-wrapper {
+            max-width: 760px;
+          }
+
+          /* Promo section: lay the stat cards out as a centered horizontal row
+             instead of the narrow mobile single column, so wide screens no
+             longer show a thin stretched strip. */
+          .zomato-promo-section {
+            padding: 110px 40px 80px 40px;
+          }
+
+          .promo-content-wrapper {
+            max-width: 1100px !important;
+          }
+
+          .promo-cards-container {
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            max-width: 980px;
+            margin-top: 24px;
+          }
+
+          .promo-stat-card {
+            width: auto;
+            flex: 1 1 260px;
+            max-width: 320px;
+            padding: 22px 28px;
+          }
+
+          /* Neutralise the mobile staggered offsets on desktop */
+          .promo-stat-card.card-left,
+          .promo-stat-card.card-right,
+          .promo-stat-card.card-left-2 {
+            align-self: auto;
+            transform: none;
+          }
+
+          .promo-stat-card.card-left:hover,
+          .promo-stat-card.card-right:hover,
+          .promo-stat-card.card-left-2:hover {
+            transform: translateY(-4px);
+          }
+
+          /* App Features: constrain width and keep a balanced 3x3 grid that
+             reads well on desktop rather than one stretched 9-wide row. */
+          .app-features-section {
+            padding: 90px 40px;
+          }
+
           .app-features-wrapper {
-            max-width: 850px !important;
+            max-width: 760px !important;
           }
 
           .features-heading {
@@ -1009,14 +1067,17 @@ export default function Home() {
           }
 
           .features-icon-grid {
-            grid-template-columns: repeat(9, minmax(0, 1fr));
-            gap: 16px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 28px 32px;
+            margin-bottom: 44px;
+            max-width: 620px;
+            margin-left: auto;
+            margin-right: auto;
           }
 
           .card-icon-container {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
           }
 
           .app-promo-banner-container {
@@ -1033,6 +1094,22 @@ export default function Home() {
           .promo-banner-btn {
             width: auto;
             padding: 12px 28px;
+          }
+        }
+
+        /* Wider desktops: cap overall content width so large monitors don't
+           leave the layout feeling stretched or sparse. */
+        @media (min-width: 1200px) {
+          .hero-content-wrapper {
+            max-width: 820px;
+          }
+
+          .promo-content-wrapper {
+            max-width: 1160px !important;
+          }
+
+          .promo-cards-container {
+            max-width: 1040px;
           }
         }
 
