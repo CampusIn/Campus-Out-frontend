@@ -44,6 +44,7 @@ export default function RouteTitleUpdater() {
     else if (path === '/admin/dashboard') title = 'Admin Dashboard | CampusIn';
     else if (path === '/admin/settings') title = 'Admin Settings | CampusIn';
     else if (path === '/admin/marketplace') title = 'Admin Marketplace | CampusIn';
+    else if (path === '/admin/lucky-draw') title = 'Lucky Winner Draw | Admin';
     else if (path === '/admin/coupons') title = 'Admin Coupons | CampusIn';
     else if (path === '/admin/announcements') title = 'Admin Announcements | CampusIn';
     else if (path === '/admin/banners') title = 'Admin Banners | CampusIn';

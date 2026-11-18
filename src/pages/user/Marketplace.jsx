@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarketCart } from '../../context/MarketCartContext';
 import { getUserCategories, getUserProducts, getMarketplaceSuggestions } from '../../api/marketplace.api';
+import { getUserLuckyDrawStatus } from '../../api/luckyDraw.api';
+import LuckyDrawModal from '../../components/LuckyDrawModal';
 
-import { Tag, DollarSign, Package, Search, ChevronLeft, ChevronRight, Sliders, Layers, Info, ChevronDown, User, Bookmark, MapPin, ShoppingBag } from 'lucide-react';
+import { Tag, DollarSign, Package, Search, ChevronLeft, ChevronRight, Sliders, Layers, Info, ChevronDown, User, Bookmark, MapPin, ShoppingBag, Gift, Sparkles, Trophy } from 'lucide-react';
 
 export default function Marketplace() {
   const toast = useToast();
@@ -38,6 +41,34 @@ export default function Marketplace() {
 
   // Filters expanded toggler
   const [showFilters, setShowFilters] = useState(false);
+
+  // Lucky Draw states
+  const [luckyDrawStatus, setLuckyDrawStatus] = useState(null);
+  const [isLuckyModalOpen, setIsLuckyModalOpen] = useState(false);
+  const [hasUserEnteredLuckyDraw, setHasUserEnteredLuckyDraw] = useState(false);
+
+  // Fetch lucky draw status
+  const fetchLuckyDrawStatus = useCallback(async () => {
+    try {
+      const { data } = await getUserLuckyDrawStatus();
+      if (data.success) {
+        setLuckyDrawStatus(data.data);
+        const drawId = data.data?.luckyDrawId || data.data?.lastDrawId;
+        if (drawId) {
+          const stored = localStorage.getItem(`lucky_entry_${drawId}_${user?.id || 'anon'}`);
+          if (stored) {
+            setHasUserEnteredLuckyDraw(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch lucky draw status on marketplace:', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchLuckyDrawStatus();
+  }, [fetchLuckyDrawStatus]);
 
   // Suggestions state
   const [suggestions, setSuggestions] = useState([]);
@@ -415,6 +446,93 @@ export default function Marketplace() {
 
       </div>
 
+      {/* 3. Lucky Draw Promotional Banner (If Active or Has Winners) */}
+      {luckyDrawStatus && (luckyDrawStatus.isActive || luckyDrawStatus.canSubmit || luckyDrawStatus.isOver) && (
+        <div style={{ padding: '0 20px', background: '#ffffff' }}>
+          <div
+            onClick={() => setIsLuckyModalOpen(true)}
+            style={{
+              padding: '14px 18px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, #4A35E8 0%, #7C3AED 60%, #EC4899 100%)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(74, 53, 232, 0.25)',
+              transition: 'transform 0.2s',
+              marginBottom: '12px'
+            }}
+            className="hover-lift"
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div 
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.22)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  backdropFilter: 'blur(4px)'
+                }}
+              >
+                <Gift size={22} color="#ffffff" />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span 
+                    style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      padding: '2px 8px',
+                      borderRadius: '20px',
+                      letterSpacing: '0.04em'
+                    }}
+                  >
+                    {luckyDrawStatus.isOver ? '🎉 Winners Announced' : '✨ Live Campaign'}
+                  </span>
+                  <span style={{ fontSize: '0.92rem', fontWeight: 800 }}>
+                    {luckyDrawStatus.title || 'Campus Lucky Winner Draw'}
+                  </span>
+                </div>
+                <p style={{ margin: '3px 0 0 0', fontSize: '0.8rem', opacity: 0.95, lineHeight: 1.3 }}>
+                  {luckyDrawStatus.isOver 
+                    ? 'Lucky winners have been drawn! Tap to see the winner wall.'
+                    : hasUserEnteredLuckyDraw
+                      ? 'Your lucky entry is submitted! Tap to view details.'
+                      : 'Free entry for all verified campus students. Stand a chance to win exclusive merchandise!'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              style={{
+                background: '#ffffff',
+                color: '#4A35E8',
+                border: 'none',
+                padding: '9px 18px',
+                borderRadius: '12px',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                marginLeft: '12px'
+              }}
+            >
+              {luckyDrawStatus.isOver ? 'View Winners' : hasUserEnteredLuckyDraw ? 'View Entry' : 'Enter Now →'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 4. Categories Horizontal Strip */}
       <div style={{ background: '#ffffff', padding: '8px 20px 16px 20px', borderBottom: '1px solid #edf2f7', marginBottom: '8px' }}>
         <div className="marketplace-cat-strip-container">
@@ -585,6 +703,83 @@ export default function Marketplace() {
         )}
 
       </div>
+
+      {/* Floating Lucky Draw Popup Action Button */}
+      {luckyDrawStatus && (luckyDrawStatus.isActive || luckyDrawStatus.canSubmit || luckyDrawStatus.isOver) && (
+        <motion.button
+          onClick={() => setIsLuckyModalOpen(true)}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            position: 'fixed',
+            bottom: '84px',
+            right: '20px',
+            zIndex: 9998,
+            background: 'linear-gradient(135deg, #4A35E8 0%, #7C3AED 50%, #EC4899 100%)',
+            color: '#ffffff',
+            border: '2px solid rgba(255, 255, 255, 0.45)',
+            borderRadius: '50px',
+            padding: '12px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 10px 25px rgba(74, 53, 232, 0.45), 0 0 20px rgba(236, 72, 153, 0.35)',
+            cursor: 'pointer',
+            fontWeight: 800,
+            fontSize: '0.88rem'
+          }}
+          className="lucky-draw-floating-btn hover-lift"
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 255, 255, 0.25)',
+              borderRadius: '50%',
+              width: '26px',
+              height: '26px'
+            }}
+          >
+            <Gift size={15} color="#ffffff" />
           </div>
+          <span>
+            {luckyDrawStatus.isOver 
+              ? 'Lucky Winners' 
+              : hasUserEnteredLuckyDraw 
+                ? 'My Entry' 
+                : 'Enter Lucky Draw'}
+          </span>
+          {!luckyDrawStatus.isOver && !hasUserEnteredLuckyDraw && (
+            <span
+              style={{
+                background: '#ffffff',
+                color: '#EC4899',
+                fontSize: '0.65rem',
+                fontWeight: 900,
+                padding: '2px 6px',
+                borderRadius: '8px',
+                letterSpacing: '0.04em'
+              }}
+            >
+              FREE
+            </span>
+          )}
+        </motion.button>
+      )}
+
+      {/* Lucky Draw Interactive Modal */}
+      <LuckyDrawModal
+        isOpen={isLuckyModalOpen}
+        onClose={() => setIsLuckyModalOpen(false)}
+        drawStatus={luckyDrawStatus}
+        onEntrySubmitted={() => {
+          setHasUserEnteredLuckyDraw(true);
+          fetchLuckyDrawStatus();
+        }}
+      />
+    </div>
   );
 }

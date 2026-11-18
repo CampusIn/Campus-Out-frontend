@@ -70,6 +70,7 @@ const AdminUsers = lazyWithRetry(() => import('./pages/admin/AdminUsers'));
 const AdminBanners = lazyWithRetry(() => import('./pages/admin/AdminBanners'));
 const AdminAbandonedCarts = lazyWithRetry(() => import('./pages/admin/AdminAbandonedCarts'));
 const AdminMarketplace = lazyWithRetry(() => import('./pages/admin/AdminMarketplace'));
+const AdminLuckyDraw = lazyWithRetry(() => import('./pages/admin/AdminLuckyDraw'));
 const AdminInventory = lazyWithRetry(() => import('./pages/admin/AdminInventory'));
 const AdminRepairPartners = lazyWithRetry(() => import('./pages/admin/AdminRepairPartners'));
 const AdminRepairRequests = lazyWithRetry(() => import('./pages/admin/AdminRepairRequests'));
@@ -316,6 +317,7 @@ export default function App() {
                       <Route path="dashboard" element={<AdminDashboard />} />
                       <Route path="settings" element={<AdminSettings />} />
                       <Route path="marketplace" element={<AdminMarketplace />} />
+                      <Route path="lucky-draw" element={<AdminLuckyDraw />} />
                       <Route path="coupons" element={<AdminCoupons />} />
                       <Route path="announcements" element={<AdminAnnouncements />} />
                       <Route path="banners" element={<AdminBanners />} />

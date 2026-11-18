@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getAdminDashboard } from '../api/admin.api';
 
-import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag, ClipboardList, Wrench, Printer } from 'lucide-react';
+import { Store, Ticket, Megaphone, Package, LayoutDashboard, Users, Settings, LogOut, RefreshCw, ChevronDown, Image, ShoppingBag, ClipboardList, Wrench, Printer, Gift } from 'lucide-react';
 import '../pages/admin/AdminPortal.css';
 
 export default function AdminLayout() {
@@ -61,6 +61,7 @@ export default function AdminLayout() {
     { path: '/admin/dashboard', label: 'Dashboard Overview', icon: <LayoutDashboard size={18} /> },
     { path: '/admin/settings', label: 'Food Platform Settings', icon: <Settings size={18} /> },
     { path: '/admin/marketplace', label: 'Marketplace Console', icon: <Package size={18} /> },
+    { path: '/admin/lucky-draw', label: 'Lucky Winner Draw', icon: <Gift size={18} /> },
     { path: '/admin/coupons', label: 'Coupon Campaigns', icon: <Ticket size={18} /> },
     { path: '/admin/announcements', label: 'Announcements Bulletin', icon: <Megaphone size={18} /> },
     { path: '/admin/banners', label: 'Banner Ads', icon: <Image size={18} /> },
