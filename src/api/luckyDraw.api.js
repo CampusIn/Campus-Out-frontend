@@ -12,3 +12,4 @@ export const updateLuckyDrawDeadline = (data) => api.patch('/admin/lucky-draw/de
 export const drawLuckyWinners = (data) => api.post('/admin/lucky-draw/draw', data);
 export const getAdminLuckyDrawWinners = (params) => api.get('/admin/lucky-draw/winners', { params });
 export const getAdminLuckyDrawParticipants = (params) => api.get('/admin/lucky-draw/participants', { params });
+export const deleteLuckyDraw = (luckyDrawId) => api.delete(`/admin/lucky-draw/${luckyDrawId}`);

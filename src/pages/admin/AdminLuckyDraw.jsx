@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { confetti } from '../../components/Confetti';
 import {
   getAdminLuckyDrawDetails,
   enableLuckyDraw,
   updateLuckyDrawDeadline,
   drawLuckyWinners,
-  getAdminLuckyDrawParticipants
+  getAdminLuckyDrawParticipants,
+  deleteLuckyDraw
 } from '../../api/luckyDraw.api';
 
 import {
@@ -24,6 +26,7 @@ import {
   AlertCircle,
   Copy,
   Phone,
+  Trash2,
   X
 } from 'lucide-react';
 
@@ -73,6 +76,7 @@ const getTomorrowIstEveningInput = () => {
 
 export default function AdminLuckyDraw() {
   const toast = useToast();
+  const confirm = useConfirm();
 
   // Draw details & summary
   const [drawDetails, setDrawDetails] = useState(null);
@@ -270,6 +274,38 @@ export default function AdminLuckyDraw() {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to conduct lucky draw');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Delete Lucky Draw
+  const handleDeleteDraw = async () => {
+    const luckyDrawId = drawDetails?.luckyDrawId;
+    if (!luckyDrawId) return;
+
+    const isConfirmed = await confirm({
+      title: 'Delete Lucky Draw',
+      message: `Delete "${drawDetails.title || 'this lucky draw'}"? All participant entries and winners will be permanently removed. This cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+    if (!isConfirmed) return;
+
+    setSubmitting(true);
+    try {
+      const { data } = await deleteLuckyDraw(luckyDrawId);
+      if (data.success) {
+        toast.success(data.message || 'Lucky draw deleted successfully');
+        setDrawDetails(null);
+        setParticipants([]);
+        setTotalParticipants(0);
+        setPage(1);
+        fetchDetails();
+        fetchParticipants();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete lucky draw');
     } finally {
       setSubmitting(false);
     }
@@ -565,6 +601,28 @@ export default function AdminLuckyDraw() {
                   </button>
                 </>
               )}
+
+              <button
+                onClick={handleDeleteDraw}
+                disabled={submitting}
+                className="hover-lift"
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #fecaca',
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: submitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <Trash2 size={14} />
+                <span>Delete Draw</span>
+              </button>
             </div>
           </div>
 
