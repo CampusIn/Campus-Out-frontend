@@ -19,7 +19,7 @@ export default function DeliveryRegister() {
       } else if (user.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
-        navigate(user.role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+        navigate(user.role === 'vendor' ? '/vendor' : '/marketplace', { replace: true });
       }
     }
   }, [user, navigate]);

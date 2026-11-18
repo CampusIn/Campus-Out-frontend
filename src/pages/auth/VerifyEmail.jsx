@@ -44,7 +44,7 @@ export default function VerifyEmail() {
           } else if (tokenRole === 'vendor') {
             navigate('/vendor', { replace: true });
           } else {
-            navigate('/restaurants', { replace: true });
+            navigate('/marketplace', { replace: true });
           }
         }
       }, 1000);

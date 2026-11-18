@@ -162,7 +162,7 @@ export function AuthProvider({ children }) {
           } else if (userObj.role === 'vendor') {
             window.location.href = '/vendor';
           } else {
-            window.location.href = '/restaurants';
+            window.location.href = '/marketplace';
           }
         } catch (e) {
           console.error('Failed to fetch profile during startup:', e);

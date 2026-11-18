@@ -28,7 +28,7 @@ export default function DeliveryLogin() {
         navigate('/admin', { replace: true });
       } else {
         // Redirect normal users who are already logged in to their respective portals
-        navigate(user.role === 'vendor' ? '/vendor' : '/restaurants', { replace: true });
+        navigate(user.role === 'vendor' ? '/vendor' : '/marketplace', { replace: true });
       }
     }
   }, [user, navigate]);

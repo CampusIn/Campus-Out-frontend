@@ -49,7 +49,7 @@ export default function AuthSuccess() {
         } else if (userObj.role === 'vendor') {
           navigate('/vendor', { replace: true });
         } else {
-          navigate('/restaurants', { replace: true });
+          navigate('/marketplace', { replace: true });
         }
       } catch (err) {
         console.error('Failed to get access token from refresh token:', err);

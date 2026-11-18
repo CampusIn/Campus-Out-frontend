@@ -100,7 +100,7 @@ export default function Home() {
       } else if (user.role === 'delivery_partner') {
         navigate('/delivery/dashboard', { replace: true });
       } else {
-        navigate('/restaurants', { replace: true });
+        navigate('/marketplace', { replace: true });
       }
     }
   }, [user, navigate]);

@@ -28,7 +28,7 @@ export default function Login() {
   useEffect(() => {
     if (user) {
       if (user.role === 'user') {
-        navigate('/restaurants', { replace: true });
+        navigate('/marketplace', { replace: true });
       } else {
         // Block non-user roles from the main login page
         logout(undefined, false);
@@ -55,7 +55,7 @@ export default function Login() {
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.role === 'user') {
-          navigate('/restaurants', { replace: true });
+          navigate('/marketplace', { replace: true });
         } else {
           setError('Access Denied. Please use the correct portal to login.');
           await logout(undefined, false);

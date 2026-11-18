@@ -15,7 +15,7 @@ export default function Register() {
   useEffect(() => {
     if (user) {
       if (user.role === 'user') {
-        navigate('/restaurants', { replace: true });
+        navigate('/marketplace', { replace: true });
       }
     }
   }, [user, navigate]);
