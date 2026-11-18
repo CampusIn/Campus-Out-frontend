@@ -52,7 +52,7 @@ export default function AdminLuckyDraw() {
   // Forms
   const [createForm, setCreateForm] = useState({
     title: 'Campus Lucky Draw',
-    description: 'Enter your details to stand a chance to win exclusive NITJ merchandise and goodies!',
+    description: 'Participate for a chance to win exciting prizes!',
     submissionDeadline: '',
     numberOfWinners: 1,
     closePrevious: true
@@ -324,7 +324,7 @@ export default function AdminLuckyDraw() {
 
               setCreateForm({
                 title: 'Campus Lucky Draw',
-                description: 'Enter your details to stand a chance to win exclusive NITJ merchandise and goodies!',
+                description: 'Participate for a chance to win exciting prizes!',
                 submissionDeadline: formattedDate,
                 numberOfWinners: 1,
                 closePrevious: true

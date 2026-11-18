@@ -210,10 +210,10 @@ export default function LuckyDrawModal({ isOpen, onClose, drawStatus, onEntrySub
             position: 'relative'
           }}
         >
-          {/* Top Decorative Gradient Header */}
+          {/* Top Decorative Header */}
           <div 
             style={{
-              background: 'linear-gradient(135deg, #4A35E8 0%, #7C3AED 50%, #EC4899 100%)',
+              background: '#4A35E8',
               padding: '24px 24px 20px 24px',
               color: '#ffffff',
               position: 'relative'
@@ -281,7 +281,7 @@ export default function LuckyDrawModal({ isOpen, onClose, drawStatus, onEntrySub
             </div>
 
             <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.92)', margin: 0, lineHeight: 1.4 }}>
-              {drawStatus?.description || 'Participate for a chance to win exclusive NITJ merchandise, dining vouchers, and tech gear!'}
+              {drawStatus?.description || 'Participate for a chance to win exciting prizes!'}
             </p>
 
             {/* Sub-info Badges */}
@@ -678,7 +678,7 @@ export default function LuckyDrawModal({ isOpen, onClose, drawStatus, onEntrySub
                       disabled={submitting}
                       style={{
                         height: '46px',
-                        background: 'linear-gradient(135deg, #4A35E8 0%, #7C3AED 100%)',
+                        background: '#4A35E8',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '14px',
@@ -719,7 +719,7 @@ export default function LuckyDrawModal({ isOpen, onClose, drawStatus, onEntrySub
                   <div>
                     <div 
                       style={{
-                        background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                        background: '#fffbeb',
                         border: '1.5px solid #fde68a',
                         borderRadius: '16px',
                         padding: '16px',
