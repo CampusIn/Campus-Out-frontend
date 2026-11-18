@@ -29,6 +29,48 @@ import {
 
 import './AdminPortal.css';
 
+const IST_TIME_ZONE = 'Asia/Kolkata';
+
+// Converts a datetime-local value (interpreted as IST wall time) to an ISO UTC string.
+const toIstIsoString = (localValue) => {
+  if (!localValue) return '';
+  const normalized = localValue.length === 16 ? `${localValue}:00` : localValue;
+  const date = new Date(`${normalized}+05:30`);
+  return isNaN(date.getTime()) ? '' : date.toISOString();
+};
+
+// Converts a stored date (ISO/UTC) to a datetime-local value in IST.
+const toIstInputValue = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: IST_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(date);
+  const get = (type) => parts.find((part) => part.type === type)?.value || '';
+  const hour = get('hour') === '24' ? '00' : get('hour');
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}`;
+};
+
+// Default deadline: tomorrow 6:00 PM IST, as a datetime-local value.
+const getTomorrowIstEveningInput = () => {
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: IST_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(tomorrow);
+  const get = (type) => parts.find((part) => part.type === type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}T18:00`;
+};
+
 export default function AdminLuckyDraw() {
   const toast = useToast();
 
@@ -132,14 +174,14 @@ export default function AdminLuckyDraw() {
   // Create Draw Submit
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    if (!createForm.submissionDeadline) {
+    const deadlineIso = toIstIsoString(createForm.submissionDeadline);
+    if (!deadlineIso) {
       toast.error('Please select a valid future deadline date & time');
       return;
     }
 
-    const deadline = new Date(createForm.submissionDeadline);
-    if (deadline.getTime() <= Date.now()) {
-      toast.error('Submission deadline must be in the future');
+    if (new Date(deadlineIso).getTime() <= Date.now()) {
+      toast.error('Submission deadline must be in the future (IST)');
       return;
     }
 
@@ -148,7 +190,7 @@ export default function AdminLuckyDraw() {
       const { data } = await enableLuckyDraw({
         title: createForm.title.trim(),
         description: createForm.description.trim(),
-        submissionDeadline: createForm.submissionDeadline,
+        submissionDeadline: deadlineIso,
         numberOfWinners: Number(createForm.numberOfWinners) || 1,
         closePrevious: createForm.closePrevious
       });
@@ -169,14 +211,14 @@ export default function AdminLuckyDraw() {
   // Update Deadline Submit
   const handleDeadlineSubmit = async (e) => {
     e.preventDefault();
-    if (!deadlineForm.submissionDeadline) {
+    const deadlineIso = toIstIsoString(deadlineForm.submissionDeadline);
+    if (!deadlineIso) {
       toast.error('Please select a valid future deadline');
       return;
     }
 
-    const deadline = new Date(deadlineForm.submissionDeadline);
-    if (deadline.getTime() <= Date.now()) {
-      toast.error('New deadline must be in the future');
+    if (new Date(deadlineIso).getTime() <= Date.now()) {
+      toast.error('New deadline must be in the future (IST)');
       return;
     }
 
@@ -184,7 +226,7 @@ export default function AdminLuckyDraw() {
     try {
       const { data } = await updateLuckyDrawDeadline({
         luckyDrawId: drawDetails?.luckyDrawId,
-        submissionDeadline: deadlineForm.submissionDeadline
+        submissionDeadline: deadlineIso
       });
 
       if (data.success) {
@@ -238,10 +280,11 @@ export default function AdminLuckyDraw() {
     toast.success(label);
   };
 
-  // Format Helper
+  // Format Helper (always display in IST)
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleString('en-IN', {
+      timeZone: IST_TIME_ZONE,
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -316,11 +359,8 @@ export default function AdminLuckyDraw() {
 
           <button
             onClick={() => {
-              // Set default deadline to tomorrow 6 PM
-              const tomorrow = new Date();
-              tomorrow.setDate(tomorrow.getDate() + 1);
-              tomorrow.setHours(18, 0, 0, 0);
-              const formattedDate = tomorrow.toISOString().slice(0, 16);
+              // Set default deadline to tomorrow 6 PM IST
+              const formattedDate = getTomorrowIstEveningInput();
 
               setCreateForm({
                 title: 'Campus Lucky Draw',
@@ -476,9 +516,7 @@ export default function AdminLuckyDraw() {
                 <>
                   <button
                     onClick={() => {
-                      const dt = new Date(drawDetails.submissionDeadline);
-                      const formatted = !isNaN(dt.getTime()) ? dt.toISOString().slice(0, 16) : '';
-                      setDeadlineForm({ submissionDeadline: formatted });
+                      setDeadlineForm({ submissionDeadline: toIstInputValue(drawDetails.submissionDeadline) });
                       setDeadlineModalOpen(true);
                     }}
                     className="hover-lift"
@@ -1089,7 +1127,7 @@ export default function AdminLuckyDraw() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 750, color: '#334155', marginBottom: '6px' }}>
-                    Submission Deadline <span style={{ color: '#ef4444' }}>*</span>
+                    Submission Deadline (IST) <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -1268,7 +1306,7 @@ export default function AdminLuckyDraw() {
             <form onSubmit={handleDeadlineSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 750, color: '#334155', marginBottom: '6px' }}>
-                  New Submission Deadline Date & Time <span style={{ color: '#ef4444' }}>*</span>
+                  New Submission Deadline Date & Time (IST) <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="datetime-local"
